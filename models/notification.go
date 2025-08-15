@@ -15,13 +15,32 @@ const (
 	InAppNotification NotificationType = "in_app"
 )
 
+// Content represents the content structure for different notification types
+type Content struct {
+	// For Slack notifications
+	Text string `json:"text,omitempty"`
+
+	// For In-App notifications
+	Title string `json:"title,omitempty"`
+	Body  string `json:"body,omitempty"`
+
+	// For Email notifications
+	Subject   string `json:"subject,omitempty"`
+	EmailBody string `json:"email_body,omitempty"`
+}
+
+// Template represents template information with data parameters
+type Template struct {
+	ID   string                 `json:"id"`
+	Data map[string]interface{} `json:"data"`
+}
+
 // Notification represents a notification request
 type Notification struct {
 	ID          string                 `json:"id"`
 	Type        NotificationType       `json:"type"`
-	Title       string                 `json:"title"`
-	Message     string                 `json:"message"`
-	TemplateID  string                 `json:"template_id,omitempty"`
+	Content     Content                `json:"content"`
+	Template    *Template              `json:"template,omitempty"`
 	Recipients  []string               `json:"recipients"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 	ScheduledAt *time.Time             `json:"scheduled_at,omitempty"`
@@ -51,12 +70,24 @@ type NotificationResponse struct {
 }
 
 // NewNotification creates a new notification with default values
-func NewNotification(notificationType NotificationType, title, message string, recipients []string) *Notification {
+func NewNotification(notificationType NotificationType, content Content, recipients []string) *Notification {
 	return &Notification{
 		ID:         uuid.New().String(),
 		Type:       notificationType,
-		Title:      title,
-		Message:    message,
+		Content:    content,
+		Recipients: recipients,
+		Metadata:   make(map[string]interface{}),
+		CreatedAt:  time.Now(),
+		Status:     "pending",
+	}
+}
+
+// NewNotificationWithTemplate creates a new notification with template
+func NewNotificationWithTemplate(notificationType NotificationType, template *Template, recipients []string) *Notification {
+	return &Notification{
+		ID:         uuid.New().String(),
+		Type:       notificationType,
+		Template:   template,
 		Recipients: recipients,
 		Metadata:   make(map[string]interface{}),
 		CreatedAt:  time.Now(),

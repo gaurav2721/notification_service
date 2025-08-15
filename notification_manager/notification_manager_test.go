@@ -67,18 +67,23 @@ func TestNotificationManager_SendNotification(t *testing.T) {
 		{
 			name: "Send Email Notification",
 			notification: &struct {
-				ID          string
-				Type        string
-				Title       string
-				Message     string
+				ID       string
+				Type     string
+				Content  map[string]interface{}
+				Template *struct {
+					ID   string
+					Data map[string]interface{}
+				}
 				Recipients  []string
 				Metadata    map[string]interface{}
 				ScheduledAt *time.Time
 			}{
-				ID:         "test-1",
-				Type:       "email",
-				Title:      "Test Email",
-				Message:    "This is a test email",
+				ID:   "test-1",
+				Type: "email",
+				Content: map[string]interface{}{
+					"subject":    "Test Email",
+					"email_body": "This is a test email",
+				},
 				Recipients: []string{"test@example.com"},
 			},
 			expectError: false,
@@ -86,18 +91,22 @@ func TestNotificationManager_SendNotification(t *testing.T) {
 		{
 			name: "Send Slack Notification",
 			notification: &struct {
-				ID          string
-				Type        string
-				Title       string
-				Message     string
+				ID       string
+				Type     string
+				Content  map[string]interface{}
+				Template *struct {
+					ID   string
+					Data map[string]interface{}
+				}
 				Recipients  []string
 				Metadata    map[string]interface{}
 				ScheduledAt *time.Time
 			}{
-				ID:         "test-2",
-				Type:       "slack",
-				Title:      "Test Slack",
-				Message:    "This is a test slack message",
+				ID:   "test-2",
+				Type: "slack",
+				Content: map[string]interface{}{
+					"text": "This is a test slack message",
+				},
 				Recipients: []string{"#general"},
 			},
 			expectError: false,
@@ -105,18 +114,23 @@ func TestNotificationManager_SendNotification(t *testing.T) {
 		{
 			name: "Send In-App Notification",
 			notification: &struct {
-				ID          string
-				Type        string
-				Title       string
-				Message     string
+				ID       string
+				Type     string
+				Content  map[string]interface{}
+				Template *struct {
+					ID   string
+					Data map[string]interface{}
+				}
 				Recipients  []string
 				Metadata    map[string]interface{}
 				ScheduledAt *time.Time
 			}{
-				ID:         "test-3",
-				Type:       "in_app",
-				Title:      "Test In-App",
-				Message:    "This is a test in-app notification",
+				ID:   "test-3",
+				Type: "in_app",
+				Content: map[string]interface{}{
+					"title": "Test In-App",
+					"body":  "This is a test in-app notification",
+				},
 				Recipients: []string{"user-1"},
 			},
 			expectError: false,

@@ -39,11 +39,15 @@ func NewNotificationHandler(notificationService interface {
 
 // SendNotification handles POST /notifications
 func (h *NotificationHandler) SendNotification(c *gin.Context) {
+	type TemplateData struct {
+		ID   string                 `json:"id"`
+		Data map[string]interface{} `json:"data"`
+	}
+
 	var request struct {
 		Type        string                 `json:"type" binding:"required"`
-		Title       string                 `json:"title" binding:"required"`
-		Message     string                 `json:"message" binding:"required"`
-		TemplateID  string                 `json:"template_id"`
+		Content     map[string]interface{} `json:"content"`
+		Template    *TemplateData          `json:"template,omitempty"`
 		Recipients  []string               `json:"recipients" binding:"required"`
 		Metadata    map[string]interface{} `json:"metadata"`
 		ScheduledAt *time.Time             `json:"scheduled_at"`
@@ -58,16 +62,16 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 	notification := &struct {
 		ID          string
 		Type        string
-		Title       string
-		Message     string
+		Content     map[string]interface{}
+		Template    *TemplateData
 		Recipients  []string
 		Metadata    map[string]interface{}
 		ScheduledAt *time.Time
 	}{
 		ID:          generateID(),
 		Type:        request.Type,
-		Title:       request.Title,
-		Message:     request.Message,
+		Content:     request.Content,
+		Template:    request.Template,
 		Recipients:  request.Recipients,
 		Metadata:    request.Metadata,
 		ScheduledAt: request.ScheduledAt,

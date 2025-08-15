@@ -31,10 +31,13 @@ func NewInAppServiceWithConfig(config *InAppConfig) InAppService {
 func (ias *InAppServiceImpl) SendInAppNotification(ctx context.Context, notification interface{}) (interface{}, error) {
 	// Type assertion to get the notification
 	notif, ok := notification.(*struct {
-		ID          string
-		Type        string
-		Title       string
-		Message     string
+		ID       string
+		Type     string
+		Content  map[string]interface{}
+		Template *struct {
+			ID   string
+			Data map[string]interface{}
+		}
 		Recipients  []string
 		Metadata    map[string]interface{}
 		ScheduledAt *time.Time
@@ -89,10 +92,13 @@ func (ias *InAppServiceImpl) MarkNotificationAsRead(userID, notificationID strin
 	if notifications, exists := ias.notifications[userID]; exists {
 		for i, notification := range notifications {
 			if notif, ok := notification.(*struct {
-				ID          string
-				Type        string
-				Title       string
-				Message     string
+				ID       string
+				Type     string
+				Content  map[string]interface{}
+				Template *struct {
+					ID   string
+					Data map[string]interface{}
+				}
 				Recipients  []string
 				Metadata    map[string]interface{}
 				ScheduledAt *time.Time

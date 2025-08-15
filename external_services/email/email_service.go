@@ -47,10 +47,13 @@ func NewEmailServiceWithConfig(config *EmailConfig) EmailService {
 func (es *EmailServiceImpl) SendEmail(ctx context.Context, notification interface{}) (interface{}, error) {
 	// Type assertion to get the notification
 	notif, ok := notification.(*struct {
-		ID         string
-		Type       string
-		Title      string
-		Message    string
+		ID       string
+		Type     string
+		Content  map[string]interface{}
+		Template *struct {
+			ID   string
+			Data map[string]interface{}
+		}
 		Recipients []string
 		Metadata   map[string]interface{}
 	})
@@ -62,8 +65,23 @@ func (es *EmailServiceImpl) SendEmail(ctx context.Context, notification interfac
 	m := gomail.NewMessage()
 	m.SetHeader("From", os.Getenv("SMTP_USERNAME"))
 	m.SetHeader("To", notif.Recipients...)
-	m.SetHeader("Subject", notif.Title)
-	m.SetBody("text/html", notif.Message)
+
+	// Extract subject and body from content
+	subject := ""
+	body := ""
+	if content, ok := notif.Content["subject"]; ok {
+		if subj, ok := content.(string); ok {
+			subject = subj
+		}
+	}
+	if content, ok := notif.Content["email_body"]; ok {
+		if bdy, ok := content.(string); ok {
+			body = bdy
+		}
+	}
+
+	m.SetHeader("Subject", subject)
+	m.SetBody("text/html", body)
 
 	// Send email
 	if err := es.dialer.DialAndSend(m); err != nil {

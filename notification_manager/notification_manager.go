@@ -50,10 +50,13 @@ func NewNotificationManagerWithConfig(
 func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notification interface{}) (interface{}, error) {
 	// Type assertion to get notification type
 	notif, ok := notification.(*struct {
-		ID          string
-		Type        string
-		Title       string
-		Message     string
+		ID       string
+		Type     string
+		Content  map[string]interface{}
+		Template *struct {
+			ID   string
+			Data map[string]interface{}
+		}
 		Recipients  []string
 		Metadata    map[string]interface{}
 		ScheduledAt *time.Time
@@ -86,10 +89,13 @@ func (nm *NotificationManagerImpl) SendNotificationToUsers(ctx context.Context, 
 func (nm *NotificationManagerImpl) ScheduleNotification(ctx context.Context, notification interface{}) (interface{}, error) {
 	// Type assertion to get notification
 	notif, ok := notification.(*struct {
-		ID          string
-		Type        string
-		Title       string
-		Message     string
+		ID       string
+		Type     string
+		Content  map[string]interface{}
+		Template *struct {
+			ID   string
+			Data map[string]interface{}
+		}
 		Recipients  []string
 		Metadata    map[string]interface{}
 		ScheduledAt *time.Time

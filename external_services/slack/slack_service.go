@@ -42,10 +42,13 @@ func NewSlackServiceWithConfig(config *SlackConfig) SlackService {
 func (ss *SlackServiceImpl) SendSlackMessage(ctx context.Context, notification interface{}) (interface{}, error) {
 	// Type assertion to get the notification
 	notif, ok := notification.(*struct {
-		ID         string
-		Type       string
-		Title      string
-		Message    string
+		ID       string
+		Type     string
+		Content  map[string]interface{}
+		Template *struct {
+			ID   string
+			Data map[string]interface{}
+		}
 		Recipients []string
 		Metadata   map[string]interface{}
 	})
@@ -53,8 +56,16 @@ func (ss *SlackServiceImpl) SendSlackMessage(ctx context.Context, notification i
 		return nil, ErrSlackSendFailed
 	}
 
+	// Extract text from content
+	text := ""
+	if content, ok := notif.Content["text"]; ok {
+		if txt, ok := content.(string); ok {
+			text = txt
+		}
+	}
+
 	// Create Slack message
-	msg := slack.MsgOptionText(notif.Message, false)
+	msg := slack.MsgOptionText(text, false)
 
 	// Send message
 	_, _, err := ss.client.PostMessage(ss.channel, msg)
