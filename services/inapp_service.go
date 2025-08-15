@@ -24,13 +24,14 @@ func NewInAppService() *InAppServiceImpl {
 func (ias *InAppServiceImpl) SendInAppNotification(ctx context.Context, notification interface{}) (interface{}, error) {
 	// Type assertion to get the notification
 	notif, ok := notification.(*struct {
-		ID         string
-		Type       string
-		Priority   string
-		Title      string
-		Message    string
-		Recipients []string
-		Metadata   map[string]interface{}
+		ID          string
+		Type        string
+		Priority    string
+		Title       string
+		Message     string
+		Recipients  []string
+		Metadata    map[string]interface{}
+		ScheduledAt *time.Time
 	})
 	if !ok {
 		return nil, ErrInAppSendFailed
@@ -82,13 +83,14 @@ func (ias *InAppServiceImpl) MarkNotificationAsRead(userID, notificationID strin
 	if notifications, exists := ias.notifications[userID]; exists {
 		for i, notification := range notifications {
 			if notif, ok := notification.(*struct {
-				ID         string
-				Type       string
-				Priority   string
-				Title      string
-				Message    string
-				Recipients []string
-				Metadata   map[string]interface{}
+				ID          string
+				Type        string
+				Priority    string
+				Title       string
+				Message     string
+				Recipients  []string
+				Metadata    map[string]interface{}
+				ScheduledAt *time.Time
 			}); ok && notif.ID == notificationID {
 				// Remove the notification from the user's list
 				ias.notifications[userID] = append(notifications[:i], notifications[i+1:]...)

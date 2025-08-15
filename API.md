@@ -15,6 +15,11 @@ Currently, the API does not require authentication. In a production environment,
 #### GET /health
 Check the health status of the service.
 
+**cURL Command:**
+```bash
+curl -X GET http://localhost:8080/health
+```
+
 **Response:**
 ```json
 {
@@ -28,6 +33,25 @@ Check the health status of the service.
 
 #### POST /api/v1/notifications
 Send a notification through the specified channel.
+
+**cURL Command:**
+```bash
+curl -X POST http://localhost:8080/api/v1/notifications \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "email",
+    "priority": "normal",
+    "title": "Welcome!",
+    "message": "Welcome to our platform!",
+    "recipients": ["user@example.com"],
+    "template_id": "optional-template-id",
+    "metadata": {
+      "user_id": "123",
+      "campaign": "welcome"
+    },
+    "scheduled_at": "2024-01-01T10:00:00Z"
+  }'
+```
 
 **Request Body:**
 ```json
@@ -70,6 +94,11 @@ Send a notification through the specified channel.
 #### GET /api/v1/notifications/{id}
 Get the status of a notification.
 
+**cURL Command:**
+```bash
+curl -X GET http://localhost:8080/api/v1/notifications/notification-id
+```
+
 **Parameters:**
 - `id` (path): Notification ID
 
@@ -88,6 +117,19 @@ Get the status of a notification.
 
 #### POST /api/v1/templates
 Create a new notification template.
+
+**cURL Command:**
+```bash
+curl -X POST http://localhost:8080/api/v1/templates \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Welcome Email",
+    "type": "email",
+    "subject": "Welcome to {{platform}}",
+    "body": "Hello {{name}}, welcome to {{platform}}!",
+    "variables": ["name", "platform"]
+  }'
+```
 
 **Request Body:**
 ```json
@@ -124,6 +166,11 @@ Create a new notification template.
 #### GET /api/v1/templates/{id}
 Get a notification template.
 
+**cURL Command:**
+```bash
+curl -X GET http://localhost:8080/api/v1/templates/template-id
+```
+
 **Parameters:**
 - `id` (path): Template ID
 
@@ -143,6 +190,19 @@ Get a notification template.
 
 #### PUT /api/v1/templates/{id}
 Update a notification template.
+
+**cURL Command:**
+```bash
+curl -X PUT http://localhost:8080/api/v1/templates/template-id \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Welcome Email",
+    "type": "email",
+    "subject": "Welcome to {{platform}}",
+    "body": "Hello {{name}}, welcome to our updated {{platform}}!",
+    "variables": ["name", "platform"]
+  }'
+```
 
 **Parameters:**
 - `id` (path): Template ID
@@ -173,6 +233,11 @@ Update a notification template.
 
 #### DELETE /api/v1/templates/{id}
 Delete a notification template.
+
+**cURL Command:**
+```bash
+curl -X DELETE http://localhost:8080/api/v1/templates/template-id
+```
 
 **Parameters:**
 - `id` (path): Template ID
@@ -209,59 +274,7 @@ All endpoints may return the following error responses:
 }
 ```
 
-## Examples
 
-### Send an Email Notification
-```bash
-curl -X POST http://localhost:8080/api/v1/notifications \
-  -H "Content-Type: application/json" \
-  -d '{
-    "type": "email",
-    "title": "Welcome to Our Platform",
-    "message": "Thank you for joining us!",
-    "recipients": ["user@example.com"],
-    "priority": "normal"
-  }'
-```
-
-### Send a Slack Notification
-```bash
-curl -X POST http://localhost:8080/api/v1/notifications \
-  -H "Content-Type: application/json" \
-  -d '{
-    "type": "slack",
-    "title": "System Alert",
-    "message": "Server is running low on memory",
-    "recipients": ["#alerts"],
-    "priority": "high"
-  }'
-```
-
-### Schedule a Notification
-```bash
-curl -X POST http://localhost:8080/api/v1/notifications \
-  -H "Content-Type: application/json" \
-  -d '{
-    "type": "email",
-    "title": "Reminder",
-    "message": "Don\'t forget about the meeting tomorrow",
-    "recipients": ["user@example.com"],
-    "scheduled_at": "2024-01-02T09:00:00Z"
-  }'
-```
-
-### Create a Template
-```bash
-curl -X POST http://localhost:8080/api/v1/templates \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Order Confirmation",
-    "type": "email",
-    "subject": "Order #{{order_id}} Confirmed",
-    "body": "Dear {{customer_name}}, your order #{{order_id}} has been confirmed and will be shipped soon.",
-    "variables": ["order_id", "customer_name"]
-  }'
-```
 
 ## Rate Limiting
 
