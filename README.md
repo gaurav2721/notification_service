@@ -124,7 +124,7 @@ Request Body (Scheduled Notification without template):
     "subject": "Welcome To Tuskira",
     "email_body": "Hi! John Doe we welcome you to tuskira"
   },
-  "scheduled_at": 1704110400
+  "scheduled_at": "2024-01-01T12:00:00Z"
 }
 ```
 
@@ -155,7 +155,7 @@ Request Body (Scheduled Notification using Template):
       "platform": "Tuskira"
     }
   },
-  "scheduled_at": 1704110400
+  "scheduled_at": "2024-01-01T12:00:00Z"
 }
 ```
 
@@ -169,7 +169,7 @@ Request Body (Scheduled Notification using Template):
 - `template` (required if no content): Template object with:
   - `id` (string): Template identifier in UUID format
   - `data` (object): Key-value pairs for template parameters
-- `scheduled_at` (optional): Unix timestamp (UTC) for scheduled delivery
+- `scheduled_at` (optional): ISO 8601 timestamp (UTC) for scheduled delivery
 
 **Note**: Either `content` OR `template` must be provided, but not both. When using a template, the `data` object contains the key-value pairs that will replace the template variables.
 
@@ -184,11 +184,11 @@ The notification service supports two delivery modes:
 - Best for real-time notifications, alerts, and instant communications
 
 ### Scheduled Delivery
-- **Include** the `scheduled_at` field with a Unix timestamp (UTC)
+- **Include** the `scheduled_at` field with an ISO 8601 timestamp (UTC)
 - Notification will be stored and delivered at the specified time
 - Best for reminders, scheduled announcements, and time-sensitive campaigns
 
-**Note**: The `scheduled_at` timestamp should be a Unix timestamp (UTC) in the future. Past timestamps will result in immediate delivery.
+**Note**: The `scheduled_at` timestamp should be an ISO 8601 timestamp (UTC) in the future. Past timestamps will result in immediate delivery.
 
 **Important**: Recipients are always specified as user IDs (e.g., `["user-123", "user-456"]`).
 
@@ -250,7 +250,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
       "email_body": "This email was scheduled for future delivery"
     },
     "recipients": ["user-123", "user-456"],
-    "scheduled_at": 1704110400
+    "scheduled_at": "2024-01-01T12:00:00Z"
   }'
 ```
 
@@ -613,7 +613,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
       }
     },
     "recipients": ["user-789"],
-    "scheduled_at": 1704110400
+    "scheduled_at": "2024-01-01T12:00:00Z"
   }'
 ```
 
@@ -632,7 +632,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
       }
     },
     "recipients": ["user-456"],
-    "scheduled_at": 1705276800
+    "scheduled_at": "2024-01-15T12:00:00Z"
   }'
 ```
 

@@ -194,7 +194,7 @@ func sendNotificationWithTemplate(baseURL, templateID string) {
 
 // Example of scheduled notification with template
 func sendScheduledNotificationWithTemplate(baseURL, templateID string) {
-	scheduledTime := time.Now().Add(1 * time.Hour).Unix()
+	scheduledTime := time.Now().Add(1 * time.Hour)
 
 	notification := map[string]interface{}{
 		"type": "email",
