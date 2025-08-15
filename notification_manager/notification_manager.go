@@ -2,24 +2,20 @@ package notification_manager
 
 import (
 	"context"
-	"log"
-	"sync"
 	"time"
 
 	"github.com/gaurav2721/notification-service/models"
-	"github.com/google/uuid"
+	"github.com/gaurav2721/notification-service/notification_manager/templates"
 )
 
 // NotificationManagerImpl implements the NotificationManager interface
 type NotificationManagerImpl struct {
-	emailService  interface{}
-	slackService  interface{}
-	inappService  interface{}
-	userService   interface{}
-	scheduler     interface{}
-	templates     map[string]*models.Template
-	templateMutex sync.RWMutex
-	initialized   bool
+	emailService    interface{}
+	slackService    interface{}
+	inappService    interface{}
+	userService     interface{}
+	scheduler       interface{}
+	templateManager *templates.TemplateManager
 }
 
 // NewNotificationManager creates a new notification manager instance
@@ -30,73 +26,14 @@ func NewNotificationManager(
 	userService interface{},
 	scheduler interface{},
 ) *NotificationManagerImpl {
-	nm := &NotificationManagerImpl{
-		emailService:  emailService,
-		slackService:  slackService,
-		inappService:  inappService,
-		userService:   userService,
-		scheduler:     scheduler,
-		templates:     make(map[string]*models.Template),
-		templateMutex: sync.RWMutex{},
-		initialized:   false,
+	return &NotificationManagerImpl{
+		emailService:    emailService,
+		slackService:    slackService,
+		inappService:    inappService,
+		userService:     userService,
+		scheduler:       scheduler,
+		templateManager: templates.NewTemplateManager(),
 	}
-
-	// Load predefined templates on startup
-	nm.loadPredefinedTemplates()
-
-	return nm
-}
-
-// loadPredefinedTemplates loads all predefined templates into the manager
-func (nm *NotificationManagerImpl) loadPredefinedTemplates() {
-	nm.templateMutex.Lock()
-	defer nm.templateMutex.Unlock()
-
-	predefinedTemplates := models.PredefinedTemplates()
-
-	for _, template := range predefinedTemplates {
-		nm.templates[template.ID] = template
-		log.Printf("Loaded predefined template: %s (ID: %s)", template.Name, template.ID)
-	}
-
-	nm.initialized = true
-	log.Printf("Loaded %d predefined templates", len(predefinedTemplates))
-}
-
-// GetPredefinedTemplates returns all predefined templates
-func (nm *NotificationManagerImpl) GetPredefinedTemplates() []*models.Template {
-	nm.templateMutex.RLock()
-	defer nm.templateMutex.RUnlock()
-
-	var predefinedTemplates []*models.Template
-	for _, template := range nm.templates {
-		// Check if it's a predefined template by looking at the fixed IDs
-		if isPredefinedTemplateID(template.ID) {
-			predefinedTemplates = append(predefinedTemplates, template)
-		}
-	}
-
-	return predefinedTemplates
-}
-
-// isPredefinedTemplateID checks if a template ID is one of the predefined ones
-func isPredefinedTemplateID(templateID string) bool {
-	predefinedIDs := []string{
-		"550e8400-e29b-41d4-a716-446655440000", // Welcome Email
-		"550e8400-e29b-41d4-a716-446655440001", // Password Reset
-		"550e8400-e29b-41d4-a716-446655440002", // Order Confirmation
-		"550e8400-e29b-41d4-a716-446655440003", // System Alert
-		"550e8400-e29b-41d4-a716-446655440004", // Deployment Notification
-		"550e8400-e29b-41d4-a716-446655440005", // Order Status Update
-		"550e8400-e29b-41d4-a716-446655440006", // Payment Reminder
-	}
-
-	for _, id := range predefinedIDs {
-		if templateID == id {
-			return true
-		}
-	}
-	return false
 }
 
 // SendNotification sends a notification through the appropriate channel
@@ -122,19 +59,8 @@ func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notific
 
 	// Process template if provided
 	if notif.Template != nil {
-		// Get template version
-		template, err := nm.GetTemplateVersion(ctx, notif.Template.ID, 1) // Default to version 1 for now
-		if err != nil {
-			return nil, err
-		}
-
-		// Validate required variables
-		templateVersion, ok := template.(*models.TemplateVersion)
-		if !ok {
-			return nil, ErrTemplateNotFound
-		}
-
-		if err := templateVersion.ValidateRequiredVariables(notif.Template.Data); err != nil {
+		// Validate template data
+		if err := nm.templateManager.ValidateTemplateData(notif.Template.ID, notif.Template.Data); err != nil {
 			return nil, err
 		}
 
@@ -263,59 +189,15 @@ func (nm *NotificationManagerImpl) CreateTemplate(ctx context.Context, template 
 		return nil, ErrTemplateNotFound
 	}
 
-	nm.templateMutex.Lock()
-	defer nm.templateMutex.Unlock()
-
-	// Generate ID if not provided
-	if tmpl.ID == "" {
-		tmpl.ID = uuid.New().String()
-	}
-
-	// Set version and status
-	tmpl.Version = 1
-	tmpl.Status = "created"
-	tmpl.CreatedAt = time.Now()
-
-	// Store template
-	nm.templates[tmpl.ID] = tmpl
-
-	// Return response
-	return &models.TemplateResponse{
-		ID:        tmpl.ID,
-		Name:      tmpl.Name,
-		Type:      string(tmpl.Type),
-		Version:   tmpl.Version,
-		Status:    tmpl.Status,
-		CreatedAt: tmpl.CreatedAt,
-	}, nil
+	return nm.templateManager.CreateTemplate(ctx, tmpl)
 }
 
 // GetTemplateVersion retrieves a specific version of a notification template
 func (nm *NotificationManagerImpl) GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error) {
-	nm.templateMutex.RLock()
-	defer nm.templateMutex.RUnlock()
+	return nm.templateManager.GetTemplateVersion(ctx, templateID, version)
+}
 
-	template, exists := nm.templates[templateID]
-	if !exists {
-		return nil, ErrTemplateNotFound
-	}
-
-	// For now, we only support version 1
-	// In a real implementation, you would store multiple versions
-	if version != 1 {
-		return nil, ErrTemplateNotFound
-	}
-
-	// Return template version
-	return &models.TemplateVersion{
-		ID:                template.ID,
-		Name:              template.Name,
-		Type:              template.Type,
-		Version:           template.Version,
-		Content:           template.Content,
-		RequiredVariables: template.RequiredVariables,
-		Description:       template.Description,
-		Status:            template.Status,
-		CreatedAt:         template.CreatedAt,
-	}, nil
+// GetPredefinedTemplates returns all predefined templates
+func (nm *NotificationManagerImpl) GetPredefinedTemplates() []*models.Template {
+	return nm.templateManager.GetPredefinedTemplates()
 }
