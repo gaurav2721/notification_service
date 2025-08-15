@@ -3,7 +3,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gaurav2721/notification-service/external_services/consumers"
 	"github.com/gaurav2721/notification-service/external_services/kafka"
@@ -38,45 +37,27 @@ func (c *ServiceContainer) initializeServices() {
 	c.inAppService = factory.NewInAppService()
 	c.userService = factory.NewUserService()
 
-	// Initialize Kafka service
-	kafkaService, err := kafka.NewKafkaService()
+	// Initialize Kafka service using factory
+	kafkaService, err := factory.NewKafkaService()
 	if err != nil {
 		panic("Failed to initialize Kafka service: " + err.Error())
 	}
 	c.kafkaService = kafkaService
 
-	// Initialize consumer manager
-	consumerConfig := consumers.ConsumerConfig{
-		KafkaService: c.kafkaService,
-	}
-	c.consumerManager = consumers.NewConsumerManager(consumerConfig)
+	// Initialize consumer manager using factory
+	c.consumerManager = factory.NewConsumerManager(c.kafkaService)
 
-	// Initialize notification service with dependencies
-	c.notificationService = factory.NewNotificationManager(
-		c.emailService,
-		c.slackService,
-		c.inAppService,
-		c.kafkaService,
-	)
-}
-
-// StartConsumerManager starts the consumer manager and all worker pools
-func (c *ServiceContainer) StartConsumerManager(ctx context.Context) error {
-	if c.consumerManager == nil {
-		return fmt.Errorf("consumer manager not initialized")
-	}
-
-	// Initialize the consumer manager
+	// Start the consumer manager immediately
+	ctx := context.Background()
 	if err := c.consumerManager.Initialize(ctx); err != nil {
-		return fmt.Errorf("failed to initialize consumer manager: %w", err)
+		panic("Failed to initialize consumer manager: " + err.Error())
 	}
-
-	// Start the consumer manager
 	if err := c.consumerManager.Start(ctx); err != nil {
-		return fmt.Errorf("failed to start consumer manager: %w", err)
+		panic("Failed to start consumer manager: " + err.Error())
 	}
 
-	return nil
+	// Initialize notification service with only Kafka service since it only pushes to channels
+	c.notificationService = factory.NewNotificationManagerWithKafkaOnly(c.kafkaService)
 }
 
 // GetEmailService returns the email service

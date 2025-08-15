@@ -54,16 +54,23 @@ type ServiceContainer struct {
 
 - Added `consumerManager` field to `ServiceContainer`
 - Initialized consumer manager with Kafka service configuration
-- Added `StartConsumerManager()` method to start all worker pools
+- **Consumer manager is now started automatically during initialization**
 - Added `GetConsumerManager()` method to access the consumer manager
+- Removed `StartConsumerManager()` method since it's no longer needed
 
 **Key Changes**:
 ```go
-// Initialize consumer manager
-consumerConfig := consumers.ConsumerConfig{
-    KafkaService: c.kafkaService,
+// Initialize consumer manager using factory
+c.consumerManager = factory.NewConsumerManager(c.kafkaService)
+
+// Start the consumer manager immediately
+ctx := context.Background()
+if err := c.consumerManager.Initialize(ctx); err != nil {
+    panic("Failed to initialize consumer manager: " + err.Error())
 }
-c.consumerManager = consumers.NewConsumerManager(consumerConfig)
+if err := c.consumerManager.Start(ctx); err != nil {
+    panic("Failed to start consumer manager: " + err.Error())
+}
 ```
 
 ### 3. Notification Manager Updates
@@ -72,6 +79,7 @@ c.consumerManager = consumers.NewConsumerManager(consumerConfig)
 
 - Added `kafkaService` field to `NotificationManagerImpl`
 - Updated constructor to accept Kafka service parameter
+- **Modified to only receive Kafka service since it only pushes to channels**
 - Modified `SendNotification()` method to send notifications to Kafka channels
 
 **Key Changes**:
@@ -99,12 +107,29 @@ case "email":
 **File**: `services/service_factory.go`
 
 - Added Kafka service import and type alias
+- Added ConsumerManager import and type alias
 - Updated `NewNotificationManager()` method to accept Kafka service parameter
 - Added `NewKafkaService()` method for creating Kafka service instances
+- Added `NewConsumerManager()` method for creating consumer manager instances
+- Added `NewConsumerManagerWithConfig()` method for custom configuration
+- Added `NewConsumerManagerFromEnv()` method for environment-based configuration
+- Added multiple notification manager factory methods for different dependency combinations
 
 **Key Changes**:
 ```go
 type KafkaService = kafka.KafkaService
+type ConsumerManager = consumers.ConsumerManager
+
+func (f *ServiceFactory) NewKafkaService() (KafkaService, error) {
+    return kafka.NewKafkaService()
+}
+
+func (f *ServiceFactory) NewConsumerManager(kafkaService KafkaService) ConsumerManager {
+    config := consumers.ConsumerConfig{
+        KafkaService: kafkaService,
+    }
+    return consumers.NewConsumerManager(config)
+}
 
 func (f *ServiceFactory) NewNotificationManager(
     emailService EmailService,
@@ -116,6 +141,17 @@ func (f *ServiceFactory) NewNotificationManager(
         emailService, slackService, inAppService, nil, kafkaService, nil)
 }
 ```
+
+**Factory Methods Available**:
+- `NewKafkaService()` - Creates a new Kafka service instance
+- `NewConsumerManager(kafkaService)` - Creates a consumer manager with default config
+- `NewConsumerManagerWithConfig(config)` - Creates a consumer manager with custom config
+- `NewConsumerManagerFromEnv(kafkaService)` - Creates a consumer manager from environment variables
+- `NewNotificationManager(...)` - Creates notification manager with basic dependencies
+- `NewNotificationManagerWithKafkaOnly(kafkaService)` - Creates notification manager with only Kafka service (for channel pushing)
+- `NewNotificationManagerWithUserService(...)` - Creates notification manager with user service
+- `NewNotificationManagerWithScheduler(...)` - Creates notification manager with scheduler
+- `NewNotificationManagerComplete(...)` - Creates notification manager with all dependencies
 
 ### 5. Consumer Processor Implementation
 
@@ -148,34 +184,33 @@ func (ep *emailProcessor) ProcessNotification(ctx context.Context, message Notif
 The example demonstrates how to:
 
 1. Create a service container
-2. Start the consumer manager
-3. Send notifications of different types
-4. Monitor consumer status
+2. Create services using factory methods
+3. Start the consumer manager
+4. Send notifications of different types
+5. Monitor consumer status
 
 ```go
 func RunKafkaIntegrationExample() {
-    // Create service container
+    // Create service factory
+    factory := services.NewServiceFactory()
+    
+    // Create service container (consumer manager starts automatically)
     container := services.NewServiceContainer()
 
-    // Start the consumer manager
-    ctx := context.Background()
-    if err := container.StartConsumerManager(ctx); err != nil {
-        log.Fatalf("Failed to start consumer manager: %v", err)
+    // Alternative: Create services manually using factory
+    kafkaService, err := factory.NewKafkaService()
+    if err != nil {
+        log.Fatalf("Failed to create Kafka service: %v", err)
     }
+    
+    consumerManager := factory.NewConsumerManager(kafkaService)
+    notificationService := factory.NewNotificationManagerWithKafkaOnly(kafkaService)
+
+    // Consumer manager is already started in the container
+    ctx := context.Background()
     defer container.Shutdown(ctx)
 
-    // Get the notification service
-    notificationService := container.GetNotificationService()
-
     // Send notifications
-    emailNotification := &struct {
-        ID:   "email-001",
-        Type: "email",
-        // ... other fields
-    }{
-        // ... notification data
-    }
-
     response, err := notificationService.SendNotification(ctx, emailNotification)
     // ... handle response
 }
@@ -211,6 +246,7 @@ The Kafka service and consumer manager can be configured through environment var
 3. **Reliability**: Kafka channels provide buffering and fault tolerance
 4. **Flexibility**: Easy to add new notification types and processors
 5. **Monitoring**: Consumer status can be monitored and managed
+6. **Factory Pattern**: Centralized service creation with multiple configuration options
 
 ## Future Enhancements
 
@@ -234,4 +270,4 @@ go build .
 go run examples/kafka_integration_example.go
 ```
 
-The example will demonstrate the complete flow from sending notifications to processing them through Kafka channels and consumer workers. 
+The example will demonstrate the complete flow from sending notifications to processing them through Kafka channels and consumer workers.

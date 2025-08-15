@@ -10,24 +10,41 @@ import (
 )
 
 func RunKafkaIntegrationExample() {
-	// Create service container
+	// Create service factory
+	factory := services.NewServiceFactory()
+
+	// Create service container (consumer manager is started automatically)
 	container := services.NewServiceContainer()
 
-	// Start the consumer manager
-	ctx := context.Background()
-	if err := container.StartConsumerManager(ctx); err != nil {
-		log.Fatalf("Failed to start consumer manager: %v", err)
-	}
-	defer container.Shutdown(ctx)
+	// Alternative: Create services manually using factory
+	fmt.Println("🔧 Creating services using factory...")
 
-	fmt.Println("✅ Consumer manager started successfully")
+	// Create Kafka service using factory
+	kafkaService, err := factory.NewKafkaService()
+	if err != nil {
+		log.Fatalf("Failed to create Kafka service: %v", err)
+	}
+
+	// Create consumer manager using factory
+	consumerManager := factory.NewConsumerManager(kafkaService)
+
+	// Create notification manager using factory (with only Kafka service)
+	notificationService := factory.NewNotificationManagerWithKafkaOnly(kafkaService)
+
+	// Consumer manager is already started in the container
+	fmt.Println("✅ Consumer manager started automatically")
 	fmt.Println("✅ Kafka service initialized")
 	fmt.Println("✅ All worker pools are running")
+	fmt.Println("✅ Factory-created services ready")
 
-	// Get the notification service
-	notificationService := container.GetNotificationService()
+	// Create context for operations
+	ctx := context.Background()
+	defer container.Shutdown(ctx)
 
-	// Example: Send an email notification
+	// Get the notification service from container (or use factory-created one)
+	containerNotificationService := container.GetNotificationService()
+
+	// Example: Send an email notification using container service
 	emailNotification := &struct {
 		ID          string
 		Type        string
@@ -49,15 +66,15 @@ func RunKafkaIntegrationExample() {
 		},
 	}
 
-	// Send the notification
-	response, err := notificationService.SendNotification(ctx, emailNotification)
+	// Send the notification using container service
+	response, err := containerNotificationService.SendNotification(ctx, emailNotification)
 	if err != nil {
 		log.Printf("Failed to send email notification: %v", err)
 	} else {
-		fmt.Printf("📧 Email notification sent: %+v\n", response)
+		fmt.Printf("📧 Email notification sent (container): %+v\n", response)
 	}
 
-	// Example: Send a Slack notification
+	// Example: Send a Slack notification using factory-created service
 	slackNotification := &struct {
 		ID          string
 		Type        string
@@ -79,12 +96,12 @@ func RunKafkaIntegrationExample() {
 		},
 	}
 
-	// Send the notification
+	// Send the notification using factory-created service
 	response, err = notificationService.SendNotification(ctx, slackNotification)
 	if err != nil {
 		log.Printf("Failed to send Slack notification: %v", err)
 	} else {
-		fmt.Printf("💬 Slack notification sent: %+v\n", response)
+		fmt.Printf("💬 Slack notification sent (factory): %+v\n", response)
 	}
 
 	// Example: Send an iOS push notification
@@ -154,13 +171,18 @@ func RunKafkaIntegrationExample() {
 	fmt.Println("\n⏳ Waiting for consumers to process notifications...")
 	time.Sleep(5 * time.Second)
 
-	// Get consumer status
-	consumerManager := container.GetConsumerManager()
-	status := consumerManager.GetStatus()
-	fmt.Println("\n📊 Consumer Status:")
+	// Get consumer status from container
+	containerConsumerManager := container.GetConsumerManager()
+	status := containerConsumerManager.GetStatus()
+	fmt.Println("\n📊 Consumer Status (Container):")
 	for notificationType, isRunning := range status {
 		fmt.Printf("  %s: %t\n", notificationType, isRunning)
 	}
+
+	// Demonstrate factory-created consumer manager
+	fmt.Println("\n🔧 Factory-created Consumer Manager:")
+	fmt.Printf("  Email Workers: %d\n", consumerManager.GetWorkerPool(services.EmailNotification).GetWorkerCount())
+	fmt.Printf("  Slack Workers: %d\n", consumerManager.GetWorkerPool(services.SlackNotification).GetWorkerCount())
 
 	fmt.Println("\n✅ Example completed successfully!")
 }
