@@ -49,7 +49,6 @@ func (es *EmailServiceImpl) SendEmail(ctx context.Context, notification interfac
 	notif, ok := notification.(*struct {
 		ID         string
 		Type       string
-		Priority   string
 		Title      string
 		Message    string
 		Recipients []string

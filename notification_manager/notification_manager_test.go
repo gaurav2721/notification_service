@@ -69,7 +69,6 @@ func TestNotificationManager_SendNotification(t *testing.T) {
 			notification: &struct {
 				ID          string
 				Type        string
-				Priority    string
 				Title       string
 				Message     string
 				Recipients  []string
@@ -78,7 +77,6 @@ func TestNotificationManager_SendNotification(t *testing.T) {
 			}{
 				ID:         "test-1",
 				Type:       "email",
-				Priority:   "normal",
 				Title:      "Test Email",
 				Message:    "This is a test email",
 				Recipients: []string{"test@example.com"},
@@ -90,7 +88,6 @@ func TestNotificationManager_SendNotification(t *testing.T) {
 			notification: &struct {
 				ID          string
 				Type        string
-				Priority    string
 				Title       string
 				Message     string
 				Recipients  []string
@@ -99,7 +96,6 @@ func TestNotificationManager_SendNotification(t *testing.T) {
 			}{
 				ID:         "test-2",
 				Type:       "slack",
-				Priority:   "normal",
 				Title:      "Test Slack",
 				Message:    "This is a test slack message",
 				Recipients: []string{"#general"},
@@ -111,7 +107,6 @@ func TestNotificationManager_SendNotification(t *testing.T) {
 			notification: &struct {
 				ID          string
 				Type        string
-				Priority    string
 				Title       string
 				Message     string
 				Recipients  []string
@@ -120,7 +115,6 @@ func TestNotificationManager_SendNotification(t *testing.T) {
 			}{
 				ID:         "test-3",
 				Type:       "in_app",
-				Priority:   "normal",
 				Title:      "Test In-App",
 				Message:    "This is a test in-app notification",
 				Recipients: []string{"user-1"},

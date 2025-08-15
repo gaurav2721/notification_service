@@ -134,7 +134,6 @@ func ExampleUsage() {
 		"System maintenance will begin in 30 minutes.",
 		[]string{},
 	)
-	urgentNotification.Priority = models.UrgentPriority
 
 	err = notificationService.SendNotificationToUsers(ctx, []string{"user-001", "user-005"}, urgentNotification)
 	if err != nil {

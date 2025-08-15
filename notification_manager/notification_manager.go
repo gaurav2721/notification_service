@@ -52,7 +52,6 @@ func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notific
 	notif, ok := notification.(*struct {
 		ID          string
 		Type        string
-		Priority    string
 		Title       string
 		Message     string
 		Recipients  []string
@@ -89,7 +88,6 @@ func (nm *NotificationManagerImpl) ScheduleNotification(ctx context.Context, not
 	notif, ok := notification.(*struct {
 		ID          string
 		Type        string
-		Priority    string
 		Title       string
 		Message     string
 		Recipients  []string

@@ -33,7 +33,6 @@ func (ias *InAppServiceImpl) SendInAppNotification(ctx context.Context, notifica
 	notif, ok := notification.(*struct {
 		ID          string
 		Type        string
-		Priority    string
 		Title       string
 		Message     string
 		Recipients  []string
@@ -92,7 +91,6 @@ func (ias *InAppServiceImpl) MarkNotificationAsRead(userID, notificationID strin
 			if notif, ok := notification.(*struct {
 				ID          string
 				Type        string
-				Priority    string
 				Title       string
 				Message     string
 				Recipients  []string

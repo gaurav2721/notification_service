@@ -41,7 +41,6 @@ func NewNotificationHandler(notificationService interface {
 func (h *NotificationHandler) SendNotification(c *gin.Context) {
 	var request struct {
 		Type        string                 `json:"type" binding:"required"`
-		Priority    string                 `json:"priority"`
 		Title       string                 `json:"title" binding:"required"`
 		Message     string                 `json:"message" binding:"required"`
 		TemplateID  string                 `json:"template_id"`
@@ -59,7 +58,6 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 	notification := &struct {
 		ID          string
 		Type        string
-		Priority    string
 		Title       string
 		Message     string
 		Recipients  []string
@@ -68,7 +66,6 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 	}{
 		ID:          generateID(),
 		Type:        request.Type,
-		Priority:    request.Priority,
 		Title:       request.Title,
 		Message:     request.Message,
 		Recipients:  request.Recipients,

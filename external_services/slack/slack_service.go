@@ -44,7 +44,6 @@ func (ss *SlackServiceImpl) SendSlackMessage(ctx context.Context, notification i
 	notif, ok := notification.(*struct {
 		ID         string
 		Type       string
-		Priority   string
 		Title      string
 		Message    string
 		Recipients []string

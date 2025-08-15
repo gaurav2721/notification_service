@@ -15,21 +15,10 @@ const (
 	InAppNotification NotificationType = "in_app"
 )
 
-// NotificationPriority represents the priority level
-type NotificationPriority string
-
-const (
-	LowPriority    NotificationPriority = "low"
-	NormalPriority NotificationPriority = "normal"
-	HighPriority   NotificationPriority = "high"
-	UrgentPriority NotificationPriority = "urgent"
-)
-
 // Notification represents a notification request
 type Notification struct {
 	ID          string                 `json:"id"`
 	Type        NotificationType       `json:"type"`
-	Priority    NotificationPriority   `json:"priority"`
 	Title       string                 `json:"title"`
 	Message     string                 `json:"message"`
 	TemplateID  string                 `json:"template_id,omitempty"`
@@ -66,7 +55,6 @@ func NewNotification(notificationType NotificationType, title, message string, r
 	return &Notification{
 		ID:         uuid.New().String(),
 		Type:       notificationType,
-		Priority:   NormalPriority,
 		Title:      title,
 		Message:    message,
 		Recipients: recipients,
