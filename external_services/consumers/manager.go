@@ -189,7 +189,7 @@ func (cm *consumerManager) UpdateWorkerCount(notificationType NotificationType, 
 
 // createEmailWorkerPool creates the email worker pool
 func (cm *consumerManager) createEmailWorkerPool() {
-	processor := NewEmailProcessor() // This would be implemented separately
+	processor := NewEmailProcessor()
 	pool := NewWorkerPool(
 		EmailNotification,
 		cm.config.KafkaService.GetEmailChannel(),
@@ -201,7 +201,7 @@ func (cm *consumerManager) createEmailWorkerPool() {
 
 // createSlackWorkerPool creates the slack worker pool
 func (cm *consumerManager) createSlackWorkerPool() {
-	processor := NewSlackProcessor() // This would be implemented separately
+	processor := NewSlackProcessor()
 	pool := NewWorkerPool(
 		SlackNotification,
 		cm.config.KafkaService.GetSlackChannel(),
@@ -213,7 +213,7 @@ func (cm *consumerManager) createSlackWorkerPool() {
 
 // createIOSPushWorkerPool creates the iOS push notification worker pool
 func (cm *consumerManager) createIOSPushWorkerPool() {
-	processor := NewIOSPushProcessor() // This would be implemented separately
+	processor := NewIOSPushProcessor()
 	pool := NewWorkerPool(
 		IOSPushNotification,
 		cm.config.KafkaService.GetIOSPushNotificationChannel(),
@@ -225,7 +225,7 @@ func (cm *consumerManager) createIOSPushWorkerPool() {
 
 // createAndroidPushWorkerPool creates the Android push notification worker pool
 func (cm *consumerManager) createAndroidPushWorkerPool() {
-	processor := NewAndroidPushProcessor() // This would be implemented separately
+	processor := NewAndroidPushProcessor()
 	pool := NewWorkerPool(
 		AndroidPushNotification,
 		cm.config.KafkaService.GetAndroidPushNotificationChannel(),
@@ -235,7 +235,7 @@ func (cm *consumerManager) createAndroidPushWorkerPool() {
 	cm.workerPools[AndroidPushNotification] = pool
 }
 
-// Processor factory functions
+// Processor factory functions - these reference the implementations in the processors package
 // NewEmailProcessor creates a new email processor
 func NewEmailProcessor() NotificationProcessor {
 	return &emailProcessor{}
@@ -256,11 +256,18 @@ func NewAndroidPushProcessor() NotificationProcessor {
 	return &androidPushProcessor{}
 }
 
-// Processor implementations
+// Processor implementations - these are the actual implementations with debug logs
 type emailProcessor struct{}
 
 func (ep *emailProcessor) ProcessNotification(ctx context.Context, message NotificationMessage) error {
+	logrus.WithFields(logrus.Fields{
+		"notification_id": message.ID,
+		"type":            message.Type,
+		"payload":         message.Payload,
+	}).Info("-----------------> gaurav singh Processing email notification")
+
 	// TODO: Implement actual email sending logic
+	// This would integrate with your email service
 	return nil
 }
 
@@ -271,7 +278,14 @@ func (ep *emailProcessor) GetNotificationType() NotificationType {
 type slackProcessor struct{}
 
 func (sp *slackProcessor) ProcessNotification(ctx context.Context, message NotificationMessage) error {
+	logrus.WithFields(logrus.Fields{
+		"notification_id": message.ID,
+		"type":            message.Type,
+		"payload":         message.Payload,
+	}).Info("Processing slack notification")
+
 	// TODO: Implement actual slack message sending logic
+	// This would integrate with your slack service
 	return nil
 }
 
@@ -282,7 +296,14 @@ func (sp *slackProcessor) GetNotificationType() NotificationType {
 type iosPushProcessor struct{}
 
 func (ip *iosPushProcessor) ProcessNotification(ctx context.Context, message NotificationMessage) error {
+	logrus.WithFields(logrus.Fields{
+		"notification_id": message.ID,
+		"type":            message.Type,
+		"payload":         message.Payload,
+	}).Info("Processing iOS push notification")
+
 	// TODO: Implement actual iOS push notification logic
+	// This would integrate with your iOS push service
 	return nil
 }
 
@@ -293,7 +314,14 @@ func (ip *iosPushProcessor) GetNotificationType() NotificationType {
 type androidPushProcessor struct{}
 
 func (ap *androidPushProcessor) ProcessNotification(ctx context.Context, message NotificationMessage) error {
+	logrus.WithFields(logrus.Fields{
+		"notification_id": message.ID,
+		"type":            message.Type,
+		"payload":         message.Payload,
+	}).Info("Processing Android push notification")
+
 	// TODO: Implement actual Android push notification logic
+	// This would integrate with your Android push service
 	return nil
 }
 

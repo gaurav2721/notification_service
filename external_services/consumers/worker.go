@@ -3,11 +3,11 @@ package consumers
 import (
 	"context"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 // worker represents a single worker that processes notifications
@@ -47,7 +47,10 @@ func (w *worker) Start(ctx context.Context) error {
 
 	go w.processLoop()
 
-	log.Printf("Worker %s started for %s notifications", w.id, w.processor.GetNotificationType())
+	logrus.WithFields(logrus.Fields{
+		"worker_id": w.id,
+		"type":      w.processor.GetNotificationType(),
+	}).Info("Worker started")
 	return nil
 }
 
@@ -68,7 +71,7 @@ func (w *worker) Stop() error {
 	// Wait for the worker to finish processing
 	w.wg.Wait()
 
-	log.Printf("Worker %s stopped", w.id)
+	logrus.WithField("worker_id", w.id).Info("Worker stopped")
 	return nil
 }
 
@@ -88,23 +91,34 @@ func (w *worker) GetWorkerID() string {
 func (w *worker) processLoop() {
 	defer w.wg.Done()
 
+	logrus.WithFields(logrus.Fields{
+		"worker_id": w.id,
+		"type":      w.processor.GetNotificationType(),
+	}).Debug("Worker processing loop started")
+
 	for {
 		select {
 		case <-w.ctx.Done():
-			log.Printf("Worker %s received shutdown signal", w.id)
+			logrus.WithField("worker_id", w.id).Debug("Worker received shutdown signal")
 			return
 
 		case message, ok := <-w.channel:
 			if !ok {
-				log.Printf("Worker %s: channel closed", w.id)
+				logrus.WithField("worker_id", w.id).Debug("Worker: channel closed")
 				return
 			}
 
-			fmt.Println("---------> gaurav message", message)
+			logrus.WithFields(logrus.Fields{
+				"worker_id": w.id,
+				"message":   message,
+			}).Debug("Worker received message from channel")
 
 			// Process the notification
 			if err := w.processMessage(message); err != nil {
-				log.Printf("Worker %s: error processing message: %v", w.id, err)
+				logrus.WithFields(logrus.Fields{
+					"worker_id": w.id,
+					"error":     err.Error(),
+				}).Error("Worker error processing message")
 				// Continue processing other messages even if one fails
 			}
 		}
@@ -114,6 +128,11 @@ func (w *worker) processLoop() {
 // processMessage processes a single notification message
 func (w *worker) processMessage(message string) error {
 	start := time.Now()
+
+	logrus.WithFields(logrus.Fields{
+		"worker_id": w.id,
+		"message":   message,
+	}).Debug("Worker starting to process message")
 
 	// Parse the message into NotificationMessage
 	// This is a simplified version - in a real implementation,
@@ -125,13 +144,33 @@ func (w *worker) processMessage(message string) error {
 		Timestamp: time.Now().Unix(),
 	}
 
-	fmt.Println("---------> gaurav notificationMsg", notificationMsg)
+	logrus.WithFields(logrus.Fields{
+		"worker_id":       w.id,
+		"notification_id": notificationMsg.ID,
+		"type":            notificationMsg.Type,
+		"payload":         notificationMsg.Payload,
+	}).Debug("Worker created notification message")
 
 	// Process the notification using the processor
+	logrus.WithFields(logrus.Fields{
+		"worker_id":       w.id,
+		"notification_id": notificationMsg.ID,
+		"type":            notificationMsg.Type,
+	}).Debug("Worker calling ProcessNotification")
+
 	if err := w.processor.ProcessNotification(w.ctx, notificationMsg); err != nil {
+		logrus.WithFields(logrus.Fields{
+			"worker_id":       w.id,
+			"notification_id": notificationMsg.ID,
+			"error":           err.Error(),
+		}).Error("Worker ProcessNotification failed")
 		return fmt.Errorf("failed to process notification: %w", err)
 	}
 
-	log.Printf("Worker %s processed notification in %v", w.id, time.Since(start))
+	logrus.WithFields(logrus.Fields{
+		"worker_id":       w.id,
+		"notification_id": notificationMsg.ID,
+		"duration":        time.Since(start),
+	}).Info("Worker processed notification successfully")
 	return nil
 }
