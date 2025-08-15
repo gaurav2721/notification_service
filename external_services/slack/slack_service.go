@@ -50,7 +50,6 @@ func (ss *SlackServiceImpl) SendSlackMessage(ctx context.Context, notification i
 			Data map[string]interface{}
 		}
 		Recipients []string
-		Metadata   map[string]interface{}
 	})
 	if !ok {
 		return nil, ErrSlackSendFailed

@@ -31,15 +31,14 @@ type Content struct {
 
 // Notification represents a notification request
 type Notification struct {
-	ID          string                 `json:"id"`
-	Type        NotificationType       `json:"type"`
-	Content     Content                `json:"content"`
-	Template    *TemplateData          `json:"template,omitempty"`
-	Recipients  []string               `json:"recipients"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
-	ScheduledAt *time.Time             `json:"scheduled_at,omitempty"`
-	CreatedAt   time.Time              `json:"created_at"`
-	Status      string                 `json:"status"`
+	ID          string           `json:"id"`
+	Type        NotificationType `json:"type"`
+	Content     Content          `json:"content"`
+	Template    *TemplateData    `json:"template,omitempty"`
+	Recipients  []string         `json:"recipients"`
+	ScheduledAt *time.Time       `json:"scheduled_at,omitempty"`
+	CreatedAt   time.Time        `json:"created_at"`
+	Status      string           `json:"status"`
 }
 
 // NotificationTemplate represents a reusable template
@@ -70,7 +69,6 @@ func NewNotification(notificationType NotificationType, content Content, recipie
 		Type:       notificationType,
 		Content:    content,
 		Recipients: recipients,
-		Metadata:   make(map[string]interface{}),
 		CreatedAt:  time.Now(),
 		Status:     "pending",
 	}
@@ -83,7 +81,6 @@ func NewNotificationWithTemplate(notificationType NotificationType, template *Te
 		Type:       notificationType,
 		Template:   template,
 		Recipients: recipients,
-		Metadata:   make(map[string]interface{}),
 		CreatedAt:  time.Now(),
 		Status:     "pending",
 	}

@@ -39,7 +39,6 @@ func (ias *InAppServiceImpl) SendInAppNotification(ctx context.Context, notifica
 			Data map[string]interface{}
 		}
 		Recipients  []string
-		Metadata    map[string]interface{}
 		ScheduledAt *time.Time
 	})
 	if !ok {
@@ -100,7 +99,6 @@ func (ias *InAppServiceImpl) MarkNotificationAsRead(userID, notificationID strin
 					Data map[string]interface{}
 				}
 				Recipients  []string
-				Metadata    map[string]interface{}
 				ScheduledAt *time.Time
 			}); ok && notif.ID == notificationID {
 				// Remove the notification from the user's list

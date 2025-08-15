@@ -55,7 +55,6 @@ func (es *EmailServiceImpl) SendEmail(ctx context.Context, notification interfac
 			Data map[string]interface{}
 		}
 		Recipients []string
-		Metadata   map[string]interface{}
 	})
 	if !ok {
 		return nil, ErrEmailSendFailed

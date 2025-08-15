@@ -44,8 +44,8 @@ func (c *ServiceContainer) initializeServices() {
 	}
 	c.kafkaService = kafkaService
 
-	// Initialize consumer manager using factory
-	c.consumerManager = factory.NewConsumerManager(c.kafkaService)
+	// Initialize consumer manager using factory with environment configuration
+	c.consumerManager = factory.NewConsumerManagerFromEnv(c.kafkaService)
 
 	// Start the consumer manager immediately
 	ctx := context.Background()
@@ -56,8 +56,8 @@ func (c *ServiceContainer) initializeServices() {
 		panic("Failed to start consumer manager: " + err.Error())
 	}
 
-	// Initialize notification service with only Kafka service since it only pushes to channels
-	c.notificationService = factory.NewNotificationManagerWithKafkaOnly(c.kafkaService)
+	// Initialize notification service with user service and Kafka service
+	c.notificationService = factory.NewNotificationManagerWithUserService(c.userService, c.kafkaService)
 }
 
 // GetEmailService returns the email service

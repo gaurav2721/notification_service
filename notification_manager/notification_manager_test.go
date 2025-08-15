@@ -75,7 +75,6 @@ func TestNotificationManager_SendNotification(t *testing.T) {
 					Data map[string]interface{}
 				}
 				Recipients  []string
-				Metadata    map[string]interface{}
 				ScheduledAt *time.Time
 			}{
 				ID:   "test-1",
@@ -99,7 +98,6 @@ func TestNotificationManager_SendNotification(t *testing.T) {
 					Data map[string]interface{}
 				}
 				Recipients  []string
-				Metadata    map[string]interface{}
 				ScheduledAt *time.Time
 			}{
 				ID:   "test-2",
@@ -122,7 +120,6 @@ func TestNotificationManager_SendNotification(t *testing.T) {
 					Data map[string]interface{}
 				}
 				Recipients  []string
-				Metadata    map[string]interface{}
 				ScheduledAt *time.Time
 			}{
 				ID:   "test-3",

@@ -139,11 +139,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
       "subject": "Welcome to Our Platform!",
       "email_body": "Hello,\n\nWelcome to our platform! We are excited to have you on board.\n\nBest regards,\nThe Team"
     },
-    "recipients": ["user-001", "user-002"],
-    "metadata": {
-      "campaign": "welcome_series",
-      "priority": "high"
-    }
+    "recipients": ["user-001", "user-002"]
   }'
 ```
 
@@ -168,11 +164,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
     "content": {
       "text": "🚨 *System Alert*\n\n*Service:* Notification Service\n*Status:* Running\n*Environment:* Development\n*Message:* All systems operational"
     },
-    "recipients": ["user-001", "user-002"],
-    "metadata": {
-      "alert_type": "system_status",
-      "severity": "info"
-    }
+    "recipients": ["user-001", "user-002"]
   }'
 ```
 
@@ -198,11 +190,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
       "title": "New Feature Available",
       "body": "We have just released a new feature! Check it out in your dashboard."
     },
-    "recipients": ["user-001", "user-002", "user-003"],
-    "metadata": {
-      "feature": "dashboard_analytics",
-      "action_required": false
-    }
+    "recipients": ["user-001", "user-002", "user-003"]
   }'
 ```
 
@@ -231,11 +219,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
       "email_body": "Hello,\n\nThis is a friendly reminder to complete your profile information.\n\nBest regards,\nThe Team"
     },
     "recipients": ["user-001"],
-    "scheduled_at": "2024-01-15T14:00:00Z",
-    "metadata": {
-      "campaign": "profile_completion",
-      "reminder_type": "first"
-    }
+    "scheduled_at": "2024-01-15T14:00:00Z"
   }'
 ```
 
@@ -261,11 +245,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
       "text": "📅 *Daily Standup Reminder*\n\nTime: 9:00 AM\nChannel: #daily-standup\nAgenda: Project updates and blockers"
     },
     "recipients": ["user-001", "user-002", "user-003"],
-    "scheduled_at": "2024-01-16T09:00:00Z",
-    "metadata": {
-      "meeting_type": "daily_standup",
-      "recurring": true
-    }
+    "scheduled_at": "2024-01-16T09:00:00Z"
   }'
 ```
 
@@ -292,11 +272,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
       "body": "Your weekly performance report is now available. Click here to view it."
     },
     "recipients": ["user-001"],
-    "scheduled_at": "2024-01-20T08:00:00Z",
-    "metadata": {
-      "report_type": "weekly_performance",
-      "action_url": "/reports/weekly"
-    }
+    "scheduled_at": "2024-01-20T08:00:00Z"
   }'
 ```
 
@@ -721,11 +697,7 @@ curl -X GET http://localhost:8080/api/v1/notifications/1705312345678901234
   "message": "Email notification sent successfully",
   "sent_at": "2024-01-15T12:00:00Z",
   "channel": "email",
-  "recipients": ["user-001", "user-002"],
-  "metadata": {
-    "campaign": "welcome_series",
-    "priority": "high"
-  }
+  "recipients": ["user-001", "user-002"]
 }
 ```
 

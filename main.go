@@ -23,8 +23,9 @@ func main() {
 	// Initialize service container (manages all service dependencies)
 	serviceContainer := services.NewServiceContainer()
 
-	// Initialize handlers with interface dependencies from the container
-	notificationHandler := handlers.NewNotificationHandler(serviceContainer.GetNotificationService())
+	// Initialize handlers with required dependencies
+	notificationHandler := handlers.NewNotificationHandler(serviceContainer.GetNotificationService(), serviceContainer.GetUserService(), serviceContainer.GetKafkaService())
+
 	userHandler := handlers.NewUserHandler(serviceContainer.GetUserService())
 
 	// Setup Gin router

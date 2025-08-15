@@ -51,7 +51,6 @@ func RunKafkaIntegrationExample() {
 		Content     map[string]interface{}
 		Template    interface{}
 		Recipients  []string
-		Metadata    map[string]interface{}
 		ScheduledAt *time.Time
 	}{
 		ID:   "email-001",
@@ -61,9 +60,6 @@ func RunKafkaIntegrationExample() {
 			"body":    "Thank you for signing up.",
 		},
 		Recipients: []string{"user@example.com"},
-		Metadata: map[string]interface{}{
-			"priority": "high",
-		},
 	}
 
 	// Send the notification using container service
@@ -81,7 +77,6 @@ func RunKafkaIntegrationExample() {
 		Content     map[string]interface{}
 		Template    interface{}
 		Recipients  []string
-		Metadata    map[string]interface{}
 		ScheduledAt *time.Time
 	}{
 		ID:   "slack-001",
@@ -91,9 +86,6 @@ func RunKafkaIntegrationExample() {
 			"message": "Hello from the notification service!",
 		},
 		Recipients: []string{"#general"},
-		Metadata: map[string]interface{}{
-			"priority": "normal",
-		},
 	}
 
 	// Send the notification using factory-created service
@@ -111,7 +103,6 @@ func RunKafkaIntegrationExample() {
 		Content     map[string]interface{}
 		Template    interface{}
 		Recipients  []string
-		Metadata    map[string]interface{}
 		ScheduledAt *time.Time
 	}{
 		ID:   "ios-push-001",
@@ -123,9 +114,6 @@ func RunKafkaIntegrationExample() {
 			"sound": "default",
 		},
 		Recipients: []string{"device-token-123"},
-		Metadata: map[string]interface{}{
-			"priority": "high",
-		},
 	}
 
 	// Send the notification
@@ -143,7 +131,6 @@ func RunKafkaIntegrationExample() {
 		Content     map[string]interface{}
 		Template    interface{}
 		Recipients  []string
-		Metadata    map[string]interface{}
 		ScheduledAt *time.Time
 	}{
 		ID:   "android-push-001",
@@ -154,9 +141,6 @@ func RunKafkaIntegrationExample() {
 			"priority": "high",
 		},
 		Recipients: []string{"device-token-456"},
-		Metadata: map[string]interface{}{
-			"priority": "high",
-		},
 	}
 
 	// Send the notification

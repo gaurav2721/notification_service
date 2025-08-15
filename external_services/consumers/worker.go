@@ -100,6 +100,8 @@ func (w *worker) processLoop() {
 				return
 			}
 
+			fmt.Println("---------> gaurav message", message)
+
 			// Process the notification
 			if err := w.processMessage(message); err != nil {
 				log.Printf("Worker %s: error processing message: %v", w.id, err)

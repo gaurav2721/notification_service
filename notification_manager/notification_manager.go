@@ -11,9 +11,6 @@ import (
 
 // NotificationManagerImpl implements the NotificationManager interface
 type NotificationManagerImpl struct {
-	emailService    interface{}
-	slackService    interface{}
-	inappService    interface{}
 	userService     interface{}
 	kafkaService    interface{}
 	scheduler       interface{}
@@ -22,18 +19,12 @@ type NotificationManagerImpl struct {
 
 // NewNotificationManager creates a new notification manager instance
 func NewNotificationManager(
-	emailService interface{},
-	slackService interface{},
-	inappService interface{},
 	userService interface{},
 	kafkaService interface{},
 	scheduler interface{},
 	templateManager templates.TemplateManager,
 ) *NotificationManagerImpl {
 	return &NotificationManagerImpl{
-		emailService:    emailService,
-		slackService:    slackService,
-		inappService:    inappService,
 		userService:     userService,
 		kafkaService:    kafkaService,
 		scheduler:       scheduler,
@@ -43,17 +34,11 @@ func NewNotificationManager(
 
 // NewNotificationManagerWithDefaultTemplate creates a new notification manager with default template manager
 func NewNotificationManagerWithDefaultTemplate(
-	emailService interface{},
-	slackService interface{},
-	inappService interface{},
 	userService interface{},
 	kafkaService interface{},
 	scheduler interface{},
 ) *NotificationManagerImpl {
 	return NewNotificationManager(
-		emailService,
-		slackService,
-		inappService,
 		userService,
 		kafkaService,
 		scheduler,
@@ -70,7 +55,6 @@ func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notific
 		Content     map[string]interface{}
 		Template    *models.TemplateData
 		Recipients  []string
-		Metadata    map[string]interface{}
 		ScheduledAt *time.Time
 	})
 	if !ok {
@@ -235,7 +219,6 @@ func (nm *NotificationManagerImpl) SendNotificationToUsers(ctx context.Context, 
 		Content     map[string]interface{}
 		Template    *models.TemplateData
 		Recipients  []string
-		Metadata    map[string]interface{}
 		ScheduledAt *time.Time
 	})
 	if !ok {
@@ -258,7 +241,6 @@ func (nm *NotificationManagerImpl) ScheduleNotification(ctx context.Context, not
 		Content     map[string]interface{}
 		Template    *models.TemplateData
 		Recipients  []string
-		Metadata    map[string]interface{}
 		ScheduledAt *time.Time
 	})
 	if !ok {

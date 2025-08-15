@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -20,19 +22,43 @@ type NotificationHandler struct {
 		GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error)
 		GetPredefinedTemplates() []*models.Template
 	}
+	userService interface {
+		GetUsersByIDs(ctx context.Context, userIDs []string) ([]*models.User, error)
+		GetUserNotificationInfo(ctx context.Context, userID string) (*models.UserNotificationInfo, error)
+	}
+	kafkaService interface {
+		GetEmailChannel() chan string
+		GetSlackChannel() chan string
+		GetIOSPushNotificationChannel() chan string
+		GetAndroidPushNotificationChannel() chan string
+	}
 }
 
 // NewNotificationHandler creates a new notification handler
-func NewNotificationHandler(notificationService interface {
-	SendNotification(ctx context.Context, notification interface{}) (interface{}, error)
-	ScheduleNotification(ctx context.Context, notification interface{}) (interface{}, error)
-	GetNotificationStatus(ctx context.Context, notificationID string) (interface{}, error)
-	CreateTemplate(ctx context.Context, template interface{}) (interface{}, error)
-	GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error)
-	GetPredefinedTemplates() []*models.Template
-}) *NotificationHandler {
+func NewNotificationHandler(
+	notificationService interface {
+		SendNotification(ctx context.Context, notification interface{}) (interface{}, error)
+		ScheduleNotification(ctx context.Context, notification interface{}) (interface{}, error)
+		GetNotificationStatus(ctx context.Context, notificationID string) (interface{}, error)
+		CreateTemplate(ctx context.Context, template interface{}) (interface{}, error)
+		GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error)
+		GetPredefinedTemplates() []*models.Template
+	},
+	userService interface {
+		GetUsersByIDs(ctx context.Context, userIDs []string) ([]*models.User, error)
+		GetUserNotificationInfo(ctx context.Context, userID string) (*models.UserNotificationInfo, error)
+	},
+	kafkaService interface {
+		GetEmailChannel() chan string
+		GetSlackChannel() chan string
+		GetIOSPushNotificationChannel() chan string
+		GetAndroidPushNotificationChannel() chan string
+	},
+) *NotificationHandler {
 	return &NotificationHandler{
 		notificationService: notificationService,
+		userService:         userService,
+		kafkaService:        kafkaService,
 	}
 }
 
@@ -43,7 +69,6 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 		Content     map[string]interface{} `json:"content"`
 		Template    *models.TemplateData   `json:"template,omitempty"`
 		Recipients  []string               `json:"recipients" binding:"required"`
-		Metadata    map[string]interface{} `json:"metadata"`
 		ScheduledAt *time.Time             `json:"scheduled_at"`
 	}
 
@@ -52,33 +77,190 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 		return
 	}
 
-	// Create notification object
-	notification := &struct {
-		ID          string
-		Type        string
-		Content     map[string]interface{}
-		Template    *models.TemplateData
-		Recipients  []string
-		Metadata    map[string]interface{}
-		ScheduledAt *time.Time
-	}{
-		ID:          generateID(),
-		Type:        request.Type,
-		Content:     request.Content,
-		Template:    request.Template,
-		Recipients:  request.Recipients,
-		Metadata:    request.Metadata,
-		ScheduledAt: request.ScheduledAt,
-	}
+	// Check if it's a scheduled notification
+	if request.ScheduledAt != nil {
+		// Create notification object for scheduling
+		notification := &struct {
+			ID          string
+			Type        string
+			Content     map[string]interface{}
+			Template    *models.TemplateData
+			Recipients  []string
+			ScheduledAt *time.Time
+		}{
+			ID:          generateID(),
+			Type:        request.Type,
+			Content:     request.Content,
+			Template:    request.Template,
+			Recipients:  request.Recipients,
+			ScheduledAt: request.ScheduledAt,
+		}
 
-	// Send notification
-	response, err := h.notificationService.SendNotification(c.Request.Context(), notification)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// Schedule notification
+		response, err := h.notificationService.ScheduleNotification(c.Request.Context(), notification)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, response)
 		return
 	}
 
-	c.JSON(http.StatusOK, response)
+	// Get recipient information from userService
+	users, err := h.userService.GetUsersByIDs(c.Request.Context(), request.Recipients)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to get recipient information: %v", err)})
+		return
+	}
+
+	if len(users) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No valid recipients found"})
+		return
+	}
+
+	// Create notification messages for each recipient and post to Kafka channels
+	var responses []interface{}
+	notificationID := generateID()
+
+	for _, user := range users {
+		// Create personalized notification message for this user
+		notificationMessage := h.createNotificationMessage(notificationID, request, user)
+
+		// Post to relevant Kafka channel based on notification type
+		err := h.postToKafkaChannel(request.Type, notificationMessage)
+		if err != nil {
+			// Log error but continue with other recipients
+			fmt.Printf("Failed to post notification for user %s: %v\n", user.ID, err)
+			continue
+		}
+
+		// Create response for this recipient
+		response := &models.NotificationResponse{
+			ID:      notificationID,
+			Status:  "queued",
+			Message: fmt.Sprintf("Notification queued for user %s", user.FullName),
+			SentAt:  time.Now(),
+			Channel: request.Type,
+		}
+		responses = append(responses, response)
+	}
+
+	// Return aggregated response
+	c.JSON(http.StatusOK, gin.H{
+		"notification_id":  notificationID,
+		"total_recipients": len(users),
+		"queued_count":     len(responses),
+		"responses":        responses,
+	})
+}
+
+// createNotificationMessage creates a personalized notification message for a specific user
+func (h *NotificationHandler) createNotificationMessage(notificationID string, request struct {
+	Type        string                 `json:"type" binding:"required"`
+	Content     map[string]interface{} `json:"content"`
+	Template    *models.TemplateData   `json:"template,omitempty"`
+	Recipients  []string               `json:"recipients" binding:"required"`
+	ScheduledAt *time.Time             `json:"scheduled_at"`
+}, user *models.User) map[string]interface{} {
+	// Create base notification message
+	message := map[string]interface{}{
+		"notification_id": notificationID,
+		"type":            request.Type,
+		"content":         request.Content,
+		"template":        request.Template,
+		"created_at":      time.Now(),
+		"recipient": map[string]interface{}{
+			"user_id":       user.ID,
+			"email":         user.Email,
+			"full_name":     user.FullName,
+			"slack_user_id": user.SlackUserID,
+			"slack_channel": user.SlackChannel,
+			"phone_number":  user.PhoneNumber,
+		},
+	}
+
+	// Add personalized content based on user information
+	if request.Content != nil {
+		// Personalize content with user information
+		personalizedContent := make(map[string]interface{})
+		for key, value := range request.Content {
+			personalizedContent[key] = value
+		}
+
+		// Add user-specific personalization
+		if user.FullName != "" {
+			personalizedContent["recipient_name"] = user.FullName
+		}
+		if user.Email != "" {
+			personalizedContent["recipient_email"] = user.Email
+		}
+
+		message["content"] = personalizedContent
+	}
+
+	return message
+}
+
+// postToKafkaChannel posts the notification message to the appropriate Kafka channel
+func (h *NotificationHandler) postToKafkaChannel(notificationType string, message map[string]interface{}) error {
+	// Convert message to JSON
+	messageJSON, err := json.Marshal(message)
+	if err != nil {
+		return fmt.Errorf("failed to marshal notification message: %v", err)
+	}
+
+	messageStr := string(messageJSON)
+
+	// Post to appropriate channel based on notification type
+	switch notificationType {
+	case "email":
+		select {
+		case h.kafkaService.GetEmailChannel() <- messageStr:
+			// Message sent successfully
+		default:
+			return fmt.Errorf("email channel is full")
+		}
+
+	case "slack":
+		select {
+		case h.kafkaService.GetSlackChannel() <- messageStr:
+			// Message sent successfully
+		default:
+			return fmt.Errorf("slack channel is full")
+		}
+
+	case "ios_push":
+		select {
+		case h.kafkaService.GetIOSPushNotificationChannel() <- messageStr:
+			// Message sent successfully
+		default:
+			return fmt.Errorf("iOS push notification channel is full")
+		}
+
+	case "android_push":
+		select {
+		case h.kafkaService.GetAndroidPushNotificationChannel() <- messageStr:
+			// Message sent successfully
+		default:
+			return fmt.Errorf("Android push notification channel is full")
+		}
+
+	case "in_app":
+		// For in-app notifications, we can use either iOS or Android channel
+		// or create a separate in-app channel. For now, using iOS channel.
+		select {
+		case h.kafkaService.GetIOSPushNotificationChannel() <- messageStr:
+			// Message sent successfully
+		default:
+			return fmt.Errorf("in-app notification channel is full")
+		}
+
+	default:
+		return fmt.Errorf("unsupported notification type: %s", notificationType)
+	}
+
+	return nil
 }
 
 // GetNotificationStatus handles GET /notifications/:id

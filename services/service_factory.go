@@ -116,50 +116,41 @@ func (f *ServiceFactory) NewConsumerManagerFromEnv(kafkaService KafkaService) Co
 
 // NewNotificationManager creates a new notification manager instance
 func (f *ServiceFactory) NewNotificationManager(
-	emailService EmailService,
-	slackService SlackService,
-	inAppService InAppService,
+	userService UserService,
 	kafkaService KafkaService,
+	scheduler interface{},
 ) NotificationManager {
-	return notification_manager.NewNotificationManagerWithDefaultTemplate(emailService, slackService, inAppService, nil, kafkaService, nil)
+	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService, scheduler)
 }
 
 // NewNotificationManagerWithUserService creates a new notification manager with user service
 func (f *ServiceFactory) NewNotificationManagerWithUserService(
-	emailService EmailService,
-	slackService SlackService,
-	inAppService InAppService,
 	userService UserService,
 	kafkaService KafkaService,
 ) NotificationManager {
-	return notification_manager.NewNotificationManagerWithDefaultTemplate(emailService, slackService, inAppService, userService, kafkaService, nil)
+	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService, nil)
 }
 
 // NewNotificationManagerWithScheduler creates a new notification manager with scheduler
 func (f *ServiceFactory) NewNotificationManagerWithScheduler(
-	emailService EmailService,
-	slackService SlackService,
-	inAppService InAppService,
-	kafkaService KafkaService,
-	scheduler interface{},
-) NotificationManager {
-	return notification_manager.NewNotificationManagerWithDefaultTemplate(emailService, slackService, inAppService, nil, kafkaService, scheduler)
-}
-
-// NewNotificationManagerComplete creates a new notification manager with all dependencies
-func (f *ServiceFactory) NewNotificationManagerComplete(
-	emailService EmailService,
-	slackService SlackService,
-	inAppService InAppService,
 	userService UserService,
 	kafkaService KafkaService,
 	scheduler interface{},
 ) NotificationManager {
-	return notification_manager.NewNotificationManagerWithDefaultTemplate(emailService, slackService, inAppService, userService, kafkaService, scheduler)
+	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService, scheduler)
+}
+
+// NewNotificationManagerComplete creates a new notification manager with all dependencies
+func (f *ServiceFactory) NewNotificationManagerComplete(
+	userService UserService,
+	kafkaService KafkaService,
+	scheduler interface{},
+) NotificationManager {
+	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService, scheduler)
 }
 
 // NewNotificationManagerWithKafkaOnly creates a new notification manager with only Kafka service
 // This is used when the notification manager only needs to push notifications to Kafka channels
 func (f *ServiceFactory) NewNotificationManagerWithKafkaOnly(kafkaService KafkaService) NotificationManager {
-	return notification_manager.NewNotificationManagerWithDefaultTemplate(nil, nil, nil, nil, kafkaService, nil)
+	return notification_manager.NewNotificationManagerWithDefaultTemplate(nil, kafkaService, nil)
 }
