@@ -9,7 +9,5 @@ import (
 func SetupTemplateRoutes(api *gin.RouterGroup, handler *handlers.NotificationHandler) {
 	// Template endpoints
 	api.POST("/templates", handler.CreateTemplate)
-	api.GET("/templates/:id", handler.GetTemplate)
-	api.PUT("/templates/:id", handler.UpdateTemplate)
-	api.DELETE("/templates/:id", handler.DeleteTemplate)
+	api.GET("/templates/:templateId/versions/:version", handler.GetTemplateVersion)
 }

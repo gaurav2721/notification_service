@@ -8,4 +8,7 @@ var (
 	ErrNoScheduledTime             = errors.New("no scheduled time provided")
 	ErrTemplateNotFound            = errors.New("template not found")
 	ErrInvalidRecipients           = errors.New("invalid recipients")
+	ErrInvalidTemplateContent      = errors.New("invalid template content")
+	ErrInvalidTemplateType         = errors.New("invalid template type")
+	ErrMissingRequiredVariable     = errors.New("missing required variable")
 )

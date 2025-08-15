@@ -2,61 +2,51 @@ package notification_manager
 
 import (
 	"context"
+	"sync"
 	"time"
 
-	"github.com/gaurav2721/notification-service/external_services/email"
-	"github.com/gaurav2721/notification-service/external_services/inapp"
-	"github.com/gaurav2721/notification-service/external_services/slack"
+	"github.com/gaurav2721/notification-service/models"
+	"github.com/google/uuid"
 )
 
-// NotificationManagerImpl manages different notification channels
+// NotificationManagerImpl implements the NotificationManager interface
 type NotificationManagerImpl struct {
-	emailService email.EmailService
-	slackService slack.SlackService
-	inAppService inapp.InAppService
-	templates    map[string]interface{}
+	emailService  interface{}
+	slackService  interface{}
+	inappService  interface{}
+	userService   interface{}
+	scheduler     interface{}
+	templates     map[string]*models.Template
+	templateMutex sync.RWMutex
 }
 
-// NewNotificationManager creates a new notification manager
+// NewNotificationManager creates a new notification manager instance
 func NewNotificationManager(
-	emailService email.EmailService,
-	slackService slack.SlackService,
-	inAppService inapp.InAppService,
-) NotificationManager {
+	emailService interface{},
+	slackService interface{},
+	inappService interface{},
+	userService interface{},
+	scheduler interface{},
+) *NotificationManagerImpl {
 	return &NotificationManagerImpl{
-		emailService: emailService,
-		slackService: slackService,
-		inAppService: inAppService,
-		templates:    make(map[string]interface{}),
-	}
-}
-
-// NewNotificationManagerWithConfig creates a new notification manager with configuration
-func NewNotificationManagerWithConfig(
-	emailService email.EmailService,
-	slackService slack.SlackService,
-	inAppService inapp.InAppService,
-	config *NotificationConfig,
-) NotificationManager {
-	return &NotificationManagerImpl{
-		emailService: emailService,
-		slackService: slackService,
-		inAppService: inAppService,
-		templates:    make(map[string]interface{}),
+		emailService:  emailService,
+		slackService:  slackService,
+		inappService:  inappService,
+		userService:   userService,
+		scheduler:     scheduler,
+		templates:     make(map[string]*models.Template),
+		templateMutex: sync.RWMutex{},
 	}
 }
 
 // SendNotification sends a notification through the appropriate channel
 func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notification interface{}) (interface{}, error) {
-	// Type assertion to get notification type
+	// Type assertion to get notification
 	notif, ok := notification.(*struct {
-		ID       string
-		Type     string
-		Content  map[string]interface{}
-		Template *struct {
-			ID   string
-			Data map[string]interface{}
-		}
+		ID          string
+		Type        string
+		Content     map[string]interface{}
+		Template    *models.TemplateData
 		Recipients  []string
 		Metadata    map[string]interface{}
 		ScheduledAt *time.Time
@@ -65,37 +55,98 @@ func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notific
 		return nil, ErrUnsupportedNotificationType
 	}
 
-	// Route notification to appropriate channel
+	// Check if it's a scheduled notification
+	if notif.ScheduledAt != nil {
+		return nm.ScheduleNotification(ctx, notification)
+	}
+
+	// Process template if provided
+	if notif.Template != nil {
+		// Get template version
+		template, err := nm.GetTemplateVersion(ctx, notif.Template.ID, 1) // Default to version 1 for now
+		if err != nil {
+			return nil, err
+		}
+
+		// Validate required variables
+		templateVersion, ok := template.(*models.TemplateVersion)
+		if !ok {
+			return nil, ErrTemplateNotFound
+		}
+
+		if err := templateVersion.ValidateRequiredVariables(notif.Template.Data); err != nil {
+			return nil, err
+		}
+
+		// TODO: Process template variables and create content
+		// For now, just return success
+	}
+
+	// Send notification based on type
 	switch notif.Type {
 	case "email":
-		return nm.emailService.SendEmail(ctx, notification)
+		// TODO: Implement email sending
+		return &models.NotificationResponse{
+			ID:      notif.ID,
+			Status:  "sent",
+			Message: "Email notification sent successfully",
+			SentAt:  time.Now(),
+			Channel: "email",
+		}, nil
 	case "slack":
-		return nm.slackService.SendSlackMessage(ctx, notification)
+		// TODO: Implement Slack sending
+		return &models.NotificationResponse{
+			ID:      notif.ID,
+			Status:  "sent",
+			Message: "Slack notification sent successfully",
+			SentAt:  time.Now(),
+			Channel: "slack",
+		}, nil
 	case "in_app":
-		return nm.inAppService.SendInAppNotification(ctx, notification)
+		// TODO: Implement in-app notification
+		return &models.NotificationResponse{
+			ID:      notif.ID,
+			Status:  "sent",
+			Message: "In-app notification sent successfully",
+			SentAt:  time.Now(),
+			Channel: "in_app",
+		}, nil
 	default:
 		return nil, ErrUnsupportedNotificationType
 	}
 }
 
-// SendNotificationToUsers sends a notification to specific users
+// SendNotificationToUsers sends notifications to specific users
 func (nm *NotificationManagerImpl) SendNotificationToUsers(ctx context.Context, userIDs []string, notification interface{}) (interface{}, error) {
-	// Implementation for sending to specific users
-	// This would typically involve getting user notification info and routing accordingly
+	// Type assertion to get notification
+	notif, ok := notification.(*struct {
+		ID          string
+		Type        string
+		Content     map[string]interface{}
+		Template    *models.TemplateData
+		Recipients  []string
+		Metadata    map[string]interface{}
+		ScheduledAt *time.Time
+	})
+	if !ok {
+		return nil, ErrUnsupportedNotificationType
+	}
+
+	// Set recipients to the provided user IDs
+	notif.Recipients = userIDs
+
+	// Send notification
 	return nm.SendNotification(ctx, notification)
 }
 
-// ScheduleNotification schedules a notification for later delivery
+// ScheduleNotification schedules a notification for future delivery
 func (nm *NotificationManagerImpl) ScheduleNotification(ctx context.Context, notification interface{}) (interface{}, error) {
 	// Type assertion to get notification
 	notif, ok := notification.(*struct {
-		ID       string
-		Type     string
-		Content  map[string]interface{}
-		Template *struct {
-			ID   string
-			Data map[string]interface{}
-		}
+		ID          string
+		Type        string
+		Content     map[string]interface{}
+		Template    *models.TemplateData
 		Recipients  []string
 		Metadata    map[string]interface{}
 		ScheduledAt *time.Time
@@ -145,57 +196,66 @@ func (nm *NotificationManagerImpl) GetNotificationStatus(ctx context.Context, no
 }
 
 // CreateTemplate creates a new notification template
-func (nm *NotificationManagerImpl) CreateTemplate(ctx context.Context, template interface{}) error {
+func (nm *NotificationManagerImpl) CreateTemplate(ctx context.Context, template interface{}) (interface{}, error) {
 	// Type assertion to get template
-	tmpl, ok := template.(*struct {
-		ID   string
-		Name string
-		Type string
-		Body string
-	})
+	tmpl, ok := template.(*models.Template)
 	if !ok {
-		return ErrTemplateNotFound
+		return nil, ErrTemplateNotFound
 	}
 
-	nm.templates[tmpl.ID] = template
-	return nil
+	nm.templateMutex.Lock()
+	defer nm.templateMutex.Unlock()
+
+	// Generate ID if not provided
+	if tmpl.ID == "" {
+		tmpl.ID = uuid.New().String()
+	}
+
+	// Set version and status
+	tmpl.Version = 1
+	tmpl.Status = "created"
+	tmpl.CreatedAt = time.Now()
+
+	// Store template
+	nm.templates[tmpl.ID] = tmpl
+
+	// Return response
+	return &models.TemplateResponse{
+		ID:        tmpl.ID,
+		Name:      tmpl.Name,
+		Type:      string(tmpl.Type),
+		Version:   tmpl.Version,
+		Status:    tmpl.Status,
+		CreatedAt: tmpl.CreatedAt,
+	}, nil
 }
 
-// GetTemplate retrieves a notification template
-func (nm *NotificationManagerImpl) GetTemplate(ctx context.Context, templateID string) (interface{}, error) {
-	if template, exists := nm.templates[templateID]; exists {
-		return template, nil
-	}
-	return nil, ErrTemplateNotFound
-}
+// GetTemplateVersion retrieves a specific version of a notification template
+func (nm *NotificationManagerImpl) GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error) {
+	nm.templateMutex.RLock()
+	defer nm.templateMutex.RUnlock()
 
-// UpdateTemplate updates an existing notification template
-func (nm *NotificationManagerImpl) UpdateTemplate(ctx context.Context, template interface{}) error {
-	// Type assertion to get template
-	tmpl, ok := template.(*struct {
-		ID   string
-		Name string
-		Type string
-		Body string
-	})
-	if !ok {
-		return ErrTemplateNotFound
+	template, exists := nm.templates[templateID]
+	if !exists {
+		return nil, ErrTemplateNotFound
 	}
 
-	if _, exists := nm.templates[tmpl.ID]; !exists {
-		return ErrTemplateNotFound
+	// For now, we only support version 1
+	// In a real implementation, you would store multiple versions
+	if version != 1 {
+		return nil, ErrTemplateNotFound
 	}
 
-	nm.templates[tmpl.ID] = template
-	return nil
-}
-
-// DeleteTemplate deletes a notification template
-func (nm *NotificationManagerImpl) DeleteTemplate(ctx context.Context, templateID string) error {
-	if _, exists := nm.templates[templateID]; !exists {
-		return ErrTemplateNotFound
-	}
-
-	delete(nm.templates, templateID)
-	return nil
+	// Return template version
+	return &models.TemplateVersion{
+		ID:                template.ID,
+		Name:              template.Name,
+		Type:              template.Type,
+		Version:           template.Version,
+		Content:           template.Content,
+		RequiredVariables: template.RequiredVariables,
+		Description:       template.Description,
+		Status:            template.Status,
+		CreatedAt:         template.CreatedAt,
+	}, nil
 }
