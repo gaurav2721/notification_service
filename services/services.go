@@ -94,7 +94,7 @@ func (f *ServiceFactory) NewNotificationManager(
 	slackService SlackService,
 	inAppService InAppService,
 ) NotificationManager {
-	return notification_manager.NewNotificationManager(emailService, slackService, inAppService, nil, nil)
+	return notification_manager.NewNotificationManagerWithDefaultTemplate(emailService, slackService, inAppService, nil, nil)
 }
 
 // ServiceContainer manages all service dependencies

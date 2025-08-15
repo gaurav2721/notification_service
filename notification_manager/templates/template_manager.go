@@ -10,16 +10,19 @@ import (
 	"github.com/google/uuid"
 )
 
-// TemplateManager handles all template-related operations
-type TemplateManager struct {
+// TemplateManagerImpl handles all template-related operations
+type TemplateManagerImpl struct {
 	templates     map[string]*models.Template
 	templateMutex sync.RWMutex
 	initialized   bool
 }
 
+// Ensure TemplateManagerImpl implements TemplateManager
+var _ TemplateManager = (*TemplateManagerImpl)(nil)
+
 // NewTemplateManager creates a new template manager instance
-func NewTemplateManager() *TemplateManager {
-	tm := &TemplateManager{
+func NewTemplateManager() *TemplateManagerImpl {
+	tm := &TemplateManagerImpl{
 		templates:     make(map[string]*models.Template),
 		templateMutex: sync.RWMutex{},
 		initialized:   false,
@@ -32,7 +35,7 @@ func NewTemplateManager() *TemplateManager {
 }
 
 // loadPredefinedTemplates loads all predefined templates into the manager
-func (tm *TemplateManager) loadPredefinedTemplates() {
+func (tm *TemplateManagerImpl) loadPredefinedTemplates() {
 	tm.templateMutex.Lock()
 	defer tm.templateMutex.Unlock()
 
@@ -48,7 +51,7 @@ func (tm *TemplateManager) loadPredefinedTemplates() {
 }
 
 // CreateTemplate creates a new notification template
-func (tm *TemplateManager) CreateTemplate(ctx context.Context, template *models.Template) (*models.TemplateResponse, error) {
+func (tm *TemplateManagerImpl) CreateTemplate(ctx context.Context, template *models.Template) (*models.TemplateResponse, error) {
 	tm.templateMutex.Lock()
 	defer tm.templateMutex.Unlock()
 
@@ -82,7 +85,7 @@ func (tm *TemplateManager) CreateTemplate(ctx context.Context, template *models.
 }
 
 // GetTemplateVersion retrieves a specific version of a notification template
-func (tm *TemplateManager) GetTemplateVersion(ctx context.Context, templateID string, version int) (*models.TemplateVersion, error) {
+func (tm *TemplateManagerImpl) GetTemplateVersion(ctx context.Context, templateID string, version int) (*models.TemplateVersion, error) {
 	tm.templateMutex.RLock()
 	defer tm.templateMutex.RUnlock()
 
@@ -112,7 +115,7 @@ func (tm *TemplateManager) GetTemplateVersion(ctx context.Context, templateID st
 }
 
 // GetPredefinedTemplates returns all predefined templates
-func (tm *TemplateManager) GetPredefinedTemplates() []*models.Template {
+func (tm *TemplateManagerImpl) GetPredefinedTemplates() []*models.Template {
 	tm.templateMutex.RLock()
 	defer tm.templateMutex.RUnlock()
 
@@ -128,7 +131,7 @@ func (tm *TemplateManager) GetPredefinedTemplates() []*models.Template {
 }
 
 // GetTemplateByID returns a template by ID
-func (tm *TemplateManager) GetTemplateByID(templateID string) (*models.Template, error) {
+func (tm *TemplateManagerImpl) GetTemplateByID(templateID string) (*models.Template, error) {
 	tm.templateMutex.RLock()
 	defer tm.templateMutex.RUnlock()
 
@@ -141,7 +144,7 @@ func (tm *TemplateManager) GetTemplateByID(templateID string) (*models.Template,
 }
 
 // GetTemplateByName returns a template by name
-func (tm *TemplateManager) GetTemplateByName(name string) (*models.Template, error) {
+func (tm *TemplateManagerImpl) GetTemplateByName(name string) (*models.Template, error) {
 	tm.templateMutex.RLock()
 	defer tm.templateMutex.RUnlock()
 
@@ -155,7 +158,7 @@ func (tm *TemplateManager) GetTemplateByName(name string) (*models.Template, err
 }
 
 // GetTemplatesByType returns all templates of a specific type
-func (tm *TemplateManager) GetTemplatesByType(templateType models.NotificationType) []*models.Template {
+func (tm *TemplateManagerImpl) GetTemplatesByType(templateType models.NotificationType) []*models.Template {
 	tm.templateMutex.RLock()
 	defer tm.templateMutex.RUnlock()
 
@@ -170,7 +173,7 @@ func (tm *TemplateManager) GetTemplatesByType(templateType models.NotificationTy
 }
 
 // ValidateTemplateData validates that the provided data contains all required variables for a template
-func (tm *TemplateManager) ValidateTemplateData(templateID string, data map[string]interface{}) error {
+func (tm *TemplateManagerImpl) ValidateTemplateData(templateID string, data map[string]interface{}) error {
 	template, err := tm.GetTemplateByID(templateID)
 	if err != nil {
 		return err
@@ -180,7 +183,7 @@ func (tm *TemplateManager) ValidateTemplateData(templateID string, data map[stri
 }
 
 // GetAllTemplates returns all templates (both predefined and custom)
-func (tm *TemplateManager) GetAllTemplates() []*models.Template {
+func (tm *TemplateManagerImpl) GetAllTemplates() []*models.Template {
 	tm.templateMutex.RLock()
 	defer tm.templateMutex.RUnlock()
 
@@ -193,7 +196,7 @@ func (tm *TemplateManager) GetAllTemplates() []*models.Template {
 }
 
 // GetTemplateCount returns the total number of templates
-func (tm *TemplateManager) GetTemplateCount() int {
+func (tm *TemplateManagerImpl) GetTemplateCount() int {
 	tm.templateMutex.RLock()
 	defer tm.templateMutex.RUnlock()
 
@@ -201,7 +204,7 @@ func (tm *TemplateManager) GetTemplateCount() int {
 }
 
 // GetPredefinedTemplateCount returns the number of predefined templates
-func (tm *TemplateManager) GetPredefinedTemplateCount() int {
+func (tm *TemplateManagerImpl) GetPredefinedTemplateCount() int {
 	tm.templateMutex.RLock()
 	defer tm.templateMutex.RUnlock()
 

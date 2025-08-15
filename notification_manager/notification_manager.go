@@ -15,7 +15,7 @@ type NotificationManagerImpl struct {
 	inappService    interface{}
 	userService     interface{}
 	scheduler       interface{}
-	templateManager *templates.TemplateManager
+	templateManager templates.TemplateManager
 }
 
 // NewNotificationManager creates a new notification manager instance
@@ -25,6 +25,7 @@ func NewNotificationManager(
 	inappService interface{},
 	userService interface{},
 	scheduler interface{},
+	templateManager templates.TemplateManager,
 ) *NotificationManagerImpl {
 	return &NotificationManagerImpl{
 		emailService:    emailService,
@@ -32,8 +33,26 @@ func NewNotificationManager(
 		inappService:    inappService,
 		userService:     userService,
 		scheduler:       scheduler,
-		templateManager: templates.NewTemplateManager(),
+		templateManager: templateManager,
 	}
+}
+
+// NewNotificationManagerWithDefaultTemplate creates a new notification manager with default template manager
+func NewNotificationManagerWithDefaultTemplate(
+	emailService interface{},
+	slackService interface{},
+	inappService interface{},
+	userService interface{},
+	scheduler interface{},
+) *NotificationManagerImpl {
+	return NewNotificationManager(
+		emailService,
+		slackService,
+		inappService,
+		userService,
+		scheduler,
+		templates.NewTemplateManager(),
+	)
 }
 
 // SendNotification sends a notification through the appropriate channel
