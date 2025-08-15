@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gaurav2721/notification-service/handlers"
+	"github.com/gaurav2721/notification-service/routes"
 	"github.com/gaurav2721/notification-service/services"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -21,6 +22,7 @@ func main() {
 	slackService := services.NewSlackService()
 	inAppService := services.NewInAppService()
 	schedulerService := services.NewSchedulerService()
+	userService := services.NewUserService()
 
 	// Initialize notification manager
 	notificationManager := services.NewNotificationManager(
@@ -30,32 +32,15 @@ func main() {
 		schedulerService,
 	)
 
-	// Initialize handler
-	handler := handlers.NewNotificationHandler(notificationManager)
+	// Initialize handlers
+	notificationHandler := handlers.NewNotificationHandler(notificationManager)
+	userHandler := handlers.NewUserHandler(userService)
 
 	// Setup Gin router
 	router := gin.Default()
 
-	// Add middleware
-	router.Use(gin.Logger())
-	router.Use(gin.Recovery())
-
-	// Health check endpoint
-	router.GET("/health", handler.HealthCheck)
-
-	// API routes
-	api := router.Group("/api/v1")
-	{
-		// Notification endpoints
-		api.POST("/notifications", handler.SendNotification)
-		api.GET("/notifications/:id", handler.GetNotificationStatus)
-
-		// Template endpoints
-		api.POST("/templates", handler.CreateTemplate)
-		api.GET("/templates/:id", handler.GetTemplate)
-		api.PUT("/templates/:id", handler.UpdateTemplate)
-		api.DELETE("/templates/:id", handler.DeleteTemplate)
-	}
+	// Setup all routes using the routes package
+	routes.SetupRoutes(router, notificationHandler, userHandler)
 
 	// Get port from environment or use default
 	port := os.Getenv("PORT")
