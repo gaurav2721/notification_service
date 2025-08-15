@@ -3,6 +3,10 @@ package services
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/gaurav2721/notification-service/external_services/consumers"
+	"github.com/gaurav2721/notification-service/external_services/kafka"
 )
 
 // ServiceContainer manages all service dependencies
@@ -11,6 +15,8 @@ type ServiceContainer struct {
 	slackService        SlackService
 	inAppService        InAppService
 	userService         UserService
+	kafkaService        kafka.KafkaService
+	consumerManager     consumers.ConsumerManager
 	notificationService NotificationManager
 }
 
@@ -32,12 +38,45 @@ func (c *ServiceContainer) initializeServices() {
 	c.inAppService = factory.NewInAppService()
 	c.userService = factory.NewUserService()
 
+	// Initialize Kafka service
+	kafkaService, err := kafka.NewKafkaService()
+	if err != nil {
+		panic("Failed to initialize Kafka service: " + err.Error())
+	}
+	c.kafkaService = kafkaService
+
+	// Initialize consumer manager
+	consumerConfig := consumers.ConsumerConfig{
+		KafkaService: c.kafkaService,
+	}
+	c.consumerManager = consumers.NewConsumerManager(consumerConfig)
+
 	// Initialize notification service with dependencies
 	c.notificationService = factory.NewNotificationManager(
 		c.emailService,
 		c.slackService,
 		c.inAppService,
+		c.kafkaService,
 	)
+}
+
+// StartConsumerManager starts the consumer manager and all worker pools
+func (c *ServiceContainer) StartConsumerManager(ctx context.Context) error {
+	if c.consumerManager == nil {
+		return fmt.Errorf("consumer manager not initialized")
+	}
+
+	// Initialize the consumer manager
+	if err := c.consumerManager.Initialize(ctx); err != nil {
+		return fmt.Errorf("failed to initialize consumer manager: %w", err)
+	}
+
+	// Start the consumer manager
+	if err := c.consumerManager.Start(ctx); err != nil {
+		return fmt.Errorf("failed to start consumer manager: %w", err)
+	}
+
+	return nil
 }
 
 // GetEmailService returns the email service
@@ -60,6 +99,16 @@ func (c *ServiceContainer) GetUserService() UserService {
 	return c.userService
 }
 
+// GetKafkaService returns the kafka service
+func (c *ServiceContainer) GetKafkaService() kafka.KafkaService {
+	return c.kafkaService
+}
+
+// GetConsumerManager returns the consumer manager
+func (c *ServiceContainer) GetConsumerManager() consumers.ConsumerManager {
+	return c.consumerManager
+}
+
 // GetNotificationService returns the notification service
 func (c *ServiceContainer) GetNotificationService() NotificationManager {
 	return c.notificationService
@@ -67,6 +116,19 @@ func (c *ServiceContainer) GetNotificationService() NotificationManager {
 
 // Shutdown gracefully shuts down all services
 func (c *ServiceContainer) Shutdown(ctx context.Context) error {
+	// Stop consumer manager
+	if c.consumerManager != nil {
+		if err := c.consumerManager.Stop(); err != nil {
+			// Log error but continue with shutdown
+			// TODO: Add proper logging
+		}
+	}
+
+	// Close Kafka service
+	if c.kafkaService != nil {
+		c.kafkaService.Close()
+	}
+
 	// Add any cleanup logic here if needed
 	// For now, all services are stateless, so no cleanup is required
 	return nil
@@ -78,6 +140,8 @@ type ServiceProvider interface {
 	GetSlackService() SlackService
 	GetInAppService() InAppService
 	GetUserService() UserService
+	GetKafkaService() kafka.KafkaService
+	GetConsumerManager() consumers.ConsumerManager
 	GetNotificationService() NotificationManager
 	Shutdown(ctx context.Context) error
 }

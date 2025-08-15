@@ -206,3 +206,69 @@ func (cm *consumerManager) createAndroidPushWorkerPool() {
 	)
 	cm.workerPools[AndroidPushNotification] = pool
 }
+
+// Processor factory functions
+// NewEmailProcessor creates a new email processor
+func NewEmailProcessor() NotificationProcessor {
+	return &emailProcessor{}
+}
+
+// NewSlackProcessor creates a new slack processor
+func NewSlackProcessor() NotificationProcessor {
+	return &slackProcessor{}
+}
+
+// NewIOSPushProcessor creates a new iOS push notification processor
+func NewIOSPushProcessor() NotificationProcessor {
+	return &iosPushProcessor{}
+}
+
+// NewAndroidPushProcessor creates a new Android push notification processor
+func NewAndroidPushProcessor() NotificationProcessor {
+	return &androidPushProcessor{}
+}
+
+// Processor implementations
+type emailProcessor struct{}
+
+func (ep *emailProcessor) ProcessNotification(ctx context.Context, message NotificationMessage) error {
+	// TODO: Implement actual email sending logic
+	return nil
+}
+
+func (ep *emailProcessor) GetNotificationType() NotificationType {
+	return EmailNotification
+}
+
+type slackProcessor struct{}
+
+func (sp *slackProcessor) ProcessNotification(ctx context.Context, message NotificationMessage) error {
+	// TODO: Implement actual slack message sending logic
+	return nil
+}
+
+func (sp *slackProcessor) GetNotificationType() NotificationType {
+	return SlackNotification
+}
+
+type iosPushProcessor struct{}
+
+func (ip *iosPushProcessor) ProcessNotification(ctx context.Context, message NotificationMessage) error {
+	// TODO: Implement actual iOS push notification logic
+	return nil
+}
+
+func (ip *iosPushProcessor) GetNotificationType() NotificationType {
+	return IOSPushNotification
+}
+
+type androidPushProcessor struct{}
+
+func (ap *androidPushProcessor) ProcessNotification(ctx context.Context, message NotificationMessage) error {
+	// TODO: Implement actual Android push notification logic
+	return nil
+}
+
+func (ap *androidPushProcessor) GetNotificationType() NotificationType {
+	return AndroidPushNotification
+}

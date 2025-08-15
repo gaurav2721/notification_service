@@ -4,6 +4,7 @@ package services
 import (
 	"github.com/gaurav2721/notification-service/external_services/email"
 	"github.com/gaurav2721/notification-service/external_services/inapp"
+	"github.com/gaurav2721/notification-service/external_services/kafka"
 	"github.com/gaurav2721/notification-service/external_services/slack"
 	"github.com/gaurav2721/notification-service/external_services/user"
 	"github.com/gaurav2721/notification-service/notification_manager"
@@ -15,6 +16,7 @@ type (
 	SlackService        = slack.SlackService
 	InAppService        = inapp.InAppService
 	UserService         = user.UserService
+	KafkaService        = kafka.KafkaService
 	NotificationManager = notification_manager.NotificationManager
 )
 
@@ -86,11 +88,17 @@ func (f *ServiceFactory) NewUserService() UserService {
 	return user.NewUserService()
 }
 
+// NewKafkaService creates a new kafka service instance
+func (f *ServiceFactory) NewKafkaService() (KafkaService, error) {
+	return kafka.NewKafkaService()
+}
+
 // NewNotificationManager creates a new notification manager instance
 func (f *ServiceFactory) NewNotificationManager(
 	emailService EmailService,
 	slackService SlackService,
 	inAppService InAppService,
+	kafkaService KafkaService,
 ) NotificationManager {
-	return notification_manager.NewNotificationManagerWithDefaultTemplate(emailService, slackService, inAppService, nil, nil)
+	return notification_manager.NewNotificationManagerWithDefaultTemplate(emailService, slackService, inAppService, nil, kafkaService, nil)
 }

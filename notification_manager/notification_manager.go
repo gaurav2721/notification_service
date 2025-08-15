@@ -2,6 +2,7 @@ package notification_manager
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/gaurav2721/notification-service/models"
@@ -14,6 +15,7 @@ type NotificationManagerImpl struct {
 	slackService    interface{}
 	inappService    interface{}
 	userService     interface{}
+	kafkaService    interface{}
 	scheduler       interface{}
 	templateManager templates.TemplateManager
 }
@@ -24,6 +26,7 @@ func NewNotificationManager(
 	slackService interface{},
 	inappService interface{},
 	userService interface{},
+	kafkaService interface{},
 	scheduler interface{},
 	templateManager templates.TemplateManager,
 ) *NotificationManagerImpl {
@@ -32,6 +35,7 @@ func NewNotificationManager(
 		slackService:    slackService,
 		inappService:    inappService,
 		userService:     userService,
+		kafkaService:    kafkaService,
 		scheduler:       scheduler,
 		templateManager: templateManager,
 	}
@@ -43,6 +47,7 @@ func NewNotificationManagerWithDefaultTemplate(
 	slackService interface{},
 	inappService interface{},
 	userService interface{},
+	kafkaService interface{},
 	scheduler interface{},
 ) *NotificationManagerImpl {
 	return NewNotificationManager(
@@ -50,6 +55,7 @@ func NewNotificationManagerWithDefaultTemplate(
 		slackService,
 		inappService,
 		userService,
+		kafkaService,
 		scheduler,
 		templates.NewTemplateManager(),
 	)
@@ -87,26 +93,124 @@ func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notific
 		// For now, just return success
 	}
 
-	// Send notification based on type
+	// Send notification to Kafka channel based on type
 	switch notif.Type {
 	case "email":
-		// TODO: Implement email sending
+		// Send to email channel
+		if nm.kafkaService != nil {
+			if kafkaService, ok := nm.kafkaService.(interface {
+				GetEmailChannel() chan string
+			}); ok {
+				// Convert to JSON string (simplified for now)
+				// TODO: Use proper JSON marshaling
+				message := fmt.Sprintf("Email notification: %s", notif.ID)
+
+				// Send to Kafka channel
+				select {
+				case kafkaService.GetEmailChannel() <- message:
+					// Message sent successfully
+				default:
+					// Channel is full, handle accordingly
+					// TODO: Add proper error handling
+				}
+			}
+		}
+
 		return &models.NotificationResponse{
 			ID:      notif.ID,
-			Status:  "sent",
-			Message: "Email notification sent successfully",
+			Status:  "queued",
+			Message: "Email notification queued for processing",
 			SentAt:  time.Now(),
 			Channel: "email",
 		}, nil
+
 	case "slack":
-		// TODO: Implement Slack sending
+		// Send to slack channel
+		if nm.kafkaService != nil {
+			if kafkaService, ok := nm.kafkaService.(interface {
+				GetSlackChannel() chan string
+			}); ok {
+				// Convert to JSON string (simplified for now)
+				// TODO: Use proper JSON marshaling
+				message := fmt.Sprintf("Slack notification: %s", notif.ID)
+
+				// Send to Kafka channel
+				select {
+				case kafkaService.GetSlackChannel() <- message:
+					// Message sent successfully
+				default:
+					// Channel is full, handle accordingly
+					// TODO: Add proper error handling
+				}
+			}
+		}
+
 		return &models.NotificationResponse{
 			ID:      notif.ID,
-			Status:  "sent",
-			Message: "Slack notification sent successfully",
+			Status:  "queued",
+			Message: "Slack notification queued for processing",
 			SentAt:  time.Now(),
 			Channel: "slack",
 		}, nil
+
+	case "ios_push":
+		// Send to iOS push notification channel
+		if nm.kafkaService != nil {
+			if kafkaService, ok := nm.kafkaService.(interface {
+				GetIOSPushNotificationChannel() chan string
+			}); ok {
+				// Convert to JSON string (simplified for now)
+				// TODO: Use proper JSON marshaling
+				message := fmt.Sprintf("iOS push notification: %s", notif.ID)
+
+				// Send to Kafka channel
+				select {
+				case kafkaService.GetIOSPushNotificationChannel() <- message:
+					// Message sent successfully
+				default:
+					// Channel is full, handle accordingly
+					// TODO: Add proper error handling
+				}
+			}
+		}
+
+		return &models.NotificationResponse{
+			ID:      notif.ID,
+			Status:  "queued",
+			Message: "iOS push notification queued for processing",
+			SentAt:  time.Now(),
+			Channel: "ios_push",
+		}, nil
+
+	case "android_push":
+		// Send to Android push notification channel
+		if nm.kafkaService != nil {
+			if kafkaService, ok := nm.kafkaService.(interface {
+				GetAndroidPushNotificationChannel() chan string
+			}); ok {
+				// Convert to JSON string (simplified for now)
+				// TODO: Use proper JSON marshaling
+				message := fmt.Sprintf("Android push notification: %s", notif.ID)
+
+				// Send to Kafka channel
+				select {
+				case kafkaService.GetAndroidPushNotificationChannel() <- message:
+					// Message sent successfully
+				default:
+					// Channel is full, handle accordingly
+					// TODO: Add proper error handling
+				}
+			}
+		}
+
+		return &models.NotificationResponse{
+			ID:      notif.ID,
+			Status:  "queued",
+			Message: "Android push notification queued for processing",
+			SentAt:  time.Now(),
+			Channel: "android_push",
+		}, nil
+
 	case "in_app":
 		// TODO: Implement in-app notification
 		return &models.NotificationResponse{
@@ -116,6 +220,7 @@ func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notific
 			SentAt:  time.Now(),
 			Channel: "in_app",
 		}, nil
+
 	default:
 		return nil, ErrUnsupportedNotificationType
 	}
