@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/gaurav2721/notification-service/handlers"
 	"github.com/gaurav2721/notification-service/routes"
@@ -17,24 +20,12 @@ func main() {
 		log.Println("No .env file found, using system environment variables")
 	}
 
-	// Initialize services
-	emailService := services.NewEmailService()
-	slackService := services.NewSlackService()
-	inAppService := services.NewInAppService()
-	schedulerService := services.NewSchedulerService()
-	userService := services.NewUserService()
+	// Initialize service container (manages all service dependencies)
+	serviceContainer := services.NewServiceContainer()
 
-	// Initialize notification manager
-	notificationManager := services.NewNotificationManager(
-		emailService,
-		slackService,
-		inAppService,
-		schedulerService,
-	)
-
-	// Initialize handlers
-	notificationHandler := handlers.NewNotificationHandler(notificationManager)
-	userHandler := handlers.NewUserHandler(userService)
+	// Initialize handlers with interface dependencies from the container
+	notificationHandler := handlers.NewNotificationHandler(serviceContainer.GetNotificationService())
+	userHandler := handlers.NewUserHandler(serviceContainer.GetUserService())
 
 	// Setup Gin router
 	router := gin.Default()
@@ -48,9 +39,36 @@ func main() {
 		port = "8080"
 	}
 
-	// Start server
-	log.Printf("Starting notification service on port %s", port)
-	if err := router.Run(":" + port); err != nil {
-		log.Fatal("Failed to start server:", err)
+	// Setup graceful shutdown
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Handle shutdown signals
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-sigChan
+		log.Println("Received shutdown signal, gracefully shutting down...")
+		cancel()
+	}()
+
+	// Start server in a goroutine
+	go func() {
+		log.Printf("Starting notification service on port %s", port)
+		if err := router.Run(":" + port); err != nil {
+			log.Printf("Server error: %v", err)
+			cancel()
+		}
+	}()
+
+	// Wait for shutdown signal
+	<-ctx.Done()
+
+	// Gracefully shutdown services
+	if err := serviceContainer.Shutdown(context.Background()); err != nil {
+		log.Printf("Error during shutdown: %v", err)
 	}
+
+	log.Println("Notification service stopped gracefully")
 }

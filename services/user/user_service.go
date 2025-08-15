@@ -459,15 +459,3 @@ func (s *userService) GetUserNotificationInfo(ctx context.Context, userID string
 
 	return notificationInfo, nil
 }
-
-// Custom errors for user service
-var (
-	ErrUserNotFound       = errors.New("user not found")
-	ErrUserInactive       = errors.New("user is inactive")
-	ErrUserAlreadyExists  = errors.New("user already exists")
-	ErrInvalidUserID      = errors.New("invalid user ID")
-	ErrInvalidEmail       = errors.New("invalid email address")
-	ErrDeviceNotFound     = errors.New("device not found")
-	ErrDeviceInactive     = errors.New("device is inactive")
-	ErrInvalidDeviceToken = errors.New("invalid device token")
-)

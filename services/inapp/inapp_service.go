@@ -2,15 +2,9 @@ package inapp
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
-)
-
-// Custom errors
-var (
-	ErrInAppSendFailed = errors.New("failed to send in-app notification")
 )
 
 // InAppServiceImpl implements the InAppService interface
@@ -20,7 +14,14 @@ type InAppServiceImpl struct {
 }
 
 // NewInAppService creates a new in-app notification service instance
-func NewInAppService() *InAppServiceImpl {
+func NewInAppService() InAppService {
+	return &InAppServiceImpl{
+		notifications: make(map[string][]interface{}),
+	}
+}
+
+// NewInAppServiceWithConfig creates a new in-app service with custom configuration
+func NewInAppServiceWithConfig(config *InAppConfig) InAppService {
 	return &InAppServiceImpl{
 		notifications: make(map[string][]interface{}),
 	}

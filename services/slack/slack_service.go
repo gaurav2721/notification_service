@@ -2,17 +2,11 @@ package slack
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"time"
 
 	"github.com/slack-go/slack"
-)
-
-// Custom errors
-var (
-	ErrSlackSendFailed = errors.New("failed to send slack message")
 )
 
 // SlackServiceImpl implements the SlackService interface
@@ -22,7 +16,7 @@ type SlackServiceImpl struct {
 }
 
 // NewSlackService creates a new Slack service instance
-func NewSlackService() *SlackServiceImpl {
+func NewSlackService() SlackService {
 	token := os.Getenv("SLACK_BOT_TOKEN")
 	channel := os.Getenv("SLACK_CHANNEL_ID")
 
@@ -31,6 +25,16 @@ func NewSlackService() *SlackServiceImpl {
 	return &SlackServiceImpl{
 		client:  client,
 		channel: channel,
+	}
+}
+
+// NewSlackServiceWithConfig creates a new Slack service with custom configuration
+func NewSlackServiceWithConfig(config *SlackConfig) SlackService {
+	client := slack.New(config.BotToken)
+
+	return &SlackServiceImpl{
+		client:  client,
+		channel: config.DefaultChannel,
 	}
 }
 

@@ -2,7 +2,6 @@ package email
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -11,18 +10,13 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
-// Custom errors
-var (
-	ErrEmailSendFailed = errors.New("failed to send email")
-)
-
 // EmailServiceImpl implements the EmailService interface
 type EmailServiceImpl struct {
 	dialer *gomail.Dialer
 }
 
 // NewEmailService creates a new email service instance
-func NewEmailService() *EmailServiceImpl {
+func NewEmailService() EmailService {
 	host := os.Getenv("SMTP_HOST")
 	portStr := os.Getenv("SMTP_PORT")
 	username := os.Getenv("SMTP_USERNAME")
@@ -34,6 +28,15 @@ func NewEmailService() *EmailServiceImpl {
 	}
 
 	dialer := gomail.NewDialer(host, port, username, password)
+
+	return &EmailServiceImpl{
+		dialer: dialer,
+	}
+}
+
+// NewEmailServiceWithConfig creates a new email service with custom configuration
+func NewEmailServiceWithConfig(config *EmailConfig) EmailService {
+	dialer := gomail.NewDialer(config.SMTPHost, config.SMTPPort, config.SMTPUsername, config.SMTPPassword)
 
 	return &EmailServiceImpl{
 		dialer: dialer,
