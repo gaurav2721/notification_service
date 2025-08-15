@@ -125,6 +125,8 @@ func (w *worker) processMessage(message string) error {
 		Timestamp: time.Now().Unix(),
 	}
 
+	fmt.Println("---------> gaurav notificationMsg", notificationMsg)
+
 	// Process the notification using the processor
 	if err := w.processor.ProcessNotification(w.ctx, notificationMsg); err != nil {
 		return fmt.Errorf("failed to process notification: %w", err)

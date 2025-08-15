@@ -6,6 +6,7 @@ import (
 	"github.com/gaurav2721/notification-service/external_services/user"
 	"github.com/gaurav2721/notification-service/models"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 // UserHandler handles HTTP requests for user management
@@ -22,14 +23,17 @@ func NewUserHandler(userService user.UserService) *UserHandler {
 
 // GetUsers handles GET /api/v1/users
 func (h *UserHandler) GetUsers(c *gin.Context) {
+	logrus.Debug("Received get users request")
 	ctx := c.Request.Context()
 
 	users, err := h.userService.GetAllUsers(ctx)
 	if err != nil {
+		logrus.WithError(err).Error("Failed to get all users")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	logrus.WithField("user_count", len(users)).Debug("Retrieved users successfully")
 	c.JSON(http.StatusOK, gin.H{
 		"users": users,
 		"count": len(users),
@@ -40,31 +44,46 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 func (h *UserHandler) GetUser(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
+		logrus.Warn("Get user request missing user ID")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "user ID is required"})
 		return
 	}
 
+	logrus.WithField("user_id", userID).Debug("Received get user request")
 	ctx := c.Request.Context()
 	user, err := h.userService.GetUserByID(ctx, userID)
 	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"user_id": userID,
+			"error":   err.Error(),
+		}).Error("Failed to get user by ID")
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
+	logrus.WithField("user_id", userID).Debug("User retrieved successfully")
 	c.JSON(http.StatusOK, user)
 }
 
 // CreateUser handles POST /api/v1/users
 func (h *UserHandler) CreateUser(c *gin.Context) {
+	logrus.Debug("Received create user request")
+
 	var request struct {
 		Email    string `json:"email" binding:"required,email"`
 		FullName string `json:"full_name" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
+		logrus.WithError(err).Warn("Invalid request body for create user")
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	logrus.WithFields(logrus.Fields{
+		"email":     request.Email,
+		"full_name": request.FullName,
+	}).Debug("Creating new user")
 
 	// Create new user using the models.NewUser function
 	newUser := models.NewUser(request.Email, request.FullName)
@@ -72,10 +91,18 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	ctx := c.Request.Context()
 	err := h.userService.CreateUser(ctx, newUser)
 	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"email": request.Email,
+			"error": err.Error(),
+		}).Error("Failed to create user")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	logrus.WithFields(logrus.Fields{
+		"user_id": newUser.ID,
+		"email":   request.Email,
+	}).Info("User created successfully")
 	c.JSON(http.StatusCreated, newUser)
 }
 
@@ -83,9 +110,12 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
+		logrus.Warn("Update user request missing user ID")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "user ID is required"})
 		return
 	}
+
+	logrus.WithField("user_id", userID).Debug("Received update user request")
 
 	var request struct {
 		Email        string `json:"email"`
@@ -96,6 +126,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
+		logrus.WithError(err).Warn("Invalid request body for update user")
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

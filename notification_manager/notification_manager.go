@@ -7,6 +7,7 @@ import (
 
 	"github.com/gaurav2721/notification-service/models"
 	"github.com/gaurav2721/notification-service/notification_manager/templates"
+	"github.com/sirupsen/logrus"
 )
 
 // NotificationManagerImpl implements the NotificationManager interface
@@ -48,6 +49,8 @@ func NewNotificationManagerWithDefaultTemplate(
 
 // SendNotification sends a notification through the appropriate channel
 func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notification interface{}) (interface{}, error) {
+	logrus.Debug("Starting notification send process")
+
 	// Type assertion to get notification
 	notif, ok := notification.(*struct {
 		ID          string
@@ -58,26 +61,38 @@ func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notific
 		ScheduledAt *time.Time
 	})
 	if !ok {
+		logrus.Error("Unsupported notification type")
 		return nil, ErrUnsupportedNotificationType
 	}
 
+	logrus.WithFields(logrus.Fields{
+		"notification_id": notif.ID,
+		"type":            notif.Type,
+		"recipients":      len(notif.Recipients),
+	}).Debug("Processing notification")
+
 	// Check if it's a scheduled notification
 	if notif.ScheduledAt != nil {
+		logrus.Debug("Notification is scheduled, redirecting to scheduler")
 		return nm.ScheduleNotification(ctx, notification)
 	}
 
 	// Process template if provided
 	if notif.Template != nil {
+		logrus.Debug("Processing notification template")
 		// Validate template data
 		if err := nm.templateManager.ValidateTemplateData(notif.Template.ID, notif.Template.Data); err != nil {
+			logrus.WithError(err).Error("Template validation failed")
 			return nil, err
 		}
+		logrus.Debug("Template validation successful")
 
 		// TODO: Process template variables and create content
 		// For now, just return success
 	}
 
 	// Send notification to Kafka channel based on type
+	logrus.WithField("type", notif.Type).Debug("Sending notification to Kafka channel")
 	switch notif.Type {
 	case "email":
 		// Send to email channel
@@ -92,8 +107,10 @@ func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notific
 				// Send to Kafka channel
 				select {
 				case kafkaService.GetEmailChannel() <- message:
+					logrus.WithField("notification_id", notif.ID).Debug("Email notification sent to Kafka channel")
 					// Message sent successfully
 				default:
+					logrus.WithField("notification_id", notif.ID).Warn("Email channel is full")
 					// Channel is full, handle accordingly
 					// TODO: Add proper error handling
 				}

@@ -1,10 +1,11 @@
 package kafka
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"sync"
+
+	"github.com/sirupsen/logrus"
 )
 
 // kafkaServiceImpl implements the KafkaService interface
@@ -19,11 +20,20 @@ type kafkaServiceImpl struct {
 
 // NewKafkaService creates a new instance of KafkaService
 func NewKafkaService() (KafkaService, error) {
+	logrus.Debug("Creating new Kafka service")
+
 	// Read buffer sizes from environment variables with defaults
 	emailBufferSize := getEnvAsInt("EMAIL_CHANNEL_BUFFER_SIZE", 100)
 	slackBufferSize := getEnvAsInt("SLACK_CHANNEL_BUFFER_SIZE", 100)
 	iosPushBufferSize := getEnvAsInt("IOS_PUSH_CHANNEL_BUFFER_SIZE", 100)
 	androidPushBufferSize := getEnvAsInt("ANDROID_PUSH_CHANNEL_BUFFER_SIZE", 100)
+
+	logrus.WithFields(logrus.Fields{
+		"email_buffer_size":   emailBufferSize,
+		"slack_buffer_size":   slackBufferSize,
+		"ios_buffer_size":     iosPushBufferSize,
+		"android_buffer_size": androidPushBufferSize,
+	}).Debug("Kafka service buffer sizes configured")
 
 	service := &kafkaServiceImpl{
 		emailChannel:                   make(chan string, emailBufferSize),
@@ -33,6 +43,7 @@ func NewKafkaService() (KafkaService, error) {
 		closed:                         false,
 	}
 
+	logrus.Info("Kafka service created successfully")
 	return service, nil
 }
 
@@ -70,9 +81,11 @@ func (k *kafkaServiceImpl) Close() {
 	defer k.mu.Unlock()
 
 	if k.closed {
+		logrus.Debug("Kafka service is already closed")
 		return
 	}
 
+	logrus.Debug("Closing Kafka service")
 	k.closed = true
 
 	// Close all channels
@@ -80,6 +93,8 @@ func (k *kafkaServiceImpl) Close() {
 	close(k.slackChannel)
 	close(k.iosPushNotificationChannel)
 	close(k.androidPushNotificationChannel)
+
+	logrus.Info("Kafka service closed successfully")
 }
 
 // getEnvAsInt reads an environment variable and converts it to int
@@ -87,14 +102,27 @@ func (k *kafkaServiceImpl) Close() {
 func getEnvAsInt(key string, defaultValue int) int {
 	valueStr := os.Getenv(key)
 	if valueStr == "" {
+		logrus.WithFields(logrus.Fields{
+			"key":           key,
+			"default_value": defaultValue,
+		}).Debug("Environment variable not set, using default")
 		return defaultValue
 	}
 
 	value, err := strconv.Atoi(valueStr)
 	if err != nil {
-		fmt.Printf("Warning: Invalid value for %s: %s. Using default: %d\n", key, valueStr, defaultValue)
+		logrus.WithFields(logrus.Fields{
+			"key":           key,
+			"value":         valueStr,
+			"default_value": defaultValue,
+			"error":         err.Error(),
+		}).Warn("Invalid environment variable value, using default")
 		return defaultValue
 	}
 
+	logrus.WithFields(logrus.Fields{
+		"key":   key,
+		"value": value,
+	}).Debug("Environment variable parsed successfully")
 	return value
 }

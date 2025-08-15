@@ -10,6 +10,7 @@ import (
 
 	"github.com/gaurav2721/notification-service/models"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 // NotificationHandler handles HTTP requests for notifications
@@ -64,6 +65,8 @@ func NewNotificationHandler(
 
 // SendNotification handles POST /notifications
 func (h *NotificationHandler) SendNotification(c *gin.Context) {
+	logrus.Debug("Received notification send request")
+
 	var request struct {
 		Type        string                 `json:"type" binding:"required"`
 		Content     map[string]interface{} `json:"content"`
@@ -73,12 +76,21 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
+		logrus.WithError(err).Warn("Invalid request body for notification")
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	logrus.WithFields(logrus.Fields{
+		"type":        request.Type,
+		"recipients":  len(request.Recipients),
+		"scheduled":   request.ScheduledAt != nil,
+		"hasTemplate": request.Template != nil,
+	}).Debug("Processing notification request")
+
 	// Check if it's a scheduled notification
 	if request.ScheduledAt != nil {
+		logrus.Debug("Processing scheduled notification")
 		// Create notification object for scheduling
 		notification := &struct {
 			ID          string
@@ -99,22 +111,29 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 		// Schedule notification
 		response, err := h.notificationService.ScheduleNotification(c.Request.Context(), notification)
 		if err != nil {
+			logrus.WithError(err).Error("Failed to schedule notification")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
+		logrus.WithField("notification_id", notification.ID).Info("Notification scheduled successfully")
 		c.JSON(http.StatusOK, response)
 		return
 	}
 
 	// Get recipient information from userService
+	logrus.Debug("Fetching recipient information from user service")
 	users, err := h.userService.GetUsersByIDs(c.Request.Context(), request.Recipients)
 	if err != nil {
+		logrus.WithError(err).Error("Failed to get recipient information")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to get recipient information: %v", err)})
 		return
 	}
 
+	logrus.WithField("valid_users", len(users)).Debug("Retrieved user information")
+
 	if len(users) == 0 {
+		logrus.Warn("No valid recipients found for notification")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No valid recipients found"})
 		return
 	}
@@ -123,17 +142,33 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 	var responses []interface{}
 	notificationID := generateID()
 
+	logrus.WithFields(logrus.Fields{
+		"notification_id": notificationID,
+		"recipient_count": len(users),
+	}).Info("Processing notification for recipients")
+
 	for _, user := range users {
+		logrus.WithFields(logrus.Fields{
+			"user_id": user.ID,
+			"email":   user.Email,
+		}).Debug("Processing notification for user")
+
 		// Create personalized notification message for this user
 		notificationMessage := h.createNotificationMessage(notificationID, request, user)
 
 		// Post to relevant Kafka channel based on notification type
 		err := h.postToKafkaChannel(request.Type, notificationMessage)
 		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"user_id": user.ID,
+				"error":   err.Error(),
+			}).Error("Failed to post notification to Kafka channel")
 			// Log error but continue with other recipients
 			fmt.Printf("Failed to post notification for user %s: %v\n", user.ID, err)
 			continue
 		}
+
+		logrus.WithField("user_id", user.ID).Debug("Notification queued successfully for user")
 
 		// Create response for this recipient
 		response := &models.NotificationResponse{
@@ -145,6 +180,12 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 		}
 		responses = append(responses, response)
 	}
+
+	logrus.WithFields(logrus.Fields{
+		"notification_id":  notificationID,
+		"total_recipients": len(users),
+		"queued_count":     len(responses),
+	}).Info("Notification processing completed")
 
 	// Return aggregated response
 	c.JSON(http.StatusOK, gin.H{

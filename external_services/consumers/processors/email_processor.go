@@ -2,6 +2,7 @@ package consumers
 
 import (
 	"context"
+	"fmt"
 	"log"
 )
 
@@ -15,7 +16,8 @@ func NewEmailProcessor() NotificationProcessor {
 
 // ProcessNotification processes an email notification
 func (ep *emailProcessor) ProcessNotification(ctx context.Context, message NotificationMessage) error {
-	log.Printf("Processing email notification: %s", message.ID)
+	fmt.Println("---------------> Processing email notification", message.Payload)
+	log.Printf("---------------> Processing email notification: %s", message.Payload)
 	// TODO: Implement actual email sending logic
 	// This would integrate with your email service
 	return nil

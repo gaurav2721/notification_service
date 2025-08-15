@@ -3,8 +3,9 @@ package consumers
 import (
 	"context"
 	"fmt"
-	"log"
 	"sync"
+
+	"github.com/sirupsen/logrus"
 )
 
 // consumerManager manages all consumer worker pools
@@ -33,16 +34,26 @@ func (cm *consumerManager) Initialize(ctx context.Context) error {
 	defer cm.mu.Unlock()
 
 	if cm.running {
+		logrus.Warn("Consumer manager is already initialized")
 		return fmt.Errorf("consumer manager is already initialized")
 	}
 
+	logrus.Debug("Initializing consumer manager")
+
 	// Create worker pools for each notification type
+	logrus.Debug("Creating email worker pool")
 	cm.createEmailWorkerPool()
+
+	logrus.Debug("Creating slack worker pool")
 	cm.createSlackWorkerPool()
+
+	logrus.Debug("Creating iOS push worker pool")
 	cm.createIOSPushWorkerPool()
+
+	logrus.Debug("Creating Android push worker pool")
 	cm.createAndroidPushWorkerPool()
 
-	log.Printf("Consumer manager initialized with %d worker pools", len(cm.workerPools))
+	logrus.WithField("worker_pools", len(cm.workerPools)).Info("Consumer manager initialized successfully")
 	return nil
 }
 
@@ -52,9 +63,11 @@ func (cm *consumerManager) Start(ctx context.Context) error {
 	defer cm.mu.Unlock()
 
 	if cm.running {
+		logrus.Warn("Consumer manager is already running")
 		return fmt.Errorf("consumer manager is already running")
 	}
 
+	logrus.Debug("Starting consumer manager")
 	cm.ctx, cm.cancel = context.WithCancel(ctx)
 	cm.running = true
 
@@ -63,13 +76,19 @@ func (cm *consumerManager) Start(ctx context.Context) error {
 		cm.wg.Add(1)
 		go func(nt NotificationType, p ConsumerWorkerPool) {
 			defer cm.wg.Done()
+			logrus.WithField("notification_type", nt).Debug("Starting worker pool")
 			if err := p.Start(cm.ctx); err != nil {
-				log.Printf("Failed to start worker pool for %s: %v", nt, err)
+				logrus.WithFields(logrus.Fields{
+					"notification_type": nt,
+					"error":             err.Error(),
+				}).Error("Failed to start worker pool")
+			} else {
+				logrus.WithField("notification_type", nt).Debug("Worker pool started successfully")
 			}
 		}(notificationType, pool)
 	}
 
-	log.Printf("Consumer manager started all worker pools")
+	logrus.Info("Consumer manager started all worker pools")
 	return nil
 }
 
@@ -79,9 +98,11 @@ func (cm *consumerManager) Stop() error {
 	defer cm.mu.Unlock()
 
 	if !cm.running {
+		logrus.Debug("Consumer manager is not running")
 		return nil
 	}
 
+	logrus.Debug("Stopping consumer manager")
 	cm.running = false
 	if cm.cancel != nil {
 		cm.cancel()
@@ -89,15 +110,22 @@ func (cm *consumerManager) Stop() error {
 
 	// Stop all worker pools
 	for notificationType, pool := range cm.workerPools {
+		logrus.WithField("notification_type", notificationType).Debug("Stopping worker pool")
 		if err := pool.Stop(); err != nil {
-			log.Printf("Error stopping worker pool for %s: %v", notificationType, err)
+			logrus.WithFields(logrus.Fields{
+				"notification_type": notificationType,
+				"error":             err.Error(),
+			}).Error("Error stopping worker pool")
+		} else {
+			logrus.WithField("notification_type", notificationType).Debug("Worker pool stopped successfully")
 		}
 	}
 
 	// Wait for all worker pools to finish
+	logrus.Debug("Waiting for all worker pools to finish")
 	cm.wg.Wait()
 
-	log.Printf("Consumer manager stopped all worker pools")
+	logrus.Info("Consumer manager stopped all worker pools")
 	return nil
 }
 
