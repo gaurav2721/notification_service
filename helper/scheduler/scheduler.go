@@ -7,26 +7,26 @@ import (
 	"github.com/go-co-op/gocron"
 )
 
-// SchedulerServiceImpl implements the SchedulerService interface
-type SchedulerServiceImpl struct {
+// SchedulerImpl implements the Scheduler interface
+type SchedulerImpl struct {
 	scheduler *gocron.Scheduler
 	jobs      map[string]*gocron.Job
 	mutex     sync.RWMutex
 }
 
-// NewSchedulerService creates a new scheduler service instance
-func NewSchedulerService() *SchedulerServiceImpl {
+// NewScheduler creates a new scheduler instance
+func NewScheduler() *SchedulerImpl {
 	scheduler := gocron.NewScheduler(time.UTC)
 	scheduler.StartAsync()
 
-	return &SchedulerServiceImpl{
+	return &SchedulerImpl{
 		scheduler: scheduler,
 		jobs:      make(map[string]*gocron.Job),
 	}
 }
 
 // ScheduleJob schedules a job to run at a specific time
-func (ss *SchedulerServiceImpl) ScheduleJob(jobID string, scheduledTime time.Time, job func()) error {
+func (ss *SchedulerImpl) ScheduleJob(jobID string, scheduledTime time.Time, job func()) error {
 	ss.mutex.Lock()
 	defer ss.mutex.Unlock()
 
@@ -49,7 +49,7 @@ func (ss *SchedulerServiceImpl) ScheduleJob(jobID string, scheduledTime time.Tim
 }
 
 // CancelJob cancels a scheduled job
-func (ss *SchedulerServiceImpl) CancelJob(jobID string) error {
+func (ss *SchedulerImpl) CancelJob(jobID string) error {
 	ss.mutex.Lock()
 	defer ss.mutex.Unlock()
 
@@ -63,7 +63,7 @@ func (ss *SchedulerServiceImpl) CancelJob(jobID string) error {
 }
 
 // GetScheduledJobs returns all scheduled job IDs
-func (ss *SchedulerServiceImpl) GetScheduledJobs() []string {
+func (ss *SchedulerImpl) GetScheduledJobs() []string {
 	ss.mutex.RLock()
 	defer ss.mutex.RUnlock()
 
@@ -76,6 +76,6 @@ func (ss *SchedulerServiceImpl) GetScheduledJobs() []string {
 }
 
 // Stop stops the scheduler
-func (ss *SchedulerServiceImpl) Stop() {
+func (ss *SchedulerImpl) Stop() {
 	ss.scheduler.Stop()
 }

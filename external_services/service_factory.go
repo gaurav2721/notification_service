@@ -2,12 +2,11 @@
 package services
 
 import (
-	"github.com/gaurav2721/notification-service/services/email"
-	"github.com/gaurav2721/notification-service/services/inapp"
-	"github.com/gaurav2721/notification-service/services/notification"
-	"github.com/gaurav2721/notification-service/services/scheduler"
-	"github.com/gaurav2721/notification-service/services/slack"
-	"github.com/gaurav2721/notification-service/services/user"
+	"github.com/gaurav2721/notification-service/external_services/email"
+	"github.com/gaurav2721/notification-service/external_services/inapp"
+	"github.com/gaurav2721/notification-service/external_services/slack"
+	"github.com/gaurav2721/notification-service/external_services/user"
+	"github.com/gaurav2721/notification-service/notification_manager"
 )
 
 // Re-export all interfaces and types for convenience
@@ -15,9 +14,8 @@ type (
 	EmailService        = email.EmailService
 	SlackService        = slack.SlackService
 	InAppService        = inapp.InAppService
-	SchedulerService    = scheduler.SchedulerService
 	UserService         = user.UserService
-	NotificationService = notification.NotificationService
+	NotificationManager = notification_manager.NotificationManager
 )
 
 // Re-export all configurations
@@ -25,9 +23,8 @@ type (
 	EmailConfig        = email.EmailConfig
 	SlackConfig        = slack.SlackConfig
 	InAppConfig        = inapp.InAppConfig
-	SchedulerConfig    = scheduler.SchedulerConfig
 	UserConfig         = user.UserConfig
-	NotificationConfig = notification.NotificationConfig
+	NotificationConfig = notification_manager.NotificationConfig
 )
 
 // Re-export all errors
@@ -47,11 +44,6 @@ var (
 	ErrInAppDeviceToken    = inapp.ErrInAppDeviceToken
 	ErrInAppDeviceNotFound = inapp.ErrInAppDeviceNotFound
 
-	// Scheduler service errors
-	ErrSchedulingFailed = scheduler.ErrSchedulingFailed
-	ErrJobNotFound      = scheduler.ErrJobNotFound
-	ErrJobTimeout       = scheduler.ErrJobTimeout
-
 	// User service errors
 	ErrUserNotFound       = user.ErrUserNotFound
 	ErrUserAlreadyExists  = user.ErrUserAlreadyExists
@@ -60,10 +52,10 @@ var (
 	ErrInvalidDeviceToken = user.ErrInvalidDeviceToken
 
 	// Notification service errors
-	ErrUnsupportedNotificationType = notification.ErrUnsupportedNotificationType
-	ErrNoScheduledTime             = notification.ErrNoScheduledTime
-	ErrTemplateNotFound            = notification.ErrTemplateNotFound
-	ErrInvalidRecipients           = notification.ErrInvalidRecipients
+	ErrUnsupportedNotificationType = notification_manager.ErrUnsupportedNotificationType
+	ErrNoScheduledTime             = notification_manager.ErrNoScheduledTime
+	ErrTemplateNotFound            = notification_manager.ErrTemplateNotFound
+	ErrInvalidRecipients           = notification_manager.ErrInvalidRecipients
 )
 
 // ServiceFactory provides methods to create service instances
@@ -89,11 +81,6 @@ func (f *ServiceFactory) NewInAppService() InAppService {
 	return inapp.NewInAppService()
 }
 
-// NewSchedulerService creates a new scheduler service instance
-func (f *ServiceFactory) NewSchedulerService() SchedulerService {
-	return scheduler.NewSchedulerService()
-}
-
 // NewUserService creates a new user service instance
 func (f *ServiceFactory) NewUserService() UserService {
 	return user.NewUserService()
@@ -104,7 +91,6 @@ func (f *ServiceFactory) NewNotificationManager(
 	emailService EmailService,
 	slackService SlackService,
 	inAppService InAppService,
-	scheduler SchedulerService,
-) NotificationService {
-	return notification.NewNotificationManager(emailService, slackService, inAppService, scheduler)
+) NotificationManager {
+	return notification_manager.NewNotificationManager(emailService, slackService, inAppService)
 }

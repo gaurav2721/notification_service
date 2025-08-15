@@ -1,4 +1,4 @@
-package notification
+package notification_manager
 
 // NotificationConfig holds notification service configuration
 type NotificationConfig struct {

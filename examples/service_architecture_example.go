@@ -346,21 +346,18 @@ func factoryExample() {
 	emailService := factory.NewEmailService()
 	slackService := factory.NewSlackService()
 	inAppService := factory.NewInAppService()
-	schedulerService := factory.NewSchedulerService()
 
 	// Create notification manager with dependencies
 	notificationService := factory.NewNotificationManager(
 		emailService,
 		slackService,
 		inAppService,
-		schedulerService,
 	)
 
 	fmt.Printf("Created %T\n", userService)
 	fmt.Printf("Created %T\n", emailService)
 	fmt.Printf("Created %T\n", slackService)
 	fmt.Printf("Created %T\n", inAppService)
-	fmt.Printf("Created %T\n", schedulerService)
 	fmt.Printf("Created %T\n", notificationService)
 
 	// Use services

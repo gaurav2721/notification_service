@@ -1,9 +1,9 @@
-package notification
+package notification_manager
 
 import "context"
 
-// NotificationService interface defines methods for notification management
-type NotificationService interface {
+// NotificationManager interface defines methods for notification management
+type NotificationManager interface {
 	SendNotification(ctx context.Context, notification interface{}) (interface{}, error)
 	SendNotificationToUsers(ctx context.Context, userIDs []string, notification interface{}) (interface{}, error)
 	ScheduleNotification(ctx context.Context, notification interface{}) (interface{}, error)

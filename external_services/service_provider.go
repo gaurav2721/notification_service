@@ -10,9 +10,8 @@ type ServiceContainer struct {
 	emailService        EmailService
 	slackService        SlackService
 	inAppService        InAppService
-	schedulerService    SchedulerService
 	userService         UserService
-	notificationService NotificationService
+	notificationService NotificationManager
 }
 
 // NewServiceContainer creates a new service container with all dependencies
@@ -31,7 +30,6 @@ func (c *ServiceContainer) initializeServices() {
 	c.emailService = factory.NewEmailService()
 	c.slackService = factory.NewSlackService()
 	c.inAppService = factory.NewInAppService()
-	c.schedulerService = factory.NewSchedulerService()
 	c.userService = factory.NewUserService()
 
 	// Initialize notification service with dependencies
@@ -39,7 +37,6 @@ func (c *ServiceContainer) initializeServices() {
 		c.emailService,
 		c.slackService,
 		c.inAppService,
-		c.schedulerService,
 	)
 }
 
@@ -58,18 +55,13 @@ func (c *ServiceContainer) GetInAppService() InAppService {
 	return c.inAppService
 }
 
-// GetSchedulerService returns the scheduler service
-func (c *ServiceContainer) GetSchedulerService() SchedulerService {
-	return c.schedulerService
-}
-
 // GetUserService returns the user service
 func (c *ServiceContainer) GetUserService() UserService {
 	return c.userService
 }
 
 // GetNotificationService returns the notification service
-func (c *ServiceContainer) GetNotificationService() NotificationService {
+func (c *ServiceContainer) GetNotificationService() NotificationManager {
 	return c.notificationService
 }
 
@@ -85,9 +77,8 @@ type ServiceProvider interface {
 	GetEmailService() EmailService
 	GetSlackService() SlackService
 	GetInAppService() InAppService
-	GetSchedulerService() SchedulerService
 	GetUserService() UserService
-	GetNotificationService() NotificationService
+	GetNotificationService() NotificationManager
 	Shutdown(ctx context.Context) error
 }
 

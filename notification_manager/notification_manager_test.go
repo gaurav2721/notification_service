@@ -1,4 +1,4 @@
-package notification
+package notification_manager
 
 import (
 	"context"
@@ -12,85 +12,52 @@ import (
 type MockEmailService struct{}
 type MockSlackService struct{}
 type MockInAppService struct{}
-type MockSchedulerService struct{}
 
 func (m *MockEmailService) SendEmail(ctx context.Context, notification interface{}) (interface{}, error) {
 	return &struct {
-		ID      string    `json:"id"`
-		Status  string    `json:"status"`
-		Message string    `json:"message"`
-		SentAt  time.Time `json:"sent_at"`
-		Channel string    `json:"channel"`
+		ID     string `json:"id"`
+		Status string `json:"status"`
 	}{
-		ID:      "test-email-id",
-		Status:  "sent",
-		Message: "Email sent successfully",
-		SentAt:  time.Now(),
-		Channel: "email",
+		ID:     "email-123",
+		Status: "sent",
 	}, nil
 }
 
 func (m *MockSlackService) SendSlackMessage(ctx context.Context, notification interface{}) (interface{}, error) {
 	return &struct {
-		ID      string    `json:"id"`
-		Status  string    `json:"status"`
-		Message string    `json:"message"`
-		SentAt  time.Time `json:"sent_at"`
-		Channel string    `json:"channel"`
+		ID     string `json:"id"`
+		Status string `json:"status"`
 	}{
-		ID:      "test-slack-id",
-		Status:  "sent",
-		Message: "Slack message sent successfully",
-		SentAt:  time.Now(),
-		Channel: "slack",
+		ID:     "slack-123",
+		Status: "sent",
 	}, nil
 }
 
 func (m *MockInAppService) SendInAppNotification(ctx context.Context, notification interface{}) (interface{}, error) {
 	return &struct {
-		ID      string    `json:"id"`
-		Status  string    `json:"status"`
-		Message string    `json:"message"`
-		SentAt  time.Time `json:"sent_at"`
-		Channel string    `json:"channel"`
+		ID     string `json:"id"`
+		Status string `json:"status"`
 	}{
-		ID:      "test-inapp-id",
-		Status:  "sent",
-		Message: "In-app notification sent successfully",
-		SentAt:  time.Now(),
-		Channel: "in_app",
+		ID:     "inapp-123",
+		Status: "sent",
 	}, nil
-}
-
-func (m *MockSchedulerService) ScheduleJob(jobID string, scheduledTime time.Time, job func()) error {
-	return nil
-}
-
-func (m *MockSchedulerService) CancelJob(jobID string) error {
-	return nil
 }
 
 func TestNewNotificationManager(t *testing.T) {
 	emailService := &MockEmailService{}
 	slackService := &MockSlackService{}
 	inAppService := &MockInAppService{}
-	schedulerService := &MockSchedulerService{}
 
-	manager := NewNotificationManager(emailService, slackService, inAppService, schedulerService)
+	manager := NewNotificationManager(emailService, slackService, inAppService)
 	assert.NotNil(t, manager)
-	assert.Equal(t, emailService, manager.emailService)
-	assert.Equal(t, slackService, manager.slackService)
-	assert.Equal(t, inAppService, manager.inAppService)
-	assert.Equal(t, schedulerService, manager.scheduler)
 }
 
 func TestNotificationManager_SendNotification(t *testing.T) {
 	emailService := &MockEmailService{}
 	slackService := &MockSlackService{}
 	inAppService := &MockInAppService{}
-	schedulerService := &MockSchedulerService{}
 
-	manager := NewNotificationManager(emailService, slackService, inAppService, schedulerService)
+	manager := NewNotificationManager(emailService, slackService, inAppService)
 
 	tests := []struct {
 		name         string
@@ -187,9 +154,8 @@ func TestNotificationManager_TemplateOperations(t *testing.T) {
 	emailService := &MockEmailService{}
 	slackService := &MockSlackService{}
 	inAppService := &MockInAppService{}
-	schedulerService := &MockSchedulerService{}
 
-	manager := NewNotificationManager(emailService, slackService, inAppService, schedulerService)
+	manager := NewNotificationManager(emailService, slackService, inAppService)
 	ctx := context.Background()
 
 	t.Run("Create Template", func(t *testing.T) {

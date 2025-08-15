@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/gaurav2721/notification-service/external_services/user"
 	"github.com/gaurav2721/notification-service/models"
-	"github.com/gaurav2721/notification-service/services/user"
 	"github.com/gin-gonic/gin"
 )
 
