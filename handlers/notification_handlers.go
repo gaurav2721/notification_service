@@ -18,6 +18,7 @@ type NotificationHandler struct {
 		GetNotificationStatus(ctx context.Context, notificationID string) (interface{}, error)
 		CreateTemplate(ctx context.Context, template interface{}) (interface{}, error)
 		GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error)
+		GetPredefinedTemplates() []*models.Template
 	}
 }
 
@@ -28,6 +29,7 @@ func NewNotificationHandler(notificationService interface {
 	GetNotificationStatus(ctx context.Context, notificationID string) (interface{}, error)
 	CreateTemplate(ctx context.Context, template interface{}) (interface{}, error)
 	GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error)
+	GetPredefinedTemplates() []*models.Template
 }) *NotificationHandler {
 	return &NotificationHandler{
 		notificationService: notificationService,
@@ -127,6 +129,31 @@ func (h *NotificationHandler) CreateTemplate(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, response)
+}
+
+// GetPredefinedTemplates handles GET /templates/predefined
+func (h *NotificationHandler) GetPredefinedTemplates(c *gin.Context) {
+	templates := h.notificationService.GetPredefinedTemplates()
+
+	// Convert to response format
+	var response []map[string]interface{}
+	for _, template := range templates {
+		response = append(response, map[string]interface{}{
+			"id":                 template.ID,
+			"name":               template.Name,
+			"type":               string(template.Type),
+			"version":            template.Version,
+			"description":        template.Description,
+			"required_variables": template.RequiredVariables,
+			"status":             template.Status,
+			"created_at":         template.CreatedAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"templates": response,
+		"count":     len(response),
+	})
 }
 
 // GetTemplateVersion handles GET /templates/:templateId/versions/:version

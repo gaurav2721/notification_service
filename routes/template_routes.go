@@ -9,5 +9,6 @@ import (
 func SetupTemplateRoutes(api *gin.RouterGroup, handler *handlers.NotificationHandler) {
 	// Template endpoints
 	api.POST("/templates", handler.CreateTemplate)
+	api.GET("/templates/predefined", handler.GetPredefinedTemplates)
 	api.GET("/templates/:templateId/versions/:version", handler.GetTemplateVersion)
 }

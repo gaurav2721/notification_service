@@ -2,6 +2,7 @@ package notification_manager
 
 import (
 	"context"
+	"log"
 	"sync"
 	"time"
 
@@ -18,6 +19,7 @@ type NotificationManagerImpl struct {
 	scheduler     interface{}
 	templates     map[string]*models.Template
 	templateMutex sync.RWMutex
+	initialized   bool
 }
 
 // NewNotificationManager creates a new notification manager instance
@@ -28,7 +30,7 @@ func NewNotificationManager(
 	userService interface{},
 	scheduler interface{},
 ) *NotificationManagerImpl {
-	return &NotificationManagerImpl{
+	nm := &NotificationManagerImpl{
 		emailService:  emailService,
 		slackService:  slackService,
 		inappService:  inappService,
@@ -36,7 +38,65 @@ func NewNotificationManager(
 		scheduler:     scheduler,
 		templates:     make(map[string]*models.Template),
 		templateMutex: sync.RWMutex{},
+		initialized:   false,
 	}
+
+	// Load predefined templates on startup
+	nm.loadPredefinedTemplates()
+
+	return nm
+}
+
+// loadPredefinedTemplates loads all predefined templates into the manager
+func (nm *NotificationManagerImpl) loadPredefinedTemplates() {
+	nm.templateMutex.Lock()
+	defer nm.templateMutex.Unlock()
+
+	predefinedTemplates := models.PredefinedTemplates()
+
+	for _, template := range predefinedTemplates {
+		nm.templates[template.ID] = template
+		log.Printf("Loaded predefined template: %s (ID: %s)", template.Name, template.ID)
+	}
+
+	nm.initialized = true
+	log.Printf("Loaded %d predefined templates", len(predefinedTemplates))
+}
+
+// GetPredefinedTemplates returns all predefined templates
+func (nm *NotificationManagerImpl) GetPredefinedTemplates() []*models.Template {
+	nm.templateMutex.RLock()
+	defer nm.templateMutex.RUnlock()
+
+	var predefinedTemplates []*models.Template
+	for _, template := range nm.templates {
+		// Check if it's a predefined template by looking at the fixed IDs
+		if isPredefinedTemplateID(template.ID) {
+			predefinedTemplates = append(predefinedTemplates, template)
+		}
+	}
+
+	return predefinedTemplates
+}
+
+// isPredefinedTemplateID checks if a template ID is one of the predefined ones
+func isPredefinedTemplateID(templateID string) bool {
+	predefinedIDs := []string{
+		"550e8400-e29b-41d4-a716-446655440000", // Welcome Email
+		"550e8400-e29b-41d4-a716-446655440001", // Password Reset
+		"550e8400-e29b-41d4-a716-446655440002", // Order Confirmation
+		"550e8400-e29b-41d4-a716-446655440003", // System Alert
+		"550e8400-e29b-41d4-a716-446655440004", // Deployment Notification
+		"550e8400-e29b-41d4-a716-446655440005", // Order Status Update
+		"550e8400-e29b-41d4-a716-446655440006", // Payment Reminder
+	}
+
+	for _, id := range predefinedIDs {
+		if templateID == id {
+			return true
+		}
+	}
+	return false
 }
 
 // SendNotification sends a notification through the appropriate channel

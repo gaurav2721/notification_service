@@ -1,6 +1,10 @@
 package notification_manager
 
-import "context"
+import (
+	"context"
+
+	"github.com/gaurav2721/notification-service/models"
+)
 
 // NotificationManager interface defines methods for notification management
 type NotificationManager interface {
@@ -10,4 +14,5 @@ type NotificationManager interface {
 	GetNotificationStatus(ctx context.Context, notificationID string) (interface{}, error)
 	CreateTemplate(ctx context.Context, template interface{}) (interface{}, error)
 	GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error)
+	GetPredefinedTemplates() []*models.Template
 }
