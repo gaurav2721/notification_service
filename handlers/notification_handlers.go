@@ -548,6 +548,7 @@ func (h *NotificationHandler) GetPredefinedTemplates(c *gin.Context) {
 			"name":               template.Name,
 			"type":               string(template.Type),
 			"version":            template.Version,
+			"content":            template.Content,
 			"description":        template.Description,
 			"required_variables": template.RequiredVariables,
 			"status":             template.Status,

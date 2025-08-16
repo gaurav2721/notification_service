@@ -311,6 +311,10 @@ curl -X GET http://localhost:8080/api/v1/templates/predefined
       "name": "Welcome Email Template",
       "type": "email",
       "version": 1,
+      "content": {
+        "subject": "Welcome to {{platform}}, {{name}}!",
+        "email_body": "Hello {{name}},\n\nWelcome to {{platform}}! We are excited to have you on board.\n\nYour account has been successfully created with the following details:\n- Username: {{username}}\n- Email: {{email}}\n- Account Type: {{account_type}}\n\nPlease click the following link to activate your account:\n{{activation_link}}\n\nIf you have any questions, please contact our support team.\n\nBest regards,\nThe {{platform}} Team"
+      },
       "description": "Welcome email template for new user onboarding",
       "required_variables": ["name", "platform", "username", "email", "account_type", "activation_link"],
       "status": "active",
@@ -321,6 +325,10 @@ curl -X GET http://localhost:8080/api/v1/templates/predefined
       "name": "Password Reset Template",
       "type": "email",
       "version": 1,
+      "content": {
+        "subject": "Password Reset Request - {{platform}}",
+        "email_body": "Hello {{name}},\n\nWe received a request to reset your password for your {{platform}} account.\n\nTo reset your password, click the link below:\n{{reset_link}}\n\nThis link will expire in {{expiry_hours}} hours.\n\nIf you did not request a password reset, please ignore this email or contact support if you have concerns.\n\nBest regards,\nThe {{platform}} Team"
+      },
       "description": "Password reset email template",
       "required_variables": ["name", "platform", "reset_link", "expiry_hours"],
       "status": "active",
@@ -331,6 +339,10 @@ curl -X GET http://localhost:8080/api/v1/templates/predefined
       "name": "Order Confirmation Template",
       "type": "email",
       "version": 1,
+      "content": {
+        "subject": "Order Confirmation - {{order_id}}",
+        "email_body": "Hello {{customer_name}},\n\nThank you for your order! Your order has been confirmed and is being processed.\n\nOrder Details:\n- Order ID: {{order_id}}\n- Order Date: {{order_date}}\n- Total Amount: {{total_amount}}\n- Payment Method: {{payment_method}}\n\nItems:\n{{items_list}}\n\nShipping Address:\n{{shipping_address}}\n\nExpected Delivery: {{delivery_date}}\n\nTrack your order: {{tracking_link}}\n\nIf you have any questions, please contact our support team.\n\nBest regards,\nThe {{platform}} Team"
+      },
       "description": "Order confirmation email template",
       "required_variables": ["customer_name", "order_id", "order_date", "total_amount", "payment_method", "items_list", "shipping_address", "delivery_date", "tracking_link", "platform"],
       "status": "active",
@@ -341,6 +353,9 @@ curl -X GET http://localhost:8080/api/v1/templates/predefined
       "name": "System Alert Template",
       "type": "slack",
       "version": 1,
+      "content": {
+        "text": "🚨 *{{alert_type}} Alert*\n\n*System:* {{system_name}}\n*Severity:* {{severity}}\n*Environment:* {{environment}}\n*Message:* {{message}}\n*Timestamp:* {{timestamp}}\n*Action Required:* {{action_required}}\n*Affected Services:* {{affected_services}}\n\n<{{dashboard_link}}|View Dashboard>"
+      },
       "description": "Slack alert template for system monitoring",
       "required_variables": ["alert_type", "system_name", "severity", "environment", "message", "timestamp", "action_required", "affected_services", "dashboard_link"],
       "status": "active",
@@ -351,6 +366,9 @@ curl -X GET http://localhost:8080/api/v1/templates/predefined
       "name": "Deployment Notification Template",
       "type": "slack",
       "version": 1,
+      "content": {
+        "text": "🚀 *Deployment {{status}}*\n\n*Service:* {{service_name}}\n*Environment:* {{environment}}\n*Version:* {{version}}\n*Deployed By:* {{deployed_by}}\n*Duration:* {{duration}}\n\n*Changes Summary:*\n{{changes_summary}}\n\n*Rollback Command:*\n```{{rollback_command}}```\n\n<{{monitoring_link}}|Monitor Service>"
+      },
       "description": "Slack notification template for deployment events",
       "required_variables": ["status", "service_name", "environment", "version", "deployed_by", "duration", "changes_summary", "rollback_command", "monitoring_link"],
       "status": "active",
@@ -361,6 +379,10 @@ curl -X GET http://localhost:8080/api/v1/templates/predefined
       "name": "Order Status Update Template",
       "type": "in_app",
       "version": 1,
+      "content": {
+        "title": "Order #{{order_id}} - {{status}}",
+        "body": "Your order with {{item_count}} items ({{total_amount}}) has been {{status}}.\n\n{{status_message}}\n\nTap to {{action_button}}."
+      },
       "description": "In-app notification template for order status updates",
       "required_variables": ["order_id", "status", "item_count", "total_amount", "status_message", "action_button"],
       "status": "active",
@@ -371,6 +393,10 @@ curl -X GET http://localhost:8080/api/v1/templates/predefined
       "name": "Payment Reminder Template",
       "type": "in_app",
       "version": 1,
+      "content": {
+        "title": "Payment Reminder - ${{amount}}",
+        "body": "Your payment of ${{amount}} is due on {{due_date}}.\n\nInvoice ID: {{invoice_id}}\n\nPlease complete your payment to avoid any service interruptions."
+      },
       "description": "In-app notification template for payment reminders",
       "required_variables": ["amount", "due_date", "invoice_id"],
       "status": "active",
@@ -644,7 +670,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
   -d '{
     "type": "email",
     "template": {
-      "id": "template-password-reset-custom",
+      "id": "840dcb93-bf17-42ba-ae49-316f0cb6d192",
       "version": 1,
       "data": {
         "user_name": "John Doe",
@@ -653,7 +679,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
         "expiry_hours": 24
       }
     },
-    "recipients": ["user-123"],
+    "recipients": ["user-001"],
     "from": {
       "email": "noreply@company.com"
     }
