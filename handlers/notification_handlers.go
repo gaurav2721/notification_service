@@ -156,6 +156,8 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 		// Create personalized notification message for this user
 		notificationMessage := h.createNotificationMessage(notificationID, request, user)
 
+		fmt.Println("---------------> gaurav notificationMessage", notificationMessage)
+
 		// Post to relevant Kafka channel based on notification type
 		err := h.postToKafkaChannel(request.Type, notificationMessage)
 		if err != nil {
@@ -255,6 +257,8 @@ func (h *NotificationHandler) postToKafkaChannel(notificationType string, messag
 	}
 
 	messageStr := string(messageJSON)
+
+	fmt.Println("---------------> gaurav messageStr", messageStr)
 
 	// Post to appropriate channel based on notification type
 	switch notificationType {

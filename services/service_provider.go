@@ -13,7 +13,8 @@ import (
 type ServiceContainer struct {
 	emailService        EmailService
 	slackService        SlackService
-	inAppService        InAppService
+	apnsService         APNSService
+	fcmService          FCMService
 	userService         UserService
 	kafkaService        kafka.KafkaService
 	consumerManager     consumers.ConsumerManager
@@ -41,7 +42,8 @@ func (c *ServiceContainer) initializeServices() {
 	logrus.Debug("Initializing core services")
 	c.emailService = factory.NewEmailService()
 	c.slackService = factory.NewSlackService()
-	c.inAppService = factory.NewInAppService()
+	c.apnsService = factory.NewAPNSService()
+	c.fcmService = factory.NewFCMService()
 	c.userService = factory.NewUserService()
 	logrus.Debug("Core services initialized")
 
@@ -90,9 +92,14 @@ func (c *ServiceContainer) GetSlackService() SlackService {
 	return c.slackService
 }
 
-// GetInAppService returns the in-app service
-func (c *ServiceContainer) GetInAppService() InAppService {
-	return c.inAppService
+// GetAPNSService returns the APNS service
+func (c *ServiceContainer) GetAPNSService() APNSService {
+	return c.apnsService
+}
+
+// GetFCMService returns the FCM service
+func (c *ServiceContainer) GetFCMService() FCMService {
+	return c.fcmService
 }
 
 // GetUserService returns the user service
@@ -113,6 +120,18 @@ func (c *ServiceContainer) GetConsumerManager() consumers.ConsumerManager {
 // GetNotificationService returns the notification service
 func (c *ServiceContainer) GetNotificationService() NotificationManager {
 	return c.notificationService
+}
+
+// NewAPNSServiceWithConfig creates a new APNS service with custom configuration
+func (c *ServiceContainer) NewAPNSServiceWithConfig(config *APNSConfig) (APNSService, error) {
+	factory := NewServiceFactory()
+	return factory.NewAPNSServiceWithConfig(config)
+}
+
+// NewFCMServiceWithConfig creates a new FCM service with custom configuration
+func (c *ServiceContainer) NewFCMServiceWithConfig(config *FCMConfig) (FCMService, error) {
+	factory := NewServiceFactory()
+	return factory.NewFCMServiceWithConfig(config)
 }
 
 // Shutdown gracefully shuts down all services
@@ -146,11 +165,14 @@ func (c *ServiceContainer) Shutdown(ctx context.Context) error {
 type ServiceProvider interface {
 	GetEmailService() EmailService
 	GetSlackService() SlackService
-	GetInAppService() InAppService
+	GetAPNSService() APNSService
+	GetFCMService() FCMService
 	GetUserService() UserService
 	GetKafkaService() kafka.KafkaService
 	GetConsumerManager() consumers.ConsumerManager
 	GetNotificationService() NotificationManager
+	NewAPNSServiceWithConfig(config *APNSConfig) (APNSService, error)
+	NewFCMServiceWithConfig(config *FCMConfig) (FCMService, error)
 	Shutdown(ctx context.Context) error
 }
 

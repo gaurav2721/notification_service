@@ -2,9 +2,10 @@
 package services
 
 import (
+	"github.com/gaurav2721/notification-service/external_services/apns"
 	"github.com/gaurav2721/notification-service/external_services/consumers"
 	"github.com/gaurav2721/notification-service/external_services/email"
-	"github.com/gaurav2721/notification-service/external_services/inapp"
+	"github.com/gaurav2721/notification-service/external_services/fcm"
 	"github.com/gaurav2721/notification-service/external_services/kafka"
 	"github.com/gaurav2721/notification-service/external_services/slack"
 	"github.com/gaurav2721/notification-service/external_services/user"
@@ -15,7 +16,8 @@ import (
 type (
 	EmailService        = email.EmailService
 	SlackService        = slack.SlackService
-	InAppService        = inapp.InAppService
+	APNSService         = apns.APNSService
+	FCMService          = fcm.FCMService
 	UserService         = user.UserService
 	KafkaService        = kafka.KafkaService
 	ConsumerManager     = consumers.ConsumerManager
@@ -26,7 +28,8 @@ type (
 type (
 	EmailConfig        = email.EmailConfig
 	SlackConfig        = slack.SlackConfig
-	InAppConfig        = inapp.InAppConfig
+	APNSConfig         = apns.APNSConfig
+	FCMConfig          = fcm.FCMConfig
 	UserConfig         = user.UserConfig
 	ConsumerConfig     = consumers.ConsumerConfig
 	NotificationConfig = notification_manager.NotificationConfig
@@ -44,10 +47,22 @@ var (
 	ErrInvalidChannel    = slack.ErrInvalidChannel
 	ErrSlackTokenMissing = slack.ErrSlackTokenMissing
 
-	// InApp service errors
-	ErrInAppSendFailed     = inapp.ErrInAppSendFailed
-	ErrInAppDeviceToken    = inapp.ErrInAppDeviceToken
-	ErrInAppDeviceNotFound = inapp.ErrInAppDeviceNotFound
+	// APNS service errors
+	ErrAPNSSendFailed                 = apns.ErrAPNSSendFailed
+	ErrAPNSInvalidDeviceToken         = apns.ErrInvalidDeviceToken
+	ErrAPNSInvalidConfiguration       = apns.ErrInvalidConfiguration
+	ErrAPNSDeviceTokenNotFound        = apns.ErrDeviceTokenNotFound
+	ErrAPNSUserNotFound               = apns.ErrUserNotFound
+	ErrAPNSInvalidNotificationPayload = apns.ErrInvalidNotificationPayload
+
+	// FCM service errors
+	ErrFCMSendFailed          = fcm.ErrFCMSendFailed
+	ErrFCMInvalidDeviceToken  = fcm.ErrInvalidDeviceToken
+	ErrFCMInvalidConfig       = fcm.ErrInvalidConfiguration
+	ErrFCMDeviceTokenNotFound = fcm.ErrDeviceTokenNotFound
+	ErrFCMUserNotFound        = fcm.ErrUserNotFound
+	ErrFCMInvalidPayload      = fcm.ErrInvalidNotificationPayload
+	ErrFCMInvalidServerKey    = fcm.ErrInvalidServerKey
 
 	// User service errors
 	ErrUserNotFound       = user.ErrUserNotFound
@@ -81,9 +96,24 @@ func (f *ServiceFactory) NewSlackService() SlackService {
 	return slack.NewSlackService()
 }
 
-// NewInAppService creates a new in-app service instance
-func (f *ServiceFactory) NewInAppService() InAppService {
-	return inapp.NewInAppService()
+// NewAPNSService creates a new APNS service instance
+func (f *ServiceFactory) NewAPNSService() APNSService {
+	return apns.NewAPNSService()
+}
+
+// NewAPNSServiceWithConfig creates a new APNS service with custom configuration
+func (f *ServiceFactory) NewAPNSServiceWithConfig(config *APNSConfig) (APNSService, error) {
+	return apns.NewAPNSServiceWithConfig(config)
+}
+
+// NewFCMService creates a new FCM service instance
+func (f *ServiceFactory) NewFCMService() FCMService {
+	return fcm.NewFCMService()
+}
+
+// NewFCMServiceWithConfig creates a new FCM service with custom configuration
+func (f *ServiceFactory) NewFCMServiceWithConfig(config *FCMConfig) (FCMService, error) {
+	return fcm.NewFCMServiceWithConfig(config)
 }
 
 // NewUserService creates a new user service instance
