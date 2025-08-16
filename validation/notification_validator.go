@@ -30,20 +30,8 @@ type ValidationResult struct {
 	Errors  []ValidationError `json:"errors,omitempty"`
 }
 
-// NotificationRequest represents the request structure for validation
-type NotificationRequest struct {
-	Type        string                 `json:"type"`
-	Content     map[string]interface{} `json:"content"`
-	Template    *models.TemplateData   `json:"template,omitempty"`
-	Recipients  []string               `json:"recipients"`
-	ScheduledAt *time.Time             `json:"scheduled_at"`
-	From        *struct {
-		Email string `json:"email"`
-	} `json:"from,omitempty"`
-}
-
 // ValidateNotificationRequest validates a complete notification request
-func (v *NotificationValidator) ValidateNotificationRequest(request *NotificationRequest) ValidationResult {
+func (v *NotificationValidator) ValidateNotificationRequest(request *models.NotificationRequest) ValidationResult {
 	var errors []ValidationError
 
 	// Validate basic required fields

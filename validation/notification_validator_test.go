@@ -13,12 +13,12 @@ func TestNotificationValidator_ValidateNotificationRequest(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		request  *NotificationRequest
+		request  *models.NotificationRequest
 		expected bool
 	}{
 		{
 			name: "Valid email notification",
-			request: &NotificationRequest{
+			request: &models.NotificationRequest{
 				Type: "email",
 				Content: map[string]interface{}{
 					"subject":    "Test Subject",
@@ -35,7 +35,7 @@ func TestNotificationValidator_ValidateNotificationRequest(t *testing.T) {
 		},
 		{
 			name: "Valid slack notification",
-			request: &NotificationRequest{
+			request: &models.NotificationRequest{
 				Type: "slack",
 				Content: map[string]interface{}{
 					"text": "Test slack message",
@@ -46,7 +46,7 @@ func TestNotificationValidator_ValidateNotificationRequest(t *testing.T) {
 		},
 		{
 			name: "Valid push notification",
-			request: &NotificationRequest{
+			request: &models.NotificationRequest{
 				Type: "ios_push",
 				Content: map[string]interface{}{
 					"title": "Test Title",
@@ -58,7 +58,7 @@ func TestNotificationValidator_ValidateNotificationRequest(t *testing.T) {
 		},
 		{
 			name: "Valid template notification",
-			request: &NotificationRequest{
+			request: &models.NotificationRequest{
 				Type: "email",
 				Template: &models.TemplateData{
 					ID: "550e8400-e29b-41d4-a716-446655440000",
@@ -77,7 +77,7 @@ func TestNotificationValidator_ValidateNotificationRequest(t *testing.T) {
 		},
 		{
 			name: "Valid scheduled notification",
-			request: &NotificationRequest{
+			request: &models.NotificationRequest{
 				Type: "email",
 				Content: map[string]interface{}{
 					"subject":    "Test Subject",
@@ -98,7 +98,7 @@ func TestNotificationValidator_ValidateNotificationRequest(t *testing.T) {
 		},
 		{
 			name: "Invalid - missing type",
-			request: &NotificationRequest{
+			request: &models.NotificationRequest{
 				Content: map[string]interface{}{
 					"subject":    "Test Subject",
 					"email_body": "Test email body",
@@ -114,7 +114,7 @@ func TestNotificationValidator_ValidateNotificationRequest(t *testing.T) {
 		},
 		{
 			name: "Invalid - missing recipients",
-			request: &NotificationRequest{
+			request: &models.NotificationRequest{
 				Type: "email",
 				Content: map[string]interface{}{
 					"subject":    "Test Subject",
@@ -130,7 +130,7 @@ func TestNotificationValidator_ValidateNotificationRequest(t *testing.T) {
 		},
 		{
 			name: "Invalid - email without from field",
-			request: &NotificationRequest{
+			request: &models.NotificationRequest{
 				Type: "email",
 				Content: map[string]interface{}{
 					"subject":    "Test Subject",
@@ -142,7 +142,7 @@ func TestNotificationValidator_ValidateNotificationRequest(t *testing.T) {
 		},
 		{
 			name: "Invalid - non-email with from field",
-			request: &NotificationRequest{
+			request: &models.NotificationRequest{
 				Type: "slack",
 				Content: map[string]interface{}{
 					"text": "Test message",
@@ -158,7 +158,7 @@ func TestNotificationValidator_ValidateNotificationRequest(t *testing.T) {
 		},
 		{
 			name: "Invalid - content and template both provided",
-			request: &NotificationRequest{
+			request: &models.NotificationRequest{
 				Type: "email",
 				Content: map[string]interface{}{
 					"subject":    "Test Subject",
@@ -181,7 +181,7 @@ func TestNotificationValidator_ValidateNotificationRequest(t *testing.T) {
 		},
 		{
 			name: "Invalid - neither content nor template provided",
-			request: &NotificationRequest{
+			request: &models.NotificationRequest{
 				Type:       "email",
 				Recipients: []string{"user-123"},
 				From: &struct {
@@ -194,7 +194,7 @@ func TestNotificationValidator_ValidateNotificationRequest(t *testing.T) {
 		},
 		{
 			name: "Invalid - past scheduled time",
-			request: &NotificationRequest{
+			request: &models.NotificationRequest{
 				Type: "email",
 				Content: map[string]interface{}{
 					"subject":    "Test Subject",

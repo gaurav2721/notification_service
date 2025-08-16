@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 
+	"github.com/gaurav2721/notification-service/models"
 	"github.com/gaurav2721/notification-service/validation"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -23,7 +24,7 @@ func NewValidationMiddleware() *ValidationMiddleware {
 // ValidateNotificationRequest is middleware that validates notification requests
 func (vm *ValidationMiddleware) ValidateNotificationRequest() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var request validation.NotificationRequest
+		var request models.NotificationRequest
 
 		if err := c.ShouldBindJSON(&request); err != nil {
 			logrus.WithError(err).Warn("Invalid JSON in notification request")

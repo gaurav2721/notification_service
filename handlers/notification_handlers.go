@@ -64,23 +64,11 @@ func NewNotificationHandler(
 	}
 }
 
-// NotificationRequest represents the request structure for sending notifications
-type NotificationRequest struct {
-	Type        string                 `json:"type" binding:"required"`
-	Content     map[string]interface{} `json:"content"`
-	Template    *models.TemplateData   `json:"template,omitempty"`
-	Recipients  []string               `json:"recipients" binding:"required"`
-	ScheduledAt *time.Time             `json:"scheduled_at"`
-	From        *struct {
-		Email string `json:"email"`
-	} `json:"from,omitempty"`
-}
-
 // SendNotification handles POST /notifications
 func (h *NotificationHandler) SendNotification(c *gin.Context) {
 	logrus.Debug("Received notification send request")
 
-	var request NotificationRequest
+	var request models.NotificationRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		logrus.WithError(err).Warn("Invalid request body for notification")
@@ -91,17 +79,7 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 	// Use comprehensive validation
 	validator := validation.NewNotificationValidator()
 
-	// Convert to validation request format
-	validationRequest := &validation.NotificationRequest{
-		Type:        request.Type,
-		Content:     request.Content,
-		Template:    request.Template,
-		Recipients:  request.Recipients,
-		ScheduledAt: request.ScheduledAt,
-		From:        request.From,
-	}
-
-	validationResult := validator.ValidateNotificationRequest(validationRequest)
+	validationResult := validator.ValidateNotificationRequest(&request)
 	if !validationResult.IsValid {
 		logrus.WithField("errors", validationResult.Errors).Warn("Validation failed for notification request")
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -237,7 +215,7 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 }
 
 // createNotificationMessage creates a personalized notification message for a specific user
-func (h *NotificationHandler) createNotificationMessage(notificationID string, request NotificationRequest, user *models.User) map[string]interface{} {
+func (h *NotificationHandler) createNotificationMessage(notificationID string, request models.NotificationRequest, user *models.User) map[string]interface{} {
 	// Create base notification message
 	message := map[string]interface{}{
 		"notification_id": notificationID,
