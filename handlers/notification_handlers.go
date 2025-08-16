@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gaurav2721/notification-service/models"
+	"github.com/gaurav2721/notification-service/validation"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -87,19 +88,27 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 		return
 	}
 
-	// Validate "from" field based on notification type
-	if request.Type == "email" {
-		if request.From == nil || request.From.Email == "" {
-			logrus.Warn("Email notification requires 'from' field with email")
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Email notifications require 'from' field with email address"})
-			return
-		}
-	} else {
-		if request.From != nil {
-			logrus.Warn("Non-email notifications should not include 'from' field")
-			c.JSON(http.StatusBadRequest, gin.H{"error": "'from' field is only allowed for email notifications"})
-			return
-		}
+	// Use comprehensive validation
+	validator := validation.NewNotificationValidator()
+
+	// Convert to validation request format
+	validationRequest := &validation.NotificationRequest{
+		Type:        request.Type,
+		Content:     request.Content,
+		Template:    request.Template,
+		Recipients:  request.Recipients,
+		ScheduledAt: request.ScheduledAt,
+		From:        request.From,
+	}
+
+	validationResult := validator.ValidateNotificationRequest(validationRequest)
+	if !validationResult.IsValid {
+		logrus.WithField("errors", validationResult.Errors).Warn("Validation failed for notification request")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Validation failed",
+			"details": validationResult.Errors,
+		})
+		return
 	}
 
 	logrus.WithFields(logrus.Fields{
