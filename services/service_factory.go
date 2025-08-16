@@ -49,20 +49,14 @@ var (
 
 	// APNS service errors
 	ErrAPNSSendFailed                 = apns.ErrAPNSSendFailed
-	ErrAPNSInvalidDeviceToken         = apns.ErrInvalidDeviceToken
 	ErrAPNSInvalidConfiguration       = apns.ErrInvalidConfiguration
-	ErrAPNSDeviceTokenNotFound        = apns.ErrDeviceTokenNotFound
-	ErrAPNSUserNotFound               = apns.ErrUserNotFound
 	ErrAPNSInvalidNotificationPayload = apns.ErrInvalidNotificationPayload
 
 	// FCM service errors
-	ErrFCMSendFailed          = fcm.ErrFCMSendFailed
-	ErrFCMInvalidDeviceToken  = fcm.ErrInvalidDeviceToken
-	ErrFCMInvalidConfig       = fcm.ErrInvalidConfiguration
-	ErrFCMDeviceTokenNotFound = fcm.ErrDeviceTokenNotFound
-	ErrFCMUserNotFound        = fcm.ErrUserNotFound
-	ErrFCMInvalidPayload      = fcm.ErrInvalidNotificationPayload
-	ErrFCMInvalidServerKey    = fcm.ErrInvalidServerKey
+	ErrFCMSendFailed       = fcm.ErrFCMSendFailed
+	ErrFCMInvalidConfig    = fcm.ErrInvalidConfiguration
+	ErrFCMInvalidPayload   = fcm.ErrInvalidNotificationPayload
+	ErrFCMInvalidServerKey = fcm.ErrInvalidServerKey
 
 	// User service errors
 	ErrUserNotFound       = user.ErrUserNotFound

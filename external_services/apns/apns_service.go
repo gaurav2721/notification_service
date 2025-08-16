@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -16,17 +15,14 @@ import (
 
 // APNSServiceImpl implements the APNSService interface
 type APNSServiceImpl struct {
-	config       *APNSConfig
-	privateKey   *ecdsa.PrivateKey
-	client       *http.Client
-	deviceTokens map[string][]string // userID -> device tokens
-	mutex        sync.RWMutex
+	config     *APNSConfig
+	privateKey *ecdsa.PrivateKey
+	client     *http.Client
 }
 
 // NewAPNSService creates a new APNS service instance
 func NewAPNSService() APNSService {
 	return &APNSServiceImpl{
-		deviceTokens: make(map[string][]string),
 		client: &http.Client{
 			Timeout: 30 * time.Second,
 		},
@@ -55,9 +51,8 @@ func NewAPNSServiceWithConfig(config *APNSConfig) (APNSService, error) {
 	// Production: https://api.push.apple.com
 
 	return &APNSServiceImpl{
-		config:       config,
-		privateKey:   privateKey,
-		deviceTokens: make(map[string][]string),
+		config:     config,
+		privateKey: privateKey,
 		client: &http.Client{
 			Timeout: time.Duration(config.Timeout) * time.Second,
 		},
@@ -82,17 +77,11 @@ func (aps *APNSServiceImpl) SendPushNotification(ctx context.Context, notificati
 		return nil, ErrInvalidNotificationPayload
 	}
 
-	// Get device tokens for all recipients
-	aps.mutex.RLock()
-	var allDeviceTokens []string
-	for _, recipient := range notif.Recipients {
-		if tokens, exists := aps.deviceTokens[recipient]; exists {
-			allDeviceTokens = append(allDeviceTokens, tokens...)
-		}
-	}
-	aps.mutex.RUnlock()
+	// Extract device tokens from recipients
+	// Recipients should contain iOS device tokens
+	deviceTokens := notif.Recipients
 
-	if len(allDeviceTokens) == 0 {
+	if len(deviceTokens) == 0 {
 		return &struct {
 			ID      string    `json:"id"`
 			Status  string    `json:"status"`
@@ -102,7 +91,7 @@ func (aps *APNSServiceImpl) SendPushNotification(ctx context.Context, notificati
 		}{
 			ID:      notif.ID,
 			Status:  "no_devices",
-			Message: "No device tokens found for recipients",
+			Message: "No device tokens provided in recipients",
 			SentAt:  time.Now(),
 			Channel: "apns",
 		}, nil
@@ -125,7 +114,7 @@ func (aps *APNSServiceImpl) SendPushNotification(ctx context.Context, notificati
 			Message:      "APNS notification simulated (no config provided)",
 			SentAt:       time.Now(),
 			Channel:      "apns",
-			SuccessCount: len(allDeviceTokens),
+			SuccessCount: len(deviceTokens),
 			FailureCount: 0,
 		}, nil
 	}
@@ -167,7 +156,7 @@ func (aps *APNSServiceImpl) SendPushNotification(ctx context.Context, notificati
 	successCount := 0
 	failureCount := 0
 
-	for _, deviceToken := range allDeviceTokens {
+	for _, deviceToken := range deviceTokens {
 		url := fmt.Sprintf("https://api.push.apple.com/3/device/%s", deviceToken)
 
 		req, err := http.NewRequestWithContext(ctx, "POST", url, nil)
@@ -213,66 +202,4 @@ func (aps *APNSServiceImpl) SendPushNotification(ctx context.Context, notificati
 		SuccessCount: successCount,
 		FailureCount: failureCount,
 	}, nil
-}
-
-// RegisterDeviceToken registers a device token for a user
-func (aps *APNSServiceImpl) RegisterDeviceToken(userID, deviceToken string) error {
-	if userID == "" || deviceToken == "" {
-		return ErrInvalidDeviceToken
-	}
-
-	aps.mutex.Lock()
-	defer aps.mutex.Unlock()
-
-	// Check if token already exists
-	if tokens, exists := aps.deviceTokens[userID]; exists {
-		for _, token := range tokens {
-			if token == deviceToken {
-				return nil // Token already registered
-			}
-		}
-		aps.deviceTokens[userID] = append(tokens, deviceToken)
-	} else {
-		aps.deviceTokens[userID] = []string{deviceToken}
-	}
-
-	return nil
-}
-
-// UnregisterDeviceToken removes a device token for a user
-func (aps *APNSServiceImpl) UnregisterDeviceToken(userID, deviceToken string) error {
-	if userID == "" || deviceToken == "" {
-		return ErrInvalidDeviceToken
-	}
-
-	aps.mutex.Lock()
-	defer aps.mutex.Unlock()
-
-	if tokens, exists := aps.deviceTokens[userID]; exists {
-		for i, token := range tokens {
-			if token == deviceToken {
-				aps.deviceTokens[userID] = append(tokens[:i], tokens[i+1:]...)
-				return nil
-			}
-		}
-		return ErrDeviceTokenNotFound
-	}
-
-	return ErrUserNotFound
-}
-
-// GetDeviceTokensForUser retrieves all device tokens for a user
-func (aps *APNSServiceImpl) GetDeviceTokensForUser(userID string) ([]string, error) {
-	if userID == "" {
-		return nil, ErrUserNotFound
-	}
-
-	aps.mutex.RLock()
-	defer aps.mutex.RUnlock()
-
-	if tokens, exists := aps.deviceTokens[userID]; exists {
-		return tokens, nil
-	}
-
-	return []string{}, nil
 }

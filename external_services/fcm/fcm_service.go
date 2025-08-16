@@ -7,16 +7,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"sync"
 	"time"
 )
 
 // FCMServiceImpl implements the FCMService interface
 type FCMServiceImpl struct {
-	config       *FCMConfig
-	client       *http.Client
-	deviceTokens map[string][]string // userID -> device tokens
-	mutex        sync.RWMutex
+	config *FCMConfig
+	client *http.Client
 }
 
 // FCMRequest represents the FCM API request structure
@@ -56,7 +53,6 @@ type Result struct {
 // NewFCMService creates a new FCM service instance
 func NewFCMService() FCMService {
 	return &FCMServiceImpl{
-		deviceTokens: make(map[string][]string),
 		client: &http.Client{
 			Timeout: 30 * time.Second,
 		},
@@ -70,8 +66,7 @@ func NewFCMServiceWithConfig(config *FCMConfig) (FCMService, error) {
 	}
 
 	return &FCMServiceImpl{
-		config:       config,
-		deviceTokens: make(map[string][]string),
+		config: config,
 		client: &http.Client{
 			Timeout: time.Duration(config.Timeout) * time.Second,
 		},
@@ -96,17 +91,11 @@ func (fcm *FCMServiceImpl) SendPushNotification(ctx context.Context, notificatio
 		return nil, ErrInvalidNotificationPayload
 	}
 
-	// Get device tokens for all recipients
-	fcm.mutex.RLock()
-	var allDeviceTokens []string
-	for _, recipient := range notif.Recipients {
-		if tokens, exists := fcm.deviceTokens[recipient]; exists {
-			allDeviceTokens = append(allDeviceTokens, tokens...)
-		}
-	}
-	fcm.mutex.RUnlock()
+	// Extract device tokens from recipients
+	// Recipients should contain Android device tokens
+	deviceTokens := notif.Recipients
 
-	if len(allDeviceTokens) == 0 {
+	if len(deviceTokens) == 0 {
 		return &struct {
 			ID      string    `json:"id"`
 			Status  string    `json:"status"`
@@ -116,7 +105,7 @@ func (fcm *FCMServiceImpl) SendPushNotification(ctx context.Context, notificatio
 		}{
 			ID:      notif.ID,
 			Status:  "no_devices",
-			Message: "No device tokens found for recipients",
+			Message: "No device tokens provided in recipients",
 			SentAt:  time.Now(),
 			Channel: "fcm",
 		}, nil
@@ -156,7 +145,7 @@ func (fcm *FCMServiceImpl) SendPushNotification(ctx context.Context, notificatio
 			Message:      "FCM notification simulated (no config provided)",
 			SentAt:       time.Now(),
 			Channel:      "fcm",
-			SuccessCount: len(allDeviceTokens),
+			SuccessCount: len(deviceTokens),
 			FailureCount: 0,
 		}, nil
 	}
@@ -170,13 +159,13 @@ func (fcm *FCMServiceImpl) SendPushNotification(ctx context.Context, notificatio
 	totalSuccess := 0
 	totalFailure := 0
 
-	for i := 0; i < len(allDeviceTokens); i += batchSize {
+	for i := 0; i < len(deviceTokens); i += batchSize {
 		end := i + batchSize
-		if end > len(allDeviceTokens) {
-			end = len(allDeviceTokens)
+		if end > len(deviceTokens) {
+			end = len(deviceTokens)
 		}
 
-		batchTokens := allDeviceTokens[i:end]
+		batchTokens := deviceTokens[i:end]
 		success, failure, err := fcm.sendBatch(ctx, batchTokens, fcmNotification, data)
 		if err != nil {
 			failure += len(batchTokens)
@@ -250,66 +239,4 @@ func (fcm *FCMServiceImpl) sendBatch(ctx context.Context, tokens []string, notif
 	}
 
 	return fcmResp.Success, fcmResp.Failure, nil
-}
-
-// RegisterDeviceToken registers a device token for a user
-func (fcm *FCMServiceImpl) RegisterDeviceToken(userID, deviceToken string) error {
-	if userID == "" || deviceToken == "" {
-		return ErrInvalidDeviceToken
-	}
-
-	fcm.mutex.Lock()
-	defer fcm.mutex.Unlock()
-
-	// Check if token already exists
-	if tokens, exists := fcm.deviceTokens[userID]; exists {
-		for _, token := range tokens {
-			if token == deviceToken {
-				return nil // Token already registered
-			}
-		}
-		fcm.deviceTokens[userID] = append(tokens, deviceToken)
-	} else {
-		fcm.deviceTokens[userID] = []string{deviceToken}
-	}
-
-	return nil
-}
-
-// UnregisterDeviceToken removes a device token for a user
-func (fcm *FCMServiceImpl) UnregisterDeviceToken(userID, deviceToken string) error {
-	if userID == "" || deviceToken == "" {
-		return ErrInvalidDeviceToken
-	}
-
-	fcm.mutex.Lock()
-	defer fcm.mutex.Unlock()
-
-	if tokens, exists := fcm.deviceTokens[userID]; exists {
-		for i, token := range tokens {
-			if token == deviceToken {
-				fcm.deviceTokens[userID] = append(tokens[:i], tokens[i+1:]...)
-				return nil
-			}
-		}
-		return ErrDeviceTokenNotFound
-	}
-
-	return ErrUserNotFound
-}
-
-// GetDeviceTokensForUser retrieves all device tokens for a user
-func (fcm *FCMServiceImpl) GetDeviceTokensForUser(userID string) ([]string, error) {
-	if userID == "" {
-		return nil, ErrUserNotFound
-	}
-
-	fcm.mutex.RLock()
-	defer fcm.mutex.RUnlock()
-
-	if tokens, exists := fcm.deviceTokens[userID]; exists {
-		return tokens, nil
-	}
-
-	return []string{}, nil
 }
