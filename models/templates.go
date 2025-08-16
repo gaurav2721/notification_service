@@ -8,8 +8,9 @@ import (
 
 // TemplateData represents the data structure for template usage in notifications
 type TemplateData struct {
-	ID   string                 `json:"id"`
-	Data map[string]interface{} `json:"data"`
+	ID      string                 `json:"id"`
+	Version int                    `json:"version"`
+	Data    map[string]interface{} `json:"data"`
 }
 
 // TemplateContent represents the content structure for different template types

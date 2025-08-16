@@ -14,5 +14,7 @@ type NotificationManager interface {
 	GetNotificationStatus(ctx context.Context, notificationID string) (interface{}, error)
 	CreateTemplate(ctx context.Context, template interface{}) (interface{}, error)
 	GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error)
+	GetTemplateByID(templateID string) (*models.Template, error)
+	GetTemplateByIDAndVersion(templateID string, version int) (*models.Template, error)
 	GetPredefinedTemplates() []*models.Template
 }

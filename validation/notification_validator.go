@@ -339,6 +339,14 @@ func (v *NotificationValidator) validateTemplate(template *models.TemplateData) 
 		})
 	}
 
+	// Validate version (mandatory field)
+	if template.Version <= 0 {
+		errors = append(errors, ValidationError{
+			Field:   "template.version",
+			Message: "template version is required and must be a positive integer",
+		})
+	}
+
 	return errors
 }
 

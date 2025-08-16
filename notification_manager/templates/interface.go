@@ -17,8 +17,11 @@ type TemplateManager interface {
 	// GetPredefinedTemplates returns all predefined templates
 	GetPredefinedTemplates() []*models.Template
 
-	// GetTemplateByID returns a template by ID
+	// GetTemplateByID returns a template by ID (latest version)
 	GetTemplateByID(templateID string) (*models.Template, error)
+
+	// GetTemplateByIDAndVersion returns a specific version of a template
+	GetTemplateByIDAndVersion(templateID string, version int) (*models.Template, error)
 
 	// GetTemplateByName returns a template by name
 	GetTemplateByName(name string) (*models.Template, error)

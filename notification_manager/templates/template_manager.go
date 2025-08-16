@@ -130,13 +130,32 @@ func (tm *TemplateManagerImpl) GetPredefinedTemplates() []*models.Template {
 	return predefinedTemplates
 }
 
-// GetTemplateByID returns a template by ID
+// GetTemplateByID returns a template by ID (latest version)
 func (tm *TemplateManagerImpl) GetTemplateByID(templateID string) (*models.Template, error) {
 	tm.templateMutex.RLock()
 	defer tm.templateMutex.RUnlock()
 
 	template, exists := tm.templates[templateID]
 	if !exists {
+		return nil, models.ErrTemplateNotFound
+	}
+
+	return template, nil
+}
+
+// GetTemplateByIDAndVersion returns a specific version of a template
+func (tm *TemplateManagerImpl) GetTemplateByIDAndVersion(templateID string, version int) (*models.Template, error) {
+	tm.templateMutex.RLock()
+	defer tm.templateMutex.RUnlock()
+
+	template, exists := tm.templates[templateID]
+	if !exists {
+		return nil, models.ErrTemplateNotFound
+	}
+
+	// For now, we only support version 1 (current implementation)
+	// In a real implementation, you would store multiple versions
+	if version != 1 {
 		return nil, models.ErrTemplateNotFound
 	}
 

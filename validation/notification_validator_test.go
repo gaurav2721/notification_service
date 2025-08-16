@@ -61,7 +61,8 @@ func TestNotificationValidator_ValidateNotificationRequest(t *testing.T) {
 			request: &models.NotificationRequest{
 				Type: "email",
 				Template: &models.TemplateData{
-					ID: "550e8400-e29b-41d4-a716-446655440000",
+					ID:      "550e8400-e29b-41d4-a716-446655440000",
+					Version: 1,
 					Data: map[string]interface{}{
 						"name": "John Doe",
 					},
@@ -165,7 +166,8 @@ func TestNotificationValidator_ValidateNotificationRequest(t *testing.T) {
 					"email_body": "Test email body",
 				},
 				Template: &models.TemplateData{
-					ID: "550e8400-e29b-41d4-a716-446655440000",
+					ID:      "550e8400-e29b-41d4-a716-446655440000",
+					Version: 1,
 					Data: map[string]interface{}{
 						"name": "John Doe",
 					},
@@ -280,6 +282,73 @@ func TestNotificationValidator_ValidateRecipients(t *testing.T) {
 			isValid := len(errors) == 0
 			if isValid != tt.expected {
 				t.Errorf("validateRecipients() = %v, expected %v", isValid, tt.expected)
+				if !isValid {
+					t.Logf("Validation errors: %+v", errors)
+				}
+			}
+		})
+	}
+}
+
+func TestNotificationValidator_ValidateTemplateVersion(t *testing.T) {
+	validator := NewNotificationValidator()
+
+	tests := []struct {
+		name     string
+		template *models.TemplateData
+		expected bool
+	}{
+		{
+			name: "Valid template with version",
+			template: &models.TemplateData{
+				ID:      "550e8400-e29b-41d4-a716-446655440000",
+				Version: 1,
+				Data: map[string]interface{}{
+					"name": "John Doe",
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "Invalid template without version (version is now mandatory)",
+			template: &models.TemplateData{
+				ID: "550e8400-e29b-41d4-a716-446655440000",
+				Data: map[string]interface{}{
+					"name": "John Doe",
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "Invalid template with negative version",
+			template: &models.TemplateData{
+				ID:      "550e8400-e29b-41d4-a716-446655440000",
+				Version: -1,
+				Data: map[string]interface{}{
+					"name": "John Doe",
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "Invalid template with zero version (version must be positive)",
+			template: &models.TemplateData{
+				ID:      "550e8400-e29b-41d4-a716-446655440000",
+				Version: 0,
+				Data: map[string]interface{}{
+					"name": "John Doe",
+				},
+			},
+			expected: false, // Zero version is now invalid
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			errors := validator.validateTemplate(tt.template)
+			isValid := len(errors) == 0
+			if isValid != tt.expected {
+				t.Errorf("validateTemplate() = %v, expected %v", isValid, tt.expected)
 				if !isValid {
 					t.Logf("Validation errors: %+v", errors)
 				}

@@ -329,3 +329,13 @@ func (nm *NotificationManagerImpl) GetTemplateVersion(ctx context.Context, templ
 func (nm *NotificationManagerImpl) GetPredefinedTemplates() []*models.Template {
 	return nm.templateManager.GetPredefinedTemplates()
 }
+
+// GetTemplateByID returns a template by ID (latest version)
+func (nm *NotificationManagerImpl) GetTemplateByID(templateID string) (*models.Template, error) {
+	return nm.templateManager.GetTemplateByID(templateID)
+}
+
+// GetTemplateByIDAndVersion returns a specific version of a template
+func (nm *NotificationManagerImpl) GetTemplateByIDAndVersion(templateID string, version int) (*models.Template, error) {
+	return nm.templateManager.GetTemplateByIDAndVersion(templateID, version)
+}

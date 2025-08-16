@@ -391,6 +391,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
     "type": "email",
     "template": {
       "id": "550e8400-e29b-41d4-a716-446655440000",
+      "version": 1,
       "data": {
         "name": "John Doe",
         "platform": "Tuskira",
@@ -427,6 +428,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
     "type": "slack",
     "template": {
       "id": "550e8400-e29b-41d4-a716-446655440003",
+      "version": 1,
       "data": {
         "alert_type": "Database Connection",
         "system_name": "User Service",
@@ -439,7 +441,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
         "dashboard_link": "https://dashboard.example.com/alerts"
       }
     },
-    "recipients": ["user-001", "user-002"]
+    "recipients": ["user-001"]
   }'
 ```
 
@@ -463,6 +465,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
     "type": "in_app",
     "template": {
       "id": "550e8400-e29b-41d4-a716-446655440005",
+      "version": 1,
       "data": {
         "order_id": "ORD-2024-001",
         "status": "Shipped",
@@ -498,6 +501,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
     "type": "email",
     "template": {
       "id": "550e8400-e29b-41d4-a716-446655440000",
+      "version": 1,
       "data": {
         "name": "Jane Smith",
         "platform": "Tuskira",
@@ -535,6 +539,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
     "type": "slack",
     "template": {
       "id": "550e8400-e29b-41d4-a716-446655440003",
+      "version": 1,
       "data": {
         "alert_type": "Backup Status",
         "system_name": "Database Backup",
@@ -572,6 +577,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
     "type": "in_app",
     "template": {
       "id": "550e8400-e29b-41d4-a716-446655440005",
+      "version": 1,
       "data": {
         "order_id": "ORD-2024-002",
         "status": "Delivered",
@@ -639,6 +645,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
     "type": "email",
     "template": {
       "id": "template-password-reset-custom",
+      "version": 1,
       "data": {
         "user_name": "John Doe",
         "platform_name": "Tuskira",
@@ -673,6 +680,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
     "type": "email",
     "template": {
       "id": "template-password-reset-custom",
+      "version": 1,
       "data": {
         "user_name": "Jane Smith",
         "platform_name": "Tuskira",
@@ -744,6 +752,7 @@ curl -X GET http://localhost:8080/health
 - **Email notifications require a mandatory "from" field with an email address**
 - **Non-email notifications should not include the "from" field**
 - Templates support variable substitution using `{{variable_name}}` syntax
+- **Template versioning**: The `version` field in template objects is **mandatory** and must be a positive integer. This ensures explicit version control for all template usage.**
 - Scheduled notifications are processed by the service's internal scheduler
 - All API responses include appropriate HTTP status codes
 - Error responses include detailed error messages for debugging

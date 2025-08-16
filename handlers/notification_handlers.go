@@ -24,6 +24,8 @@ type NotificationHandler struct {
 		CreateTemplate(ctx context.Context, template interface{}) (interface{}, error)
 		GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error)
 		GetPredefinedTemplates() []*models.Template
+		GetTemplateByID(templateID string) (*models.Template, error)
+		GetTemplateByIDAndVersion(templateID string, version int) (*models.Template, error)
 	}
 	userService interface {
 		GetUsersByIDs(ctx context.Context, userIDs []string) ([]*models.User, error)
@@ -46,6 +48,8 @@ func NewNotificationHandler(
 		CreateTemplate(ctx context.Context, template interface{}) (interface{}, error)
 		GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error)
 		GetPredefinedTemplates() []*models.Template
+		GetTemplateByID(templateID string) (*models.Template, error)
+		GetTemplateByIDAndVersion(templateID string, version int) (*models.Template, error)
 	},
 	userService interface {
 		GetUsersByIDs(ctx context.Context, userIDs []string) ([]*models.User, error)
@@ -63,6 +67,81 @@ func NewNotificationHandler(
 		userService:         userService,
 		kafkaService:        kafkaService,
 	}
+}
+
+// processTemplateToContent processes a template and returns the generated content
+func (h *NotificationHandler) processTemplateToContent(template *models.TemplateData, notificationType string) (map[string]interface{}, error) {
+	if template == nil {
+		return nil, fmt.Errorf("template cannot be nil")
+	}
+
+	// Get the template from the notification service using the specified version
+	templateObj, err := h.notificationService.GetTemplateByIDAndVersion(template.ID, template.Version)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get template: %v", err)
+	}
+
+	// Validate that the template type matches the notification type
+	if string(templateObj.Type) != notificationType {
+		return nil, fmt.Errorf("template type %s does not match notification type %s", templateObj.Type, notificationType)
+	}
+
+	// Validate required variables
+	if err := templateObj.ValidateRequiredVariables(template.Data); err != nil {
+		return nil, fmt.Errorf("template validation failed: %v", err)
+	}
+
+	// Process template content based on type
+	content := make(map[string]interface{})
+
+	switch notificationType {
+	case "email":
+		// Process email template
+		subject := h.processTemplateString(templateObj.Content.Subject, template.Data)
+		emailBody := h.processTemplateString(templateObj.Content.EmailBody, template.Data)
+
+		content["subject"] = subject
+		content["email_body"] = emailBody
+
+	case "slack":
+		// Process slack template
+		text := h.processTemplateString(templateObj.Content.Text, template.Data)
+		content["text"] = text
+
+	case "in_app":
+		// Process in-app template
+		title := h.processTemplateString(templateObj.Content.Title, template.Data)
+		body := h.processTemplateString(templateObj.Content.Body, template.Data)
+
+		content["title"] = title
+		content["body"] = body
+
+	default:
+		return nil, fmt.Errorf("unsupported notification type: %s", notificationType)
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"template_id": template.ID,
+		"type":        notificationType,
+		"content":     content,
+	}).Debug("Template processed successfully")
+
+	return content, nil
+}
+
+// processTemplateString replaces template variables with actual values
+func (h *NotificationHandler) processTemplateString(templateStr string, data map[string]interface{}) string {
+	result := templateStr
+
+	// Replace variables in the format {{variable_name}}
+	for key, value := range data {
+		placeholder := fmt.Sprintf("{{%s}}", key)
+		stringValue := fmt.Sprintf("%v", value)
+		result = strings.ReplaceAll(result, placeholder, stringValue)
+	}
+
+	return result
 }
 
 // SendNotification handles POST /notifications
@@ -97,6 +176,29 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 		"hasTemplate": request.Template != nil,
 		"hasFrom":     request.From != nil,
 	}).Debug("Processing notification request")
+
+	// Process template if provided and generate content
+	if request.Template != nil {
+		logrus.Debug("Processing template to generate content")
+		generatedContent, err := h.processTemplateToContent(request.Template, request.Type)
+		if err != nil {
+			logrus.WithError(err).Error("Failed to process template")
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Template processing failed: %v", err)})
+			return
+		}
+
+		// Replace or merge the content with generated content
+		if request.Content == nil {
+			request.Content = generatedContent
+		} else {
+			// Merge generated content with existing content, giving priority to generated content
+			for key, value := range generatedContent {
+				request.Content[key] = value
+			}
+		}
+
+		logrus.WithField("generated_content", generatedContent).Debug("Template content generated and merged")
+	}
 
 	// Check if it's a scheduled notification
 	if request.ScheduledAt != nil {
@@ -515,16 +617,6 @@ func (h *NotificationHandler) createEmailMessage(notificationID string, request 
 		}
 	}
 
-	// Personalize content with user information
-	if userInfo.FullName != "" {
-		emailBody = strings.ReplaceAll(emailBody, "{{recipient_name}}", userInfo.FullName)
-		emailBody = strings.ReplaceAll(emailBody, "{{name}}", userInfo.FullName)
-	}
-	if userInfo.Email != "" {
-		emailBody = strings.ReplaceAll(emailBody, "{{recipient_email}}", userInfo.Email)
-		emailBody = strings.ReplaceAll(emailBody, "{{email}}", userInfo.Email)
-	}
-
 	emailNotification := &models.EmailNotificationRequest{
 		ID:   notificationID,
 		Type: "email",
@@ -553,16 +645,6 @@ func (h *NotificationHandler) createSlackMessage(notificationID string, request 
 		if txt, ok := request.Content["text"].(string); ok {
 			text = txt
 		}
-	}
-
-	// Personalize content with user information
-	if userInfo.FullName != "" {
-		text = strings.ReplaceAll(text, "{{recipient_name}}", userInfo.FullName)
-		text = strings.ReplaceAll(text, "{{name}}", userInfo.FullName)
-	}
-	if userInfo.SlackUserID != "" {
-		text = strings.ReplaceAll(text, "{{recipient_slack_id}}", userInfo.SlackUserID)
-		text = strings.ReplaceAll(text, "{{slack_id}}", userInfo.SlackUserID)
 	}
 
 	slackNotification := &models.SlackNotificationRequest{
