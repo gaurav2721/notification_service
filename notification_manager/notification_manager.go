@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gaurav2721/notification-service/models"
+	"github.com/gaurav2721/notification-service/notification_manager/scheduler"
 	"github.com/gaurav2721/notification-service/notification_manager/templates"
 	"github.com/sirupsen/logrus"
 )
@@ -14,7 +15,7 @@ import (
 type NotificationManagerImpl struct {
 	userService     interface{}
 	kafkaService    interface{}
-	scheduler       interface{}
+	scheduler       scheduler.Scheduler
 	templateManager templates.TemplateManager
 }
 
@@ -22,7 +23,7 @@ type NotificationManagerImpl struct {
 func NewNotificationManager(
 	userService interface{},
 	kafkaService interface{},
-	scheduler interface{},
+	scheduler scheduler.Scheduler,
 	templateManager templates.TemplateManager,
 ) *NotificationManagerImpl {
 	return &NotificationManagerImpl{
@@ -37,7 +38,7 @@ func NewNotificationManager(
 func NewNotificationManagerWithDefaultTemplate(
 	userService interface{},
 	kafkaService interface{},
-	scheduler interface{},
+	scheduler scheduler.Scheduler,
 ) *NotificationManagerImpl {
 	return NewNotificationManager(
 		userService,
@@ -291,10 +292,6 @@ func (nm *NotificationManagerImpl) ScheduleNotification(ctx context.Context, not
 		return ErrNoScheduledTime
 	}
 
-	// Schedule the job to run at the specified time
-	// In a real implementation, you would use a proper scheduler like cron or a job queue
-	// For now, we'll simulate scheduling by storing the job information
-
 	logrus.WithFields(logrus.Fields{
 		"notification_id": notificationId,
 		"scheduled_at":    notification.ScheduledAt,
@@ -302,16 +299,25 @@ func (nm *NotificationManagerImpl) ScheduleNotification(ctx context.Context, not
 		"recipients":      len(notification.Recipients),
 	}).Debug("Scheduling notification job")
 
-	// TODO: Implement actual job scheduling
-	// Example implementation with a real scheduler:
-	// err := nm.scheduler.ScheduleJob(notificationId, *notification.ScheduledAt, job)
-	// if err != nil {
-	//     return err
-	// }
+	// Convert the job function to match scheduler interface (func() instead of func() error)
+	schedulerJob := func() {
+		fmt.Println("--------------------------> gaurav123", notificationId)
+		logrus.WithField("notification_id", notificationId).Info("Executing scheduled notification job")
+		if err := job(); err != nil {
+			logrus.WithError(err).WithField("notification_id", notificationId).Error("Scheduled notification job failed")
+		} else {
+			logrus.WithField("notification_id", notificationId).Info("Scheduled notification job completed successfully")
+		}
+	}
 
-	// For now, just log that the job would be scheduled
+	// Schedule the job using the scheduler
+	err := nm.scheduler.ScheduleJob(notificationId, *notification.ScheduledAt, schedulerJob)
+	if err != nil {
+		logrus.WithError(err).WithField("notification_id", notificationId).Error("Failed to schedule notification job")
+		return err
+	}
+
 	logrus.WithField("notification_id", notificationId).Info("Notification job scheduled successfully")
-
 	return nil
 }
 

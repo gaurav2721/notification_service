@@ -11,6 +11,7 @@ import (
 	"github.com/gaurav2721/notification-service/external_services/user"
 	"github.com/gaurav2721/notification-service/models"
 	"github.com/gaurav2721/notification-service/notification_manager"
+	"github.com/gaurav2721/notification-service/notification_manager/scheduler"
 )
 
 // Re-export all interfaces and types for convenience
@@ -144,7 +145,7 @@ func (f *ServiceFactory) NewConsumerManagerWithServices(
 func (f *ServiceFactory) NewNotificationManager(
 	userService UserService,
 	kafkaService KafkaService,
-	scheduler interface{},
+	scheduler scheduler.Scheduler,
 ) NotificationManager {
 	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService, scheduler)
 }
@@ -161,7 +162,7 @@ func (f *ServiceFactory) NewNotificationManagerWithUserService(
 func (f *ServiceFactory) NewNotificationManagerWithScheduler(
 	userService UserService,
 	kafkaService KafkaService,
-	scheduler interface{},
+	scheduler scheduler.Scheduler,
 ) NotificationManager {
 	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService, scheduler)
 }
@@ -170,7 +171,7 @@ func (f *ServiceFactory) NewNotificationManagerWithScheduler(
 func (f *ServiceFactory) NewNotificationManagerComplete(
 	userService UserService,
 	kafkaService KafkaService,
-	scheduler interface{},
+	scheduler scheduler.Scheduler,
 ) NotificationManager {
 	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService, scheduler)
 }
@@ -179,4 +180,9 @@ func (f *ServiceFactory) NewNotificationManagerComplete(
 // This is used when the notification manager only needs to push notifications to Kafka channels
 func (f *ServiceFactory) NewNotificationManagerWithKafkaOnly(kafkaService KafkaService) NotificationManager {
 	return notification_manager.NewNotificationManagerWithDefaultTemplate(nil, kafkaService, nil)
+}
+
+// NewScheduler creates a new scheduler instance
+func (f *ServiceFactory) NewScheduler() scheduler.Scheduler {
+	return scheduler.NewScheduler()
 }
