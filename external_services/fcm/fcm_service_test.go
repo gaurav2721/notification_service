@@ -17,7 +17,6 @@ func TestNewFCMServiceWithConfig(t *testing.T) {
 	// Test with valid config
 	config := &FCMConfig{
 		ServerKey: "test_server_key",
-		ProjectID: "test_project",
 		Timeout:   30,
 		BatchSize: 1000,
 	}

@@ -10,7 +10,6 @@ type FCMService interface {
 // FCMConfig holds configuration for FCM service
 type FCMConfig struct {
 	ServerKey string
-	ProjectID string
 	Timeout   int // in seconds
 	BatchSize int // number of tokens to send in a single request
 }
