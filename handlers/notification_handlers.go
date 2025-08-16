@@ -231,10 +231,9 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 
 		logrus.WithField("notification_id", id).Debug("Notification scheduled successfully")
 		c.JSON(http.StatusOK, gin.H{
-			"id":           id,
-			"status":       "scheduled",
-			"message":      "Notification scheduled successfully",
-			"scheduled_at": request.ScheduledAt,
+			"id":      id,
+			"status":  "scheduled",
+			"message": "Notification scheduled successfully",
 		})
 		return
 	}
@@ -255,10 +254,9 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 
 	// Return aggregated response
 	c.JSON(http.StatusOK, gin.H{
-		"notification_id":  id,
-		"total_recipients": len(request.Recipients),
-		"queued_count":     len(responses),
-		"responses":        responses,
+		"id":      id,
+		"status":  "sent",
+		"message": "Notification sent successfully",
 	})
 }
 
