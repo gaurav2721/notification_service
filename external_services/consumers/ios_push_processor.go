@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/gaurav2721/notification-service/models"
 	"github.com/sirupsen/logrus"
 )
 
@@ -74,23 +75,21 @@ func (ip *iosPushProcessor) ProcessNotification(ctx context.Context, message Not
 	}
 
 	// Create APNS notification request
-	apnsNotification := &struct {
-		ID         string                 `json:"id"`
-		Type       string                 `json:"type"`
-		Content    map[string]interface{} `json:"content"`
-		Recipients []string               `json:"recipients"`
-	}{
-		ID:         message.ID,
-		Type:       string(message.Type),
-		Content:    content,
+	apnsNotification := &models.APNSNotificationRequest{
+		ID:   message.ID,
+		Type: string(message.Type),
+		Content: models.APNSContent{
+			Title: getStringFromMap(content, "title"),
+			Body:  getStringFromMap(content, "body"),
+		},
 		Recipients: deviceTokens,
 	}
 
 	logrus.WithFields(logrus.Fields{
 		"notification_id": message.ID,
 		"device_tokens":   len(deviceTokens),
-		"title":           content["title"],
-		"body":            content["body"],
+		"title":           apnsNotification.Content.Title,
+		"body":            apnsNotification.Content.Body,
 	}).Info("Sending iOS push notification")
 
 	// Send push notification using the APNS service

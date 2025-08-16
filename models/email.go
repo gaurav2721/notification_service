@@ -9,11 +9,17 @@ import (
 
 // EmailNotificationRequest represents an email notification request
 type EmailNotificationRequest struct {
-	ID         string                 `json:"id"`
-	Type       string                 `json:"type"`
-	Content    map[string]interface{} `json:"content"`
-	Recipients []string               `json:"recipients"`
-	From       *EmailSender           `json:"from,omitempty"`
+	ID         string       `json:"id"`
+	Type       string       `json:"type"`
+	Content    EmailContent `json:"content"`
+	Recipients []string     `json:"recipients"`
+	From       *EmailSender `json:"from,omitempty"`
+}
+
+// EmailContent represents the content of an email notification
+type EmailContent struct {
+	Subject   string `json:"subject"`
+	EmailBody string `json:"email_body"`
 }
 
 // EmailSender represents the sender information
@@ -32,85 +38,64 @@ type EmailResponse struct {
 
 // ValidateEmailNotification validates the email notification request
 func ValidateEmailNotification(notification *EmailNotificationRequest) error {
-	// Validate ID
+	if notification == nil {
+		return fmt.Errorf("email notification cannot be nil")
+	}
+
 	if notification.ID == "" {
-		return ErrMissingEmailID
+		return fmt.Errorf("email notification ID is required")
 	}
 
-	// Validate Type
 	if notification.Type == "" {
-		return ErrMissingEmailType
+		return fmt.Errorf("email notification type is required")
 	}
 
-	// Validate Content
-	if notification.Content == nil {
-		return ErrMissingEmailContent
+	// Validate content
+	if notification.Content.Subject == "" {
+		return fmt.Errorf("email subject is required")
 	}
 
-	// Validate Recipients
-	if notification.Recipients == nil || len(notification.Recipients) == 0 {
-		return ErrEmptyEmailRecipients
+	if notification.Content.EmailBody == "" {
+		return fmt.Errorf("email body is required")
 	}
 
-	// Validate each recipient email
+	// Validate recipients
+	if len(notification.Recipients) == 0 {
+		return fmt.Errorf("at least one recipient is required")
+	}
+
 	for i, recipient := range notification.Recipients {
 		if recipient == "" {
-			return fmt.Errorf("recipient at index %d is empty", i)
+			return fmt.Errorf("recipient at index %d cannot be empty", i)
 		}
-		if !isValidEmail(recipient) {
+		if _, err := mail.ParseAddress(recipient); err != nil {
 			return fmt.Errorf("invalid email address at index %d: %s", i, recipient)
 		}
 	}
 
-	// Validate From email
-	if notification.From == nil || notification.From.Email == "" {
-		return ErrMissingEmailFrom
-	}
-	if !isValidEmail(notification.From.Email) {
-		return ErrInvalidEmail
-	}
-
-	// Validate required content fields
-	subject, hasSubject := notification.Content["subject"]
-	if !hasSubject {
-		return ErrMissingEmailSubject
-	}
-	if subjectStr, ok := subject.(string); !ok || strings.TrimSpace(subjectStr) == "" {
-		return ErrMissingEmailSubject
-	}
-
-	body, hasBody := notification.Content["email_body"]
-	if !hasBody {
-		return ErrMissingEmailBody
-	}
-	if bodyStr, ok := body.(string); !ok || strings.TrimSpace(bodyStr) == "" {
-		return ErrMissingEmailBody
+	// Validate from email if provided
+	if notification.From != nil {
+		if notification.From.Email == "" {
+			return fmt.Errorf("from email cannot be empty if from field is provided")
+		}
+		if _, err := mail.ParseAddress(notification.From.Email); err != nil {
+			return fmt.Errorf("invalid from email address: %s", notification.From.Email)
+		}
 	}
 
 	return nil
 }
 
-// isValidEmail validates email address format
-func isValidEmail(email string) bool {
-	_, err := mail.ParseAddress(email)
-	return err == nil
-}
-
-// NewEmailNotification creates a new email notification with validation
-func NewEmailNotification(id, emailType string, content map[string]interface{}, recipients []string, fromEmail string) (*EmailNotificationRequest, error) {
-	notification := &EmailNotificationRequest{
-		ID:         id,
-		Type:       emailType,
-		Content:    content,
-		Recipients: recipients,
-		From: &EmailSender{
-			Email: fromEmail,
-		},
+// ValidateEmailAddress validates if a string is a valid email address
+func ValidateEmailAddress(email string) error {
+	if email == "" {
+		return ErrInvalidEmail
 	}
 
-	if err := ValidateEmailNotification(notification); err != nil {
-		return nil, err
+	email = strings.TrimSpace(email)
+	if _, err := mail.ParseAddress(email); err != nil {
+		return ErrInvalidEmail
 	}
 
-	return notification, nil
+	return nil
 }

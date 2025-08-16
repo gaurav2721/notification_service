@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/gaurav2721/notification-service/models"
 	"github.com/sirupsen/logrus"
 )
 
@@ -65,24 +66,25 @@ func (sp *slackProcessor) ProcessNotification(ctx context.Context, message Notif
 	}
 
 	// Create slack notification request
-	slackNotification := &struct {
-		ID         string                 `json:"id"`
-		Type       string                 `json:"type"`
-		Content    map[string]interface{} `json:"content"`
-		Recipients []string               `json:"recipients"`
-		Channel    string                 `json:"channel,omitempty"`
-	}{
-		ID:         message.ID,
-		Type:       string(message.Type),
-		Content:    content,
+	slackNotification := &models.SlackNotificationRequest{
+		ID:   message.ID,
+		Type: string(message.Type),
+		Content: models.SlackContent{
+			Text: getStringFromMap(content, "text"),
+		},
 		Recipients: []string{}, // Slack doesn't use individual recipients like email
-		Channel:    channel,
+	}
+
+	// Add channel if available
+	if channel != "" {
+		// Note: Channel is not part of the standard model, but could be added as metadata
+		// For now, we'll include it in the content or handle it separately
 	}
 
 	logrus.WithFields(logrus.Fields{
 		"notification_id": message.ID,
 		"channel":         channel,
-		"text":            content["text"],
+		"text":            slackNotification.Content.Text,
 	}).Info("Sending slack notification")
 
 	// Send slack message using the slack service

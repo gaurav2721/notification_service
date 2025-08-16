@@ -96,6 +96,8 @@ func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notific
 
 	// Send notification to Kafka channel based on type
 	logrus.WithField("type", notif.Type).Debug("Sending notification to Kafka channel")
+
+	fmt.Println("------> gaurav123", notif)
 	switch notif.Type {
 	case "email":
 		// Send to email channel

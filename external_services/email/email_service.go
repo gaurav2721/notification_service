@@ -67,18 +67,8 @@ func (es *EmailServiceImpl) SendEmail(ctx context.Context, notification interfac
 	m.SetHeader("To", notif.Recipients...)
 
 	// Extract subject and body from content
-	subject := ""
-	body := ""
-	if content, ok := notif.Content["subject"]; ok {
-		if subj, ok := content.(string); ok {
-			subject = subj
-		}
-	}
-	if content, ok := notif.Content["email_body"]; ok {
-		if bdy, ok := content.(string); ok {
-			body = bdy
-		}
-	}
+	subject := notif.Content.Subject
+	body := notif.Content.EmailBody
 
 	m.SetHeader("Subject", subject)
 	m.SetBody("text/html", body)

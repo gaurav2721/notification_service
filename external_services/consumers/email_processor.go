@@ -84,9 +84,12 @@ func (ep *emailProcessor) ProcessNotification(ctx context.Context, message Notif
 
 	// Create EmailNotificationRequest
 	emailNotification := &models.EmailNotificationRequest{
-		ID:         message.ID,
-		Type:       string(message.Type),
-		Content:    content,
+		ID:   message.ID,
+		Type: string(message.Type),
+		Content: models.EmailContent{
+			Subject:   getStringFromMap(content, "subject"),
+			EmailBody: getStringFromMap(content, "email_body"),
+		},
 		Recipients: []string{email},
 	}
 
@@ -101,7 +104,7 @@ func (ep *emailProcessor) ProcessNotification(ctx context.Context, message Notif
 		"notification_id": message.ID,
 		"to":              email,
 		"from":            fromEmail,
-		"subject":         content["subject"],
+		"subject":         emailNotification.Content.Subject,
 	}).Info("Sending email notification")
 
 	// Send email using the email service

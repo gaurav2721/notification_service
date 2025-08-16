@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/gaurav2721/notification-service/models"
 	"github.com/sirupsen/logrus"
 )
 
@@ -74,23 +75,21 @@ func (ap *androidPushProcessor) ProcessNotification(ctx context.Context, message
 	}
 
 	// Create FCM notification request
-	fcmNotification := &struct {
-		ID         string                 `json:"id"`
-		Type       string                 `json:"type"`
-		Content    map[string]interface{} `json:"content"`
-		Recipients []string               `json:"recipients"`
-	}{
-		ID:         message.ID,
-		Type:       string(message.Type),
-		Content:    content,
+	fcmNotification := &models.FCMNotificationRequest{
+		ID:   message.ID,
+		Type: string(message.Type),
+		Content: models.FCMContent{
+			Title: getStringFromMap(content, "title"),
+			Body:  getStringFromMap(content, "body"),
+		},
 		Recipients: deviceTokens,
 	}
 
 	logrus.WithFields(logrus.Fields{
 		"notification_id": message.ID,
 		"device_tokens":   len(deviceTokens),
-		"title":           content["title"],
-		"body":            content["body"],
+		"title":           fcmNotification.Content.Title,
+		"body":            fcmNotification.Content.Body,
 	}).Info("Sending Android push notification")
 
 	// Send push notification using the FCM service
