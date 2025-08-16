@@ -532,7 +532,7 @@ func (h *NotificationHandler) createEmailMessage(notificationID string, request 
 			Subject:   subject,
 			EmailBody: emailBody,
 		},
-		Recipients: []string{userInfo.Email},
+		Recipient: userInfo.Email,
 	}
 
 	// Add from field if provided
@@ -566,10 +566,10 @@ func (h *NotificationHandler) createSlackMessage(notificationID string, request 
 	}
 
 	slackNotification := &models.SlackNotificationRequest{
-		ID:         notificationID,
-		Type:       "slack",
-		Content:    models.SlackContent{Text: text},
-		Recipients: []string{userInfo.SlackChannel},
+		ID:        notificationID,
+		Type:      "slack",
+		Content:   models.SlackContent{Text: text},
+		Recipient: userInfo.SlackChannel,
 	}
 
 	return slackNotification
@@ -592,17 +592,17 @@ func (h *NotificationHandler) createIndividualPushMessage(notificationID string,
 	switch pushType {
 	case "ios_push":
 		return &models.APNSNotificationRequest{
-			ID:         notificationID,
-			Type:       "ios_push",
-			Content:    models.APNSContent{Title: title, Body: body},
-			Recipients: []string{deviceToken},
+			ID:        notificationID,
+			Type:      "ios_push",
+			Content:   models.APNSContent{Title: title, Body: body},
+			Recipient: deviceToken,
 		}
 	case "android_push":
 		return &models.FCMNotificationRequest{
-			ID:         notificationID,
-			Type:       "android_push",
-			Content:    models.FCMContent{Title: title, Body: body},
-			Recipients: []string{deviceToken},
+			ID:        notificationID,
+			Type:      "android_push",
+			Content:   models.FCMContent{Title: title, Body: body},
+			Recipient: deviceToken,
 		}
 	default:
 		// Fallback to generic map for unsupported types

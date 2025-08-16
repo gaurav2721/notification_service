@@ -45,55 +45,32 @@ func (ip *iosPushProcessor) ProcessNotification(ctx context.Context, message Not
 		return nil
 	}
 
-	// Parse the payload to extract notification details
-	var notificationData map[string]interface{}
-	if err := json.Unmarshal([]byte(message.Payload), &notificationData); err != nil {
-		logrus.WithError(err).Error("Failed to parse notification payload")
-		return fmt.Errorf("failed to parse notification payload: %w", err)
+	// Parse the payload directly into APNSNotificationRequest
+	var apnsNotification models.APNSNotificationRequest
+	if err := json.Unmarshal([]byte(message.Payload), &apnsNotification); err != nil {
+		logrus.WithError(err).Error("Failed to parse notification payload into APNSNotificationRequest")
+		return fmt.Errorf("failed to parse notification payload into APNSNotificationRequest: %w", err)
 	}
 
-	// Extract content from notification
-	content, ok := notificationData["content"].(map[string]interface{})
-	if !ok {
-		logrus.Error("Invalid content data in notification payload")
-		return fmt.Errorf("invalid content data in notification payload")
+	// Use the message ID if not set in the notification
+	if apnsNotification.ID == "" {
+		apnsNotification.ID = message.ID
 	}
 
-	// Extract device tokens from recipients
-	recipients, ok := notificationData["recipients"].([]interface{})
-	if !ok {
-		logrus.Error("Invalid recipients data in notification payload")
-		return fmt.Errorf("invalid recipients data in notification payload")
-	}
-
-	// Convert recipients to string slice
-	deviceTokens := make([]string, 0, len(recipients))
-	for _, recipient := range recipients {
-		if token, ok := recipient.(string); ok {
-			deviceTokens = append(deviceTokens, token)
-		}
-	}
-
-	// Create APNS notification request
-	apnsNotification := &models.APNSNotificationRequest{
-		ID:   message.ID,
-		Type: string(message.Type),
-		Content: models.APNSContent{
-			Title: getStringFromMap(content, "title"),
-			Body:  getStringFromMap(content, "body"),
-		},
-		Recipients: deviceTokens,
+	// Use the message type if not set in the notification
+	if apnsNotification.Type == "" {
+		apnsNotification.Type = string(message.Type)
 	}
 
 	logrus.WithFields(logrus.Fields{
 		"notification_id": message.ID,
-		"device_tokens":   len(deviceTokens),
+		"device_token":    apnsNotification.Recipient,
 		"title":           apnsNotification.Content.Title,
 		"body":            apnsNotification.Content.Body,
 	}).Info("Sending iOS push notification")
 
 	// Send push notification using the APNS service
-	response, err := ip.apnsService.SendPushNotification(ctx, apnsNotification)
+	response, err := ip.apnsService.SendPushNotification(ctx, &apnsNotification)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"notification_id": message.ID,

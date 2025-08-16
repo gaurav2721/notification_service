@@ -61,18 +61,18 @@ func (aps *APNSServiceImpl) SendPushNotification(ctx context.Context, notificati
 			ID   string
 			Data map[string]interface{}
 		}
-		Recipients  []string
+		Recipient   string
 		ScheduledAt *time.Time
 	})
 	if !ok {
 		return nil, ErrInvalidNotificationPayload
 	}
 
-	// Extract device tokens from recipients
-	// Recipients should contain iOS device tokens
-	deviceTokens := notif.Recipients
+	// Extract device token from recipient
+	// Recipient should contain iOS device token
+	deviceToken := notif.Recipient
 
-	if len(deviceTokens) == 0 {
+	if deviceToken == "" {
 		return &struct {
 			ID      string    `json:"id"`
 			Status  string    `json:"status"`
@@ -105,7 +105,7 @@ func (aps *APNSServiceImpl) SendPushNotification(ctx context.Context, notificati
 			Message:      "APNS notification simulated (no config provided)",
 			SentAt:       time.Now(),
 			Channel:      "apns",
-			SuccessCount: len(deviceTokens),
+			SuccessCount: 1,
 			FailureCount: 0,
 		}, nil
 	}
@@ -143,19 +143,16 @@ func (aps *APNSServiceImpl) SendPushNotification(ctx context.Context, notificati
 		return nil, fmt.Errorf("failed to marshal payload: %w", err)
 	}
 
-	// Send to each device token
+	// Send to the device token
 	successCount := 0
 	failureCount := 0
 
-	for _, deviceToken := range deviceTokens {
-		url := fmt.Sprintf("https://api.push.apple.com/3/device/%s", deviceToken)
+	url := fmt.Sprintf("https://api.push.apple.com/3/device/%s", deviceToken)
 
-		req, err := http.NewRequestWithContext(ctx, "POST", url, nil)
-		if err != nil {
-			failureCount++
-			continue
-		}
-
+	req, err := http.NewRequestWithContext(ctx, "POST", url, nil)
+	if err != nil {
+		failureCount = 1
+	} else {
 		req.Header.Set("Authorization", "bearer "+tokenString)
 		req.Header.Set("apns-topic", aps.config.BundleID)
 		req.Header.Set("Content-Type", "application/json")
@@ -163,15 +160,15 @@ func (aps *APNSServiceImpl) SendPushNotification(ctx context.Context, notificati
 
 		resp, err := aps.client.Do(req)
 		if err != nil {
-			failureCount++
-			continue
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode == http.StatusOK {
-			successCount++
+			failureCount = 1
 		} else {
-			failureCount++
+			defer resp.Body.Close()
+
+			if resp.StatusCode == http.StatusOK {
+				successCount = 1
+			} else {
+				failureCount = 1
+			}
 		}
 	}
 

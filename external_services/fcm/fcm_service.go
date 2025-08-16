@@ -105,18 +105,18 @@ func (fcm *FCMServiceImpl) SendPushNotification(ctx context.Context, notificatio
 			ID   string
 			Data map[string]interface{}
 		}
-		Recipients  []string
+		Recipient   string
 		ScheduledAt *time.Time
 	})
 	if !ok {
 		return nil, ErrInvalidNotificationPayload
 	}
 
-	// Extract device tokens from recipients
-	// Recipients should contain Android device tokens
-	deviceTokens := notif.Recipients
+	// Extract device token from recipient
+	// Recipient should contain Android device token
+	deviceToken := notif.Recipient
 
-	if len(deviceTokens) == 0 {
+	if deviceToken == "" {
 		return &struct {
 			ID      string    `json:"id"`
 			Status  string    `json:"status"`
@@ -166,34 +166,16 @@ func (fcm *FCMServiceImpl) SendPushNotification(ctx context.Context, notificatio
 			Message:      "FCM notification simulated (no config provided)",
 			SentAt:       time.Now(),
 			Channel:      "fcm",
-			SuccessCount: len(deviceTokens),
+			SuccessCount: 1,
 			FailureCount: 0,
 		}, nil
 	}
 
-	// Send notifications in batches
-	batchSize := fcm.config.BatchSize
-	if batchSize <= 0 {
-		batchSize = 1000 // Default batch size
-	}
-
-	totalSuccess := 0
-	totalFailure := 0
-
-	for i := 0; i < len(deviceTokens); i += batchSize {
-		end := i + batchSize
-		if end > len(deviceTokens) {
-			end = len(deviceTokens)
-		}
-
-		batchTokens := deviceTokens[i:end]
-		success, failure, err := fcm.sendBatch(ctx, batchTokens, fcmNotification, data)
-		if err != nil {
-			failure += len(batchTokens)
-		} else {
-			totalSuccess += success
-			totalFailure += failure
-		}
+	// Send notification to single device token
+	success, failure, err := fcm.sendBatch(ctx, []string{deviceToken}, fcmNotification, data)
+	if err != nil {
+		failure = 1
+		success = 0
 	}
 
 	// Return success response
@@ -208,11 +190,11 @@ func (fcm *FCMServiceImpl) SendPushNotification(ctx context.Context, notificatio
 	}{
 		ID:           notif.ID,
 		Status:       "sent",
-		Message:      fmt.Sprintf("FCM notification sent successfully. Success: %d, Failed: %d", totalSuccess, totalFailure),
+		Message:      fmt.Sprintf("FCM notification sent successfully. Success: %d, Failed: %d", success, failure),
 		SentAt:       time.Now(),
 		Channel:      "fcm",
-		SuccessCount: totalSuccess,
-		FailureCount: totalFailure,
+		SuccessCount: success,
+		FailureCount: failure,
 	}, nil
 }
 

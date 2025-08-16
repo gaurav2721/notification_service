@@ -38,7 +38,7 @@ func (aps *MockAPNSServiceImpl) SendPushNotification(ctx context.Context, notifi
 			ID   string
 			Data map[string]interface{}
 		}
-		Recipients  []string
+		Recipient   string
 		ScheduledAt *time.Time
 	})
 	if !ok {
@@ -60,7 +60,7 @@ func (aps *MockAPNSServiceImpl) SendPushNotification(ctx context.Context, notifi
 		Message:      "APNS notification written to file (mock mode)",
 		SentAt:       time.Now(),
 		Channel:      "apns",
-		SuccessCount: len(notif.Recipients),
+		SuccessCount: 1,
 		FailureCount: 0,
 	}
 
@@ -70,7 +70,7 @@ func (aps *MockAPNSServiceImpl) SendPushNotification(ctx context.Context, notifi
 		"id":           notif.ID,
 		"type":         notif.Type,
 		"content":      notif.Content,
-		"recipients":   notif.Recipients,
+		"recipient":    notif.Recipient,
 		"template":     notif.Template,
 		"scheduled_at": notif.ScheduledAt,
 		"status":       "mock_sent",

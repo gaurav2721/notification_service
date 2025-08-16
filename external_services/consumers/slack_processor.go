@@ -45,41 +45,25 @@ func (sp *slackProcessor) ProcessNotification(ctx context.Context, message Notif
 		return nil
 	}
 
-	// Parse the payload to extract notification details
-	var notificationData map[string]interface{}
-	if err := json.Unmarshal([]byte(message.Payload), &notificationData); err != nil {
-		logrus.WithError(err).Error("Failed to parse notification payload")
-		return fmt.Errorf("failed to parse notification payload: %w", err)
+	// Parse the payload directly into SlackNotificationRequest
+	var slackNotification models.SlackNotificationRequest
+	if err := json.Unmarshal([]byte(message.Payload), &slackNotification); err != nil {
+		logrus.WithError(err).Error("Failed to parse notification payload into SlackNotificationRequest")
+		return fmt.Errorf("failed to parse notification payload into SlackNotificationRequest: %w", err)
 	}
 
-	// Extract content from notification
-	content, ok := notificationData["content"].(map[string]interface{})
-	if !ok {
-		logrus.Error("Invalid content data in notification payload")
-		return fmt.Errorf("invalid content data in notification payload")
+	// Use the message ID if not set in the notification
+	if slackNotification.ID == "" {
+		slackNotification.ID = message.ID
 	}
 
-	// Extract channel from notification (optional)
-	var channel string
-	if channelData, ok := notificationData["channel"].(string); ok {
-		channel = channelData
+	// Use the message type if not set in the notification
+	if slackNotification.Type == "" {
+		slackNotification.Type = string(message.Type)
 	}
 
-	// Create slack notification request
-	slackNotification := &models.SlackNotificationRequest{
-		ID:   message.ID,
-		Type: string(message.Type),
-		Content: models.SlackContent{
-			Text: getStringFromMap(content, "text"),
-		},
-		Recipients: []string{}, // Slack doesn't use individual recipients like email
-	}
-
-	// Add channel if available
-	if channel != "" {
-		// Note: Channel is not part of the standard model, but could be added as metadata
-		// For now, we'll include it in the content or handle it separately
-	}
+	// Extract channel information for logging
+	channel := slackNotification.Recipient
 
 	logrus.WithFields(logrus.Fields{
 		"notification_id": message.ID,
@@ -88,7 +72,7 @@ func (sp *slackProcessor) ProcessNotification(ctx context.Context, message Notif
 	}).Info("Sending slack notification")
 
 	// Send slack message using the slack service
-	response, err := sp.slackService.SendSlackMessage(ctx, slackNotification)
+	response, err := sp.slackService.SendSlackMessage(ctx, &slackNotification)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"notification_id": message.ID,

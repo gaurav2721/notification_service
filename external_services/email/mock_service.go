@@ -53,14 +53,14 @@ func (es *MockEmailServiceImpl) SendEmail(ctx context.Context, notification inte
 
 	// Prepare notification data for file output
 	notificationData := map[string]interface{}{
-		"timestamp":  time.Now().Format(time.RFC3339),
-		"id":         notif.ID,
-		"type":       notif.Type,
-		"content":    notif.Content,
-		"recipients": notif.Recipients,
-		"from":       notif.From,
-		"status":     "mock_sent",
-		"channel":    "email",
+		"timestamp": time.Now().Format(time.RFC3339),
+		"id":        notif.ID,
+		"type":      notif.Type,
+		"content":   notif.Content,
+		"recipient": notif.Recipient,
+		"from":      notif.From,
+		"status":    "mock_sent",
+		"channel":   "email",
 	}
 
 	// Convert to JSON

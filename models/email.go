@@ -9,11 +9,11 @@ import (
 
 // EmailNotificationRequest represents an email notification request
 type EmailNotificationRequest struct {
-	ID         string       `json:"id"`
-	Type       string       `json:"type"`
-	Content    EmailContent `json:"content"`
-	Recipients []string     `json:"recipients"`
-	From       *EmailSender `json:"from,omitempty"`
+	ID        string       `json:"id"`
+	Type      string       `json:"type"`
+	Content   EmailContent `json:"content"`
+	Recipient string       `json:"recipient"`
+	From      *EmailSender `json:"from,omitempty"`
 }
 
 // EmailContent represents the content of an email notification
@@ -59,18 +59,13 @@ func ValidateEmailNotification(notification *EmailNotificationRequest) error {
 		return fmt.Errorf("email body is required")
 	}
 
-	// Validate recipients
-	if len(notification.Recipients) == 0 {
-		return fmt.Errorf("at least one recipient is required")
+	// Validate recipient
+	if notification.Recipient == "" {
+		return fmt.Errorf("recipient is required")
 	}
 
-	for i, recipient := range notification.Recipients {
-		if recipient == "" {
-			return fmt.Errorf("recipient at index %d cannot be empty", i)
-		}
-		if _, err := mail.ParseAddress(recipient); err != nil {
-			return fmt.Errorf("invalid email address at index %d: %s", i, recipient)
-		}
+	if _, err := mail.ParseAddress(notification.Recipient); err != nil {
+		return fmt.Errorf("invalid email address: %s", notification.Recipient)
 	}
 
 	// Validate from email if provided

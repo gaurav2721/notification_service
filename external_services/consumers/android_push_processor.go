@@ -45,55 +45,32 @@ func (ap *androidPushProcessor) ProcessNotification(ctx context.Context, message
 		return nil
 	}
 
-	// Parse the payload to extract notification details
-	var notificationData map[string]interface{}
-	if err := json.Unmarshal([]byte(message.Payload), &notificationData); err != nil {
-		logrus.WithError(err).Error("Failed to parse notification payload")
-		return fmt.Errorf("failed to parse notification payload: %w", err)
+	// Parse the payload directly into FCMNotificationRequest
+	var fcmNotification models.FCMNotificationRequest
+	if err := json.Unmarshal([]byte(message.Payload), &fcmNotification); err != nil {
+		logrus.WithError(err).Error("Failed to parse notification payload into FCMNotificationRequest")
+		return fmt.Errorf("failed to parse notification payload into FCMNotificationRequest: %w", err)
 	}
 
-	// Extract content from notification
-	content, ok := notificationData["content"].(map[string]interface{})
-	if !ok {
-		logrus.Error("Invalid content data in notification payload")
-		return fmt.Errorf("invalid content data in notification payload")
+	// Use the message ID if not set in the notification
+	if fcmNotification.ID == "" {
+		fcmNotification.ID = message.ID
 	}
 
-	// Extract device tokens from recipients
-	recipients, ok := notificationData["recipients"].([]interface{})
-	if !ok {
-		logrus.Error("Invalid recipients data in notification payload")
-		return fmt.Errorf("invalid recipients data in notification payload")
-	}
-
-	// Convert recipients to string slice
-	deviceTokens := make([]string, 0, len(recipients))
-	for _, recipient := range recipients {
-		if token, ok := recipient.(string); ok {
-			deviceTokens = append(deviceTokens, token)
-		}
-	}
-
-	// Create FCM notification request
-	fcmNotification := &models.FCMNotificationRequest{
-		ID:   message.ID,
-		Type: string(message.Type),
-		Content: models.FCMContent{
-			Title: getStringFromMap(content, "title"),
-			Body:  getStringFromMap(content, "body"),
-		},
-		Recipients: deviceTokens,
+	// Use the message type if not set in the notification
+	if fcmNotification.Type == "" {
+		fcmNotification.Type = string(message.Type)
 	}
 
 	logrus.WithFields(logrus.Fields{
 		"notification_id": message.ID,
-		"device_tokens":   len(deviceTokens),
+		"device_token":    fcmNotification.Recipient,
 		"title":           fcmNotification.Content.Title,
 		"body":            fcmNotification.Content.Body,
 	}).Info("Sending Android push notification")
 
 	// Send push notification using the FCM service
-	response, err := ap.fcmService.SendPushNotification(ctx, fcmNotification)
+	response, err := ap.fcmService.SendPushNotification(ctx, &fcmNotification)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"notification_id": message.ID,

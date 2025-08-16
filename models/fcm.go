@@ -8,10 +8,10 @@ import (
 
 // FCMNotificationRequest represents an FCM notification request
 type FCMNotificationRequest struct {
-	ID         string     `json:"id"`
-	Type       string     `json:"type"`
-	Content    FCMContent `json:"content"`
-	Recipients []string   `json:"recipients"`
+	ID        string     `json:"id"`
+	Type      string     `json:"type"`
+	Content   FCMContent `json:"content"`
+	Recipient string     `json:"recipient"`
 }
 
 // FCMContent represents the content of an FCM notification
@@ -59,18 +59,13 @@ func ValidateFCMNotification(notification *FCMNotificationRequest) error {
 		return fmt.Errorf("FCM body is required")
 	}
 
-	// Validate recipients
-	if len(notification.Recipients) == 0 {
-		return fmt.Errorf("at least one recipient is required")
+	// Validate recipient
+	if notification.Recipient == "" {
+		return fmt.Errorf("recipient is required")
 	}
 
-	for i, recipient := range notification.Recipients {
-		if recipient == "" {
-			return fmt.Errorf("recipient at index %d cannot be empty", i)
-		}
-		if err := ValidateFCMDeviceToken(recipient); err != nil {
-			return fmt.Errorf("invalid device token at index %d: %s", i, recipient)
-		}
+	if err := ValidateFCMDeviceToken(notification.Recipient); err != nil {
+		return fmt.Errorf("invalid device token: %s", err)
 	}
 
 	return nil

@@ -139,7 +139,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
       "subject": "Welcome to Our Platform!",
       "email_body": "Hello,\n\nWelcome to our platform! We are excited to have you on board.\n\nBest regards,\nThe Team"
     },
-    "recipients": ["user-001", "user-002"],
+    "recipients": ["user-001"],
     "from": {
       "email": "noreply@company.com"
     }
@@ -165,9 +165,9 @@ curl -X POST http://localhost:8080/api/v1/notifications \
   -d '{
     "type": "slack",
     "content": {
-      "text": "🚨 *System Alert*\n\n*Service:* Notification Service\n*Status:* Running\n*Environment:* Development\n*Message:* All systems operational"
+      "text": "*System Alert*\n\n*Service:* Notification Service\n*Status:* Running\n*Environment:* Development\n*Message:* All systems operational"
     },
-    "recipients": ["user-001", "user-002"]
+    "recipients": ["user-001"]
   }'
 ```
 

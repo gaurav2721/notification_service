@@ -8,10 +8,10 @@ import (
 
 // APNSNotificationRequest represents an APNS notification request
 type APNSNotificationRequest struct {
-	ID         string      `json:"id"`
-	Type       string      `json:"type"`
-	Content    APNSContent `json:"content"`
-	Recipients []string    `json:"recipients"`
+	ID        string      `json:"id"`
+	Type      string      `json:"type"`
+	Content   APNSContent `json:"content"`
+	Recipient string      `json:"recipient"`
 }
 
 // APNSContent represents the content of an APNS notification
@@ -59,18 +59,13 @@ func ValidateAPNSNotification(notification *APNSNotificationRequest) error {
 		return fmt.Errorf("APNS body is required")
 	}
 
-	// Validate recipients
-	if len(notification.Recipients) == 0 {
-		return fmt.Errorf("at least one recipient is required")
+	// Validate recipient
+	if notification.Recipient == "" {
+		return fmt.Errorf("recipient is required")
 	}
 
-	for i, recipient := range notification.Recipients {
-		if recipient == "" {
-			return fmt.Errorf("recipient at index %d cannot be empty", i)
-		}
-		if err := ValidateDeviceToken(recipient); err != nil {
-			return fmt.Errorf("invalid device token at index %d: %s", i, recipient)
-		}
+	if err := ValidateDeviceToken(notification.Recipient); err != nil {
+		return fmt.Errorf("invalid device token: %s", err)
 	}
 
 	return nil

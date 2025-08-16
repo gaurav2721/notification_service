@@ -12,11 +12,11 @@ The notification service now uses strongly-typed notification request structures
 
 ```go
 type EmailNotificationRequest struct {
-    ID         string       `json:"id"`
-    Type       string       `json:"type"`
-    Content    EmailContent `json:"content"`
-    Recipients []string     `json:"recipients"`
-    From       *EmailSender `json:"from,omitempty"`
+    ID        string       `json:"id"`
+    Type      string       `json:"type"`
+    Content   EmailContent `json:"content"`
+    Recipient string       `json:"recipient"`
+    From      *EmailSender `json:"from,omitempty"`
 }
 
 type EmailContent struct {
@@ -38,7 +38,7 @@ type EmailSender struct {
     "subject": "Welcome to Our Service",
     "email_body": "Hi John Doe, welcome to our platform!"
   },
-  "recipients": ["john.doe@example.com"],
+  "recipient": "john.doe@example.com",
   "from": {
     "email": "noreply@company.com"
   }
@@ -51,10 +51,10 @@ type EmailSender struct {
 
 ```go
 type SlackNotificationRequest struct {
-    ID         string       `json:"id"`
-    Type       string       `json:"type"`
-    Content    SlackContent `json:"content"`
-    Recipients []string     `json:"recipients"`
+    ID        string       `json:"id"`
+    Type      string       `json:"type"`
+    Content   SlackContent `json:"content"`
+    Recipient string       `json:"recipient"`
 }
 
 type SlackContent struct {
@@ -70,7 +70,7 @@ type SlackContent struct {
   "content": {
     "text": "Hi John Doe, you have a new message!"
   },
-  "recipients": ["#general"]
+  "recipient": "#general"
 }
 ```
 
@@ -80,10 +80,10 @@ type SlackContent struct {
 
 ```go
 type APNSNotificationRequest struct {
-    ID         string      `json:"id"`
-    Type       string      `json:"type"`
-    Content    APNSContent `json:"content"`
-    Recipients []string    `json:"recipients"`
+    ID        string      `json:"id"`
+    Type      string      `json:"type"`
+    Content   APNSContent `json:"content"`
+    Recipient string      `json:"recipient"`
 }
 
 type APNSContent struct {
@@ -101,7 +101,7 @@ type APNSContent struct {
     "title": "New Message",
     "body": "Hi John Doe, you have a new message!"
   },
-  "recipients": ["device_token_1", "device_token_2"]
+  "recipient": "device_token_1"
 }
 ```
 
@@ -111,10 +111,10 @@ type APNSContent struct {
 
 ```go
 type FCMNotificationRequest struct {
-    ID         string     `json:"id"`
-    Type       string     `json:"type"`
-    Content    FCMContent `json:"content"`
-    Recipients []string   `json:"recipients"`
+    ID        string     `json:"id"`
+    Type      string     `json:"type"`
+    Content   FCMContent `json:"content"`
+    Recipient string     `json:"recipient"`
 }
 
 type FCMContent struct {
@@ -132,7 +132,7 @@ type FCMContent struct {
     "title": "New Message",
     "body": "Hi John Doe, you have a new message!"
   },
-  "recipients": ["fcm_device_token_1", "fcm_device_token_2"]
+  "recipient": "fcm_device_token_1"
 }
 ```
 

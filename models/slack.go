@@ -8,10 +8,10 @@ import (
 
 // SlackNotificationRequest represents a slack notification request
 type SlackNotificationRequest struct {
-	ID         string       `json:"id"`
-	Type       string       `json:"type"`
-	Content    SlackContent `json:"content"`
-	Recipients []string     `json:"recipients"`
+	ID        string       `json:"id"`
+	Type      string       `json:"type"`
+	Content   SlackContent `json:"content"`
+	Recipient string       `json:"recipient"`
 }
 
 // SlackContent represents the content of a slack notification
@@ -52,18 +52,13 @@ func ValidateSlackNotification(notification *SlackNotificationRequest) error {
 		return fmt.Errorf("slack text is required")
 	}
 
-	// Validate recipients
-	if len(notification.Recipients) == 0 {
-		return fmt.Errorf("at least one recipient is required")
+	// Validate recipient
+	if notification.Recipient == "" {
+		return fmt.Errorf("recipient is required")
 	}
 
-	for i, recipient := range notification.Recipients {
-		if recipient == "" {
-			return fmt.Errorf("recipient at index %d cannot be empty", i)
-		}
-		if err := ValidateUserID(recipient); err != nil {
-			return fmt.Errorf("invalid user ID at index %d: %s", i, recipient)
-		}
+	if err := ValidateUserID(notification.Recipient); err != nil {
+		return fmt.Errorf("invalid user ID: %s", err)
 	}
 
 	return nil

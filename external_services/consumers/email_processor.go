@@ -41,74 +41,46 @@ func (ep *emailProcessor) ProcessNotification(ctx context.Context, message Notif
 		"timestamp":       message.Timestamp,
 	}).Debug("Processing email notification")
 
-	// Parse the payload to extract notification details
-	var notificationData map[string]interface{}
-	if err := json.Unmarshal([]byte(message.Payload), &notificationData); err != nil {
-		logrus.WithError(err).Error("Failed to parse notification payload")
-		return fmt.Errorf("failed to parse notification payload: %w", err)
+	// Parse the payload directly into EmailNotificationRequest
+	var emailNotification models.EmailNotificationRequest
+	if err := json.Unmarshal([]byte(message.Payload), &emailNotification); err != nil {
+		logrus.WithError(err).Error("Failed to parse notification payload into EmailNotificationRequest")
+		return fmt.Errorf("failed to parse notification payload into EmailNotificationRequest: %w", err)
 	}
 
-	// Extract recipient information
-	recipientData, ok := notificationData["recipient"].(map[string]interface{})
-	if !ok {
-		logrus.Error("Invalid recipient data in notification payload")
-		return fmt.Errorf("invalid recipient data in notification payload")
+	// Validate the parsed notification
+	if emailNotification.Recipient == "" {
+		logrus.Error("No recipient specified in email notification")
+		return fmt.Errorf("no recipient specified in email notification")
 	}
 
-	// Extract email address from recipient
-	email, ok := recipientData["email"].(string)
-	if !ok || email == "" {
-		logrus.Error("Missing or invalid email address in recipient data")
-		return fmt.Errorf("missing or invalid email address in recipient data")
+	// Use the message ID if not set in the notification
+	if emailNotification.ID == "" {
+		emailNotification.ID = message.ID
 	}
 
-	// Extract content from notification
-	content, ok := notificationData["content"].(map[string]interface{})
-	if !ok {
-		logrus.Error("Invalid content data in notification payload")
-		return fmt.Errorf("invalid content data in notification payload")
+	// Use the message type if not set in the notification
+	if emailNotification.Type == "" {
+		emailNotification.Type = string(message.Type)
 	}
 
-	// Extract "from" information for email
-	var fromEmail string
-	if fromData, ok := notificationData["from"].(map[string]interface{}); ok {
-		if from, ok := fromData["email"].(string); ok {
-			fromEmail = from
-		}
-	}
+	// Extract recipient and from information for logging
+	recipient := emailNotification.Recipient
 
-	// If no "from" email in notification, we'll use the default from the email service
-	if fromEmail == "" {
-		logrus.Debug("No 'from' email specified, will use default from email service")
-	}
-
-	// Create EmailNotificationRequest
-	emailNotification := &models.EmailNotificationRequest{
-		ID:   message.ID,
-		Type: string(message.Type),
-		Content: models.EmailContent{
-			Subject:   getStringFromMap(content, "subject"),
-			EmailBody: getStringFromMap(content, "email_body"),
-		},
-		Recipients: []string{email},
-	}
-
-	// Add "from" field if available
-	if fromEmail != "" {
-		emailNotification.From = &models.EmailSender{
-			Email: fromEmail,
-		}
+	fromEmail := ""
+	if emailNotification.From != nil {
+		fromEmail = emailNotification.From.Email
 	}
 
 	logrus.WithFields(logrus.Fields{
 		"notification_id": message.ID,
-		"to":              email,
+		"to":              recipient,
 		"from":            fromEmail,
 		"subject":         emailNotification.Content.Subject,
 	}).Info("Sending email notification")
 
 	// Send email using the email service
-	response, err := ep.emailService.SendEmail(ctx, emailNotification)
+	response, err := ep.emailService.SendEmail(ctx, &emailNotification)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"notification_id": message.ID,
