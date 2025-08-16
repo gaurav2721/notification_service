@@ -82,6 +82,20 @@ type ConsumerConfig struct {
 	IOSPushWorkerCount     int `json:"ios_push_worker_count" env:"IOS_PUSH_WORKER_COUNT" env-default:"3"`
 	AndroidPushWorkerCount int `json:"android_push_worker_count" env:"ANDROID_PUSH_WORKER_COUNT" env-default:"3"`
 
+	// Service dependencies
+	EmailService interface {
+		SendEmail(ctx context.Context, notification interface{}) (interface{}, error)
+	}
+	SlackService interface {
+		SendSlackMessage(ctx context.Context, notification interface{}) (interface{}, error)
+	}
+	APNSService interface {
+		SendPushNotification(ctx context.Context, notification interface{}) (interface{}, error)
+	}
+	FCMService interface {
+		SendPushNotification(ctx context.Context, notification interface{}) (interface{}, error)
+	}
+
 	// Kafka service interface for getting channels
 	KafkaService interface {
 		GetEmailChannel() chan string

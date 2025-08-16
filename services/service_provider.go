@@ -3,6 +3,8 @@ package services
 
 import (
 	"context"
+	"os"
+	"strconv"
 
 	"github.com/gaurav2721/notification-service/external_services/consumers"
 	"github.com/gaurav2721/notification-service/external_services/kafka"
@@ -59,7 +61,21 @@ func (c *ServiceContainer) initializeServices() {
 
 	// Initialize consumer manager using factory with environment configuration
 	logrus.Debug("Initializing consumer manager")
-	c.consumerManager = factory.NewConsumerManagerFromEnv(c.kafkaService)
+	// Use the new constructor with service dependencies
+	config := consumers.ConsumerConfig{
+		EmailWorkerCount:       getEnvAsInt("EMAIL_WORKER_COUNT", 5),
+		SlackWorkerCount:       getEnvAsInt("SLACK_WORKER_COUNT", 3),
+		IOSPushWorkerCount:     getEnvAsInt("IOS_PUSH_WORKER_COUNT", 3),
+		AndroidPushWorkerCount: getEnvAsInt("ANDROID_PUSH_WORKER_COUNT", 3),
+	}
+	c.consumerManager = consumers.NewConsumerManagerWithServices(
+		c.emailService,
+		c.slackService,
+		c.apnsService,
+		c.fcmService,
+		c.kafkaService,
+		config,
+	)
 
 	// Start the consumer manager immediately
 	ctx := context.Background()
@@ -164,3 +180,13 @@ type ServiceProvider interface {
 
 // Ensure ServiceContainer implements ServiceProvider
 var _ ServiceProvider = (*ServiceContainer)(nil)
+
+// getEnvAsInt gets an environment variable as an integer with a default value
+func getEnvAsInt(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if intValue, err := strconv.Atoi(value); err == nil {
+			return intValue
+		}
+	}
+	return defaultValue
+}

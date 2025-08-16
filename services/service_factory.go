@@ -129,6 +129,18 @@ func (f *ServiceFactory) NewConsumerManagerFromEnv(kafkaService KafkaService) Co
 	return consumers.NewConsumerManagerFromEnv(kafkaService)
 }
 
+// NewConsumerManagerWithServices creates a new consumer manager with service dependencies
+func (f *ServiceFactory) NewConsumerManagerWithServices(
+	emailService EmailService,
+	slackService SlackService,
+	apnsService APNSService,
+	fcmService FCMService,
+	kafkaService KafkaService,
+	config ConsumerConfig,
+) ConsumerManager {
+	return consumers.NewConsumerManagerWithServices(emailService, slackService, apnsService, fcmService, kafkaService, config)
+}
+
 // NewNotificationManager creates a new notification manager instance
 func (f *ServiceFactory) NewNotificationManager(
 	userService UserService,

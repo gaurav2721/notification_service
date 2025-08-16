@@ -28,6 +28,43 @@ func NewConsumerManager(config ConsumerConfig) ConsumerManager {
 	}
 }
 
+// NewConsumerManagerWithServices creates a new consumer manager with service dependencies
+func NewConsumerManagerWithServices(
+	emailService interface {
+		SendEmail(ctx context.Context, notification interface{}) (interface{}, error)
+	},
+	slackService interface {
+		SendSlackMessage(ctx context.Context, notification interface{}) (interface{}, error)
+	},
+	apnsService interface {
+		SendPushNotification(ctx context.Context, notification interface{}) (interface{}, error)
+	},
+	fcmService interface {
+		SendPushNotification(ctx context.Context, notification interface{}) (interface{}, error)
+	},
+	kafkaService interface {
+		GetEmailChannel() chan string
+		GetSlackChannel() chan string
+		GetIOSPushNotificationChannel() chan string
+		GetAndroidPushNotificationChannel() chan string
+		Close()
+	},
+	config ConsumerConfig,
+) ConsumerManager {
+	// Update config with service dependencies
+	config.EmailService = emailService
+	config.SlackService = slackService
+	config.APNSService = apnsService
+	config.FCMService = fcmService
+	config.KafkaService = kafkaService
+
+	return &consumerManager{
+		config:      config,
+		workerPools: make(map[NotificationType]ConsumerWorkerPool),
+		running:     false,
+	}
+}
+
 // Initialize creates and configures all consumer worker pools
 func (cm *consumerManager) Initialize(ctx context.Context) error {
 	cm.mu.Lock()
@@ -189,7 +226,15 @@ func (cm *consumerManager) UpdateWorkerCount(notificationType NotificationType, 
 
 // createEmailWorkerPool creates the email worker pool
 func (cm *consumerManager) createEmailWorkerPool() {
-	processor := NewEmailProcessor()
+	var processor NotificationProcessor
+
+	// Use injected email service if available, otherwise create default
+	if cm.config.EmailService != nil {
+		processor = NewEmailProcessorWithService(cm.config.EmailService)
+	} else {
+		processor = NewEmailProcessor()
+	}
+
 	pool := NewWorkerPool(
 		EmailNotification,
 		cm.config.KafkaService.GetEmailChannel(),
@@ -201,7 +246,15 @@ func (cm *consumerManager) createEmailWorkerPool() {
 
 // createSlackWorkerPool creates the slack worker pool
 func (cm *consumerManager) createSlackWorkerPool() {
-	processor := NewSlackProcessor()
+	var processor NotificationProcessor
+
+	// Use injected slack service if available, otherwise create default
+	if cm.config.SlackService != nil {
+		processor = NewSlackProcessorWithService(cm.config.SlackService)
+	} else {
+		processor = NewSlackProcessor()
+	}
+
 	pool := NewWorkerPool(
 		SlackNotification,
 		cm.config.KafkaService.GetSlackChannel(),
@@ -213,7 +266,15 @@ func (cm *consumerManager) createSlackWorkerPool() {
 
 // createIOSPushWorkerPool creates the iOS push notification worker pool
 func (cm *consumerManager) createIOSPushWorkerPool() {
-	processor := NewIOSPushProcessor()
+	var processor NotificationProcessor
+
+	// Use injected APNS service if available, otherwise create default
+	if cm.config.APNSService != nil {
+		processor = NewIOSPushProcessorWithService(cm.config.APNSService)
+	} else {
+		processor = NewIOSPushProcessor()
+	}
+
 	pool := NewWorkerPool(
 		IOSPushNotification,
 		cm.config.KafkaService.GetIOSPushNotificationChannel(),
@@ -225,7 +286,15 @@ func (cm *consumerManager) createIOSPushWorkerPool() {
 
 // createAndroidPushWorkerPool creates the Android push notification worker pool
 func (cm *consumerManager) createAndroidPushWorkerPool() {
-	processor := NewAndroidPushProcessor()
+	var processor NotificationProcessor
+
+	// Use injected FCM service if available, otherwise create default
+	if cm.config.FCMService != nil {
+		processor = NewAndroidPushProcessorWithService(cm.config.FCMService)
+	} else {
+		processor = NewAndroidPushProcessor()
+	}
+
 	pool := NewWorkerPool(
 		AndroidPushNotification,
 		cm.config.KafkaService.GetAndroidPushNotificationChannel(),

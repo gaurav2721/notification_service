@@ -2,16 +2,31 @@ package consumers
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	"github.com/sirupsen/logrus"
 )
 
 // slackProcessor handles slack notification processing
-type slackProcessor struct{}
+type slackProcessor struct {
+	slackService interface {
+		SendSlackMessage(ctx context.Context, notification interface{}) (interface{}, error)
+	}
+}
 
 // NewSlackProcessor creates a new slack processor
 func NewSlackProcessor() NotificationProcessor {
 	return &slackProcessor{}
+}
+
+// NewSlackProcessorWithService creates a new slack processor with a specific slack service
+func NewSlackProcessorWithService(slackService interface {
+	SendSlackMessage(ctx context.Context, notification interface{}) (interface{}, error)
+}) NotificationProcessor {
+	return &slackProcessor{
+		slackService: slackService,
+	}
 }
 
 // ProcessNotification processes a slack notification
@@ -23,14 +38,68 @@ func (sp *slackProcessor) ProcessNotification(ctx context.Context, message Notif
 		"timestamp":       message.Timestamp,
 	}).Debug("Processing slack notification")
 
-	// TODO: Implement actual slack message sending logic
-	// This would integrate with your slack service
-	// Example implementation:
-	// - Parse the payload to extract slack details (channel, message, attachments)
-	// - Validate slack channel/webhook URL
-	// - Send message to Slack using Slack API or webhook
-	// - Handle rate limiting and retries
-	// - Log success/failure metrics
+	// If no slack service is available, just log and return
+	if sp.slackService == nil {
+		logrus.Warn("No slack service available, skipping slack notification")
+		return nil
+	}
+
+	// Parse the payload to extract notification details
+	var notificationData map[string]interface{}
+	if err := json.Unmarshal([]byte(message.Payload), &notificationData); err != nil {
+		logrus.WithError(err).Error("Failed to parse notification payload")
+		return fmt.Errorf("failed to parse notification payload: %w", err)
+	}
+
+	// Extract content from notification
+	content, ok := notificationData["content"].(map[string]interface{})
+	if !ok {
+		logrus.Error("Invalid content data in notification payload")
+		return fmt.Errorf("invalid content data in notification payload")
+	}
+
+	// Extract channel from notification (optional)
+	var channel string
+	if channelData, ok := notificationData["channel"].(string); ok {
+		channel = channelData
+	}
+
+	// Create slack notification request
+	slackNotification := &struct {
+		ID         string                 `json:"id"`
+		Type       string                 `json:"type"`
+		Content    map[string]interface{} `json:"content"`
+		Recipients []string               `json:"recipients"`
+		Channel    string                 `json:"channel,omitempty"`
+	}{
+		ID:         message.ID,
+		Type:       string(message.Type),
+		Content:    content,
+		Recipients: []string{}, // Slack doesn't use individual recipients like email
+		Channel:    channel,
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"notification_id": message.ID,
+		"channel":         channel,
+		"text":            content["text"],
+	}).Info("Sending slack notification")
+
+	// Send slack message using the slack service
+	response, err := sp.slackService.SendSlackMessage(ctx, slackNotification)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"notification_id": message.ID,
+			"error":           err.Error(),
+		}).Error("Failed to send slack notification")
+		return fmt.Errorf("failed to send slack message: %w", err)
+	}
+
+	// Log successful slack sending
+	logrus.WithFields(logrus.Fields{
+		"notification_id": message.ID,
+		"response":        response,
+	}).Info("Slack notification sent successfully")
 
 	return nil
 }
