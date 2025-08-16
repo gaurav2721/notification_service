@@ -19,7 +19,7 @@ import (
 type NotificationHandler struct {
 	notificationService interface {
 		SendNotification(ctx context.Context, notification interface{}) (interface{}, error)
-		ScheduleNotification(ctx context.Context, notification interface{}) (interface{}, error)
+		ScheduleNotification(ctx context.Context, notificationId string, notification *models.NotificationRequest, job func() error) error
 		GetNotificationStatus(ctx context.Context, notificationID string) (interface{}, error)
 		CreateTemplate(ctx context.Context, template interface{}) (interface{}, error)
 		GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error)
@@ -43,7 +43,7 @@ type NotificationHandler struct {
 func NewNotificationHandler(
 	notificationService interface {
 		SendNotification(ctx context.Context, notification interface{}) (interface{}, error)
-		ScheduleNotification(ctx context.Context, notification interface{}) (interface{}, error)
+		ScheduleNotification(ctx context.Context, notificationId string, notification *models.NotificationRequest, job func() error) error
 		GetNotificationStatus(ctx context.Context, notificationID string) (interface{}, error)
 		CreateTemplate(ctx context.Context, template interface{}) (interface{}, error)
 		GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error)
@@ -224,8 +224,17 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 			From:        request.From,
 		}
 
-		// Schedule notification
-		response, err := h.notificationService.ScheduleNotification(c.Request.Context(), notification)
+		// Schedule notification with a job function
+		err := h.notificationService.ScheduleNotification(c.Request.Context(), notification.ID, &request, func() error {
+			// This job will be executed at the scheduled time
+			// It should send the notification
+			logrus.WithField("notification_id", notification.ID).Info("Executing scheduled notification job")
+
+			// TODO: Implement the actual notification sending logic here
+			// For now, just log that the job would be executed
+			return nil
+		})
+
 		if err != nil {
 			logrus.WithError(err).Error("Failed to schedule notification")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -233,7 +242,12 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 		}
 
 		logrus.WithField("notification_id", notification.ID).Debug("Notification scheduled successfully")
-		c.JSON(http.StatusOK, response)
+		c.JSON(http.StatusOK, gin.H{
+			"id":           notification.ID,
+			"status":       "scheduled",
+			"message":      "Notification scheduled successfully",
+			"scheduled_at": request.ScheduledAt,
+		})
 		return
 	}
 

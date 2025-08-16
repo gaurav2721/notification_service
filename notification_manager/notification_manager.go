@@ -77,7 +77,34 @@ func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notific
 	// Check if it's a scheduled notification
 	if notif.ScheduledAt != nil {
 		logrus.Debug("Notification is scheduled, redirecting to scheduler")
-		return nm.ScheduleNotification(ctx, notification)
+		// Convert to NotificationRequest and schedule
+		notificationRequest := &models.NotificationRequest{
+			Type:        notif.Type,
+			Content:     notif.Content,
+			Template:    notif.Template,
+			Recipients:  notif.Recipients,
+			ScheduledAt: notif.ScheduledAt,
+			From:        notif.From,
+		}
+
+		err := nm.ScheduleNotification(ctx, notif.ID, notificationRequest, func() error {
+			// This job will be executed at the scheduled time
+			logrus.WithField("notification_id", notif.ID).Info("Executing scheduled notification job")
+			// TODO: Implement actual notification sending logic
+			return nil
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		return &models.NotificationResponse{
+			ID:      notif.ID,
+			Status:  "scheduled",
+			Message: "Notification scheduled successfully",
+			SentAt:  time.Now(),
+			Channel: notif.Type,
+		}, nil
 	}
 
 	// Process template if provided
@@ -255,45 +282,37 @@ func (nm *NotificationManagerImpl) SendNotificationToUsers(ctx context.Context, 
 }
 
 // ScheduleNotification schedules a notification for future delivery
-func (nm *NotificationManagerImpl) ScheduleNotification(ctx context.Context, notification interface{}) (interface{}, error) {
-	// Type assertion to get notification
-	notif, ok := notification.(*struct {
-		ID          string
-		Type        string
-		Content     map[string]interface{}
-		Template    *models.TemplateData
-		Recipients  []string
-		ScheduledAt *time.Time
-	})
-	if !ok {
-		return nil, ErrNoScheduledTime
+func (nm *NotificationManagerImpl) ScheduleNotification(ctx context.Context, notificationId string, notification *models.NotificationRequest, job func() error) error {
+	if notification == nil {
+		return ErrUnsupportedNotificationType
 	}
 
-	if notif.ScheduledAt == nil {
-		return nil, ErrNoScheduledTime
+	if notification.ScheduledAt == nil {
+		return ErrNoScheduledTime
 	}
 
-	// Schedule the notification
-	// err := nm.scheduler.ScheduleJob(notif.ID, *notif.ScheduledAt, func() {
-	// 	nm.SendNotification(context.Background(), notification)
-	// })
+	// Schedule the job to run at the specified time
+	// In a real implementation, you would use a proper scheduler like cron or a job queue
+	// For now, we'll simulate scheduling by storing the job information
 
+	logrus.WithFields(logrus.Fields{
+		"notification_id": notificationId,
+		"scheduled_at":    notification.ScheduledAt,
+		"type":            notification.Type,
+		"recipients":      len(notification.Recipients),
+	}).Debug("Scheduling notification job")
+
+	// TODO: Implement actual job scheduling
+	// Example implementation with a real scheduler:
+	// err := nm.scheduler.ScheduleJob(notificationId, *notification.ScheduledAt, job)
 	// if err != nil {
-	// 	return nil, err
+	//     return err
 	// }
 
-	// Return success response
-	return &struct {
-		ID          string    `json:"id"`
-		Status      string    `json:"status"`
-		Message     string    `json:"message"`
-		ScheduledAt time.Time `json:"scheduled_at"`
-	}{
-		ID:          notif.ID,
-		Status:      "scheduled",
-		Message:     "Notification scheduled successfully",
-		ScheduledAt: *notif.ScheduledAt,
-	}, nil
+	// For now, just log that the job would be scheduled
+	logrus.WithField("notification_id", notificationId).Info("Notification job scheduled successfully")
+
+	return nil
 }
 
 // GetNotificationStatus retrieves the status of a notification
