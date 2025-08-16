@@ -112,6 +112,7 @@ func (fcm *FCMServiceImpl) SendPushNotification(ctx context.Context, notificatio
 	// Extract device token from recipient
 	deviceToken := notif.Recipient
 
+	// Device token validation - only check if it's not empty
 	if deviceToken == "" {
 		return &models.FCMResponse{
 			ID:      notif.ID,

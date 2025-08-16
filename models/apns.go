@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -64,31 +63,9 @@ func ValidateAPNSNotification(notification *APNSNotificationRequest) error {
 		return fmt.Errorf("recipient is required")
 	}
 
-	if err := ValidateDeviceToken(notification.Recipient); err != nil {
-		return fmt.Errorf("invalid device token: %s", err)
-	}
-
-	return nil
-}
-
-// ValidateDeviceToken validates if a string is a valid device token
-func ValidateDeviceToken(deviceToken string) error {
-	if deviceToken == "" {
+	// Device token validation - only check if it's not empty
+	if notification.Recipient == "" {
 		return fmt.Errorf("device token cannot be empty")
-	}
-
-	deviceToken = strings.TrimSpace(deviceToken)
-
-	// iOS device tokens are typically 64 characters long and contain only hexadecimal characters
-	if len(deviceToken) != 64 {
-		return fmt.Errorf("device token must be exactly 64 characters long")
-	}
-
-	// Check if the device token contains only hexadecimal characters
-	for _, char := range deviceToken {
-		if !((char >= '0' && char <= '9') || (char >= 'a' && char <= 'f') || (char >= 'A' && char <= 'F')) {
-			return fmt.Errorf("device token must contain only hexadecimal characters (0-9, a-f, A-F)")
-		}
 	}
 
 	return nil

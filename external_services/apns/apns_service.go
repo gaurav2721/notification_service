@@ -67,6 +67,7 @@ func (aps *APNSServiceImpl) SendPushNotification(ctx context.Context, notificati
 	// Extract device token from recipient
 	deviceToken := notif.Recipient
 
+	// Device token validation - only check if it's not empty
 	if deviceToken == "" {
 		return &models.APNSResponse{
 			ID:      notif.ID,

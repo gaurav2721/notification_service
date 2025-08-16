@@ -403,9 +403,9 @@ func (s *userService) RegisterDevice(ctx context.Context, userID, deviceToken, d
 		return nil, ErrUserNotFound
 	}
 
-	// Validate device token
+	// Device token validation - only check if it's not empty
 	if deviceToken == "" {
-		return nil, ErrInvalidDeviceToken
+		return nil, errors.New("device token cannot be empty")
 	}
 
 	// Check if device already exists for this user

@@ -60,11 +60,10 @@ var (
 	ErrFCMInvalidServerKey = fcm.ErrInvalidServerKey
 
 	// User service errors
-	ErrUserNotFound       = user.ErrUserNotFound
-	ErrUserAlreadyExists  = user.ErrUserAlreadyExists
-	ErrInvalidUserID      = user.ErrInvalidUserID
-	ErrDeviceInactive     = user.ErrDeviceInactive
-	ErrInvalidDeviceToken = user.ErrInvalidDeviceToken
+	ErrUserNotFound      = user.ErrUserNotFound
+	ErrUserAlreadyExists = user.ErrUserAlreadyExists
+	ErrInvalidUserID     = user.ErrInvalidUserID
+	ErrDeviceInactive    = user.ErrDeviceInactive
 
 	// Notification service errors
 	ErrUnsupportedNotificationType = notification_manager.ErrUnsupportedNotificationType

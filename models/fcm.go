@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -64,35 +63,9 @@ func ValidateFCMNotification(notification *FCMNotificationRequest) error {
 		return fmt.Errorf("recipient is required")
 	}
 
-	if err := ValidateFCMDeviceToken(notification.Recipient); err != nil {
-		return fmt.Errorf("invalid device token: %s", err)
-	}
-
-	return nil
-}
-
-// ValidateFCMDeviceToken validates if a string is a valid FCM device token
-func ValidateFCMDeviceToken(deviceToken string) error {
-	if deviceToken == "" {
+	// Device token validation - only check if it's not empty
+	if notification.Recipient == "" {
 		return fmt.Errorf("device token cannot be empty")
-	}
-
-	deviceToken = strings.TrimSpace(deviceToken)
-
-	// FCM device tokens (Firebase Instance ID tokens) are typically 140+ characters long
-	// and contain alphanumeric characters, hyphens, and underscores
-	if len(deviceToken) < 140 {
-		return fmt.Errorf("FCM device token must be at least 140 characters long")
-	}
-
-	// Check if the device token contains only valid characters
-	for _, char := range deviceToken {
-		if !((char >= '0' && char <= '9') ||
-			(char >= 'a' && char <= 'z') ||
-			(char >= 'A' && char <= 'Z') ||
-			char == '-' || char == '_' || char == ':') {
-			return fmt.Errorf("FCM device token must contain only alphanumeric characters, hyphens, underscores, and colons")
-		}
 	}
 
 	return nil
