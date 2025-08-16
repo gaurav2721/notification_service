@@ -50,36 +50,6 @@ func NewAPNSService() APNSService {
 	}
 }
 
-// NewAPNSServiceWithConfig creates a new APNS service with custom configuration
-func NewAPNSServiceWithConfig(config *APNSConfig) (APNSService, error) {
-	if config == nil {
-		return nil, ErrInvalidConfiguration
-	}
-
-	// Load private key
-	privateKeyBytes, err := ioutil.ReadFile(config.PrivateKeyPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read private key: %w", err)
-	}
-
-	privateKey, err := jwt.ParseECPrivateKeyFromPEM(privateKeyBytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse private key: %w", err)
-	}
-
-	// Note: APNS endpoint is determined by environment
-	// Sandbox: https://api.sandbox.push.apple.com
-	// Production: https://api.push.apple.com
-
-	return &APNSServiceImpl{
-		config:     config,
-		privateKey: privateKey,
-		client: &http.Client{
-			Timeout: time.Duration(config.Timeout) * time.Second,
-		},
-	}, nil
-}
-
 // SendPushNotification sends a push notification to Apple devices
 func (aps *APNSServiceImpl) SendPushNotification(ctx context.Context, notification interface{}) (interface{}, error) {
 	// Type assertion to get the notification

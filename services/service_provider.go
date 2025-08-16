@@ -122,18 +122,6 @@ func (c *ServiceContainer) GetNotificationService() NotificationManager {
 	return c.notificationService
 }
 
-// NewAPNSServiceWithConfig creates a new APNS service with custom configuration
-func (c *ServiceContainer) NewAPNSServiceWithConfig(config *APNSConfig) (APNSService, error) {
-	factory := NewServiceFactory()
-	return factory.NewAPNSServiceWithConfig(config)
-}
-
-// NewFCMServiceWithConfig creates a new FCM service with custom configuration
-func (c *ServiceContainer) NewFCMServiceWithConfig(config *FCMConfig) (FCMService, error) {
-	factory := NewServiceFactory()
-	return factory.NewFCMServiceWithConfig(config)
-}
-
 // Shutdown gracefully shuts down all services
 func (c *ServiceContainer) Shutdown(ctx context.Context) error {
 	logrus.Debug("Starting graceful shutdown of service container")
@@ -171,8 +159,6 @@ type ServiceProvider interface {
 	GetKafkaService() kafka.KafkaService
 	GetConsumerManager() consumers.ConsumerManager
 	GetNotificationService() NotificationManager
-	NewAPNSServiceWithConfig(config *APNSConfig) (APNSService, error)
-	NewFCMServiceWithConfig(config *FCMConfig) (FCMService, error)
 	Shutdown(ctx context.Context) error
 }
 

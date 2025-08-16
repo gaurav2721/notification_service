@@ -95,19 +95,9 @@ func (f *ServiceFactory) NewAPNSService() APNSService {
 	return apns.NewAPNSService()
 }
 
-// NewAPNSServiceWithConfig creates a new APNS service with custom configuration
-func (f *ServiceFactory) NewAPNSServiceWithConfig(config *APNSConfig) (APNSService, error) {
-	return apns.NewAPNSServiceWithConfig(config)
-}
-
 // NewFCMService creates a new FCM service instance
 func (f *ServiceFactory) NewFCMService() FCMService {
 	return fcm.NewFCMService()
-}
-
-// NewFCMServiceWithConfig creates a new FCM service with custom configuration
-func (f *ServiceFactory) NewFCMServiceWithConfig(config *FCMConfig) (FCMService, error) {
-	return fcm.NewFCMServiceWithConfig(config)
 }
 
 // NewUserService creates a new user service instance

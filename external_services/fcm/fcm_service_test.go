@@ -13,36 +13,6 @@ func TestNewFCMService(t *testing.T) {
 	}
 }
 
-func TestNewFCMServiceWithConfig(t *testing.T) {
-	// Test with valid config
-	config := &FCMConfig{
-		ServerKey: "test_server_key",
-		Timeout:   30,
-		BatchSize: 1000,
-	}
-
-	service, err := NewFCMServiceWithConfig(config)
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
-	if service == nil {
-		t.Fatal("Expected FCM service to be created, got nil")
-	}
-
-	// Test with nil config
-	_, err = NewFCMServiceWithConfig(nil)
-	if err != ErrInvalidConfiguration {
-		t.Errorf("Expected ErrInvalidConfiguration, got %v", err)
-	}
-
-	// Test with empty server key
-	config.ServerKey = ""
-	_, err = NewFCMServiceWithConfig(config)
-	if err != ErrInvalidConfiguration {
-		t.Errorf("Expected ErrInvalidConfiguration, got %v", err)
-	}
-}
-
 func TestSendPushNotification(t *testing.T) {
 	service := NewFCMService()
 

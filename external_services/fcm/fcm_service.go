@@ -53,29 +53,33 @@ type Result struct {
 }
 
 // NewFCMService creates a new FCM service instance
-// It checks environment variables and returns mock service if config is incomplete
+// It checks environment variables and returns mock service if any required config is missing or empty
+// Required environment variables:
+//   - FCM_SERVER_KEY: Firebase Cloud Messaging server key (mandatory)
+//   - FCM_TIMEOUT: Request timeout in seconds (mandatory, must be > 0)
+//   - FCM_BATCH_SIZE: Number of tokens to send in a single request (mandatory, must be > 0)
+//
+// If any of these variables are missing, empty, or invalid, the service will use mock implementation
 func NewFCMService() FCMService {
 	serverKey := os.Getenv("FCM_SERVER_KEY")
 	timeoutStr := os.Getenv("FCM_TIMEOUT")
 	batchSizeStr := os.Getenv("FCM_BATCH_SIZE")
 
 	// Check if all required environment variables are present and non-empty
-	if serverKey == "" {
+	if serverKey == "" || timeoutStr == "" || batchSizeStr == "" {
 		return NewMockFCMService()
 	}
 
-	timeout := 30 // default timeout
-	if timeoutStr != "" {
-		if t, err := strconv.Atoi(timeoutStr); err == nil && t > 0 {
-			timeout = t
-		}
+	// Parse timeout - must be a valid positive integer
+	timeout, err := strconv.Atoi(timeoutStr)
+	if err != nil || timeout <= 0 {
+		return NewMockFCMService()
 	}
 
-	batchSize := 1000 // default batch size
-	if batchSizeStr != "" {
-		if b, err := strconv.Atoi(batchSizeStr); err == nil && b > 0 {
-			batchSize = b
-		}
+	// Parse batch size - must be a valid positive integer
+	batchSize, err := strconv.Atoi(batchSizeStr)
+	if err != nil || batchSize <= 0 {
+		return NewMockFCMService()
 	}
 
 	return &FCMServiceImpl{
@@ -88,20 +92,6 @@ func NewFCMService() FCMService {
 			Timeout: time.Duration(timeout) * time.Second,
 		},
 	}
-}
-
-// NewFCMServiceWithConfig creates a new FCM service with custom configuration
-func NewFCMServiceWithConfig(config *FCMConfig) (FCMService, error) {
-	if config == nil || config.ServerKey == "" {
-		return nil, ErrInvalidConfiguration
-	}
-
-	return &FCMServiceImpl{
-		config: config,
-		client: &http.Client{
-			Timeout: time.Duration(config.Timeout) * time.Second,
-		},
-	}, nil
 }
 
 // SendPushNotification sends a push notification to Android devices via FCM

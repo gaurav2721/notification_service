@@ -34,16 +34,6 @@ func NewSlackService() SlackService {
 	}
 }
 
-// NewSlackServiceWithConfig creates a new Slack service with custom configuration
-func NewSlackServiceWithConfig(config *SlackConfig) SlackService {
-	client := slack.New(config.BotToken)
-
-	return &SlackServiceImpl{
-		client:  client,
-		channel: config.DefaultChannel,
-	}
-}
-
 // SendSlackMessage sends a Slack notification
 func (ss *SlackServiceImpl) SendSlackMessage(ctx context.Context, notification interface{}) (interface{}, error) {
 	// Type assertion to get the notification

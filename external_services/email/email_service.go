@@ -40,15 +40,6 @@ func NewEmailService() EmailService {
 	}
 }
 
-// NewEmailServiceWithConfig creates a new email service with custom configuration
-func NewEmailServiceWithConfig(config *EmailConfig) EmailService {
-	dialer := gomail.NewDialer(config.SMTPHost, config.SMTPPort, config.SMTPUsername, config.SMTPPassword)
-
-	return &EmailServiceImpl{
-		dialer: dialer,
-	}
-}
-
 // SendEmail sends an email notification
 func (es *EmailServiceImpl) SendEmail(ctx context.Context, notification interface{}) (interface{}, error) {
 	// Type assertion to get the notification
