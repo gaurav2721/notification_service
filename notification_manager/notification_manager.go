@@ -301,7 +301,7 @@ func (nm *NotificationManagerImpl) ScheduleNotification(ctx context.Context, not
 
 	// Convert the job function to match scheduler interface (func() instead of func() error)
 	schedulerJob := func() {
-		fmt.Println("--------------------------> gaurav123", notificationId)
+		fmt.Println("--------------------------> gaurav testing job", notificationId)
 		logrus.WithField("notification_id", notificationId).Info("Executing scheduled notification job")
 		if err := job(); err != nil {
 			logrus.WithError(err).WithField("notification_id", notificationId).Error("Scheduled notification job failed")

@@ -4,24 +4,19 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-co-op/gocron"
+	"github.com/sirupsen/logrus"
 )
 
 // SchedulerImpl implements the Scheduler interface
 type SchedulerImpl struct {
-	scheduler *gocron.Scheduler
-	jobs      map[string]*gocron.Job
-	mutex     sync.RWMutex
+	jobs  map[string]*time.Timer
+	mutex sync.RWMutex
 }
 
 // NewScheduler creates a new scheduler instance
 func NewScheduler() *SchedulerImpl {
-	scheduler := gocron.NewScheduler(time.UTC)
-	scheduler.StartAsync()
-
 	return &SchedulerImpl{
-		scheduler: scheduler,
-		jobs:      make(map[string]*gocron.Job),
+		jobs: make(map[string]*time.Timer),
 	}
 }
 
@@ -30,20 +25,44 @@ func (ss *SchedulerImpl) ScheduleJob(jobID string, scheduledTime time.Time, job 
 	ss.mutex.Lock()
 	defer ss.mutex.Unlock()
 
-	// Calculate delay until scheduled time
-	delay := scheduledTime.Sub(time.Now())
-	if delay < 0 {
-		delay = 0 // If scheduled time is in the past, run immediately
+	// Log scheduling information for debugging
+	now := time.Now()
+	delay := scheduledTime.Sub(now)
+
+	logrus.WithFields(logrus.Fields{
+		"job_id":         jobID,
+		"scheduled_time": scheduledTime.Format("2006-01-02T15:04:05Z"),
+		"current_time":   now.Format("2006-01-02T15:04:05Z"),
+		"delay_seconds":  int(delay.Seconds()),
+	}).Debug("Scheduling job")
+
+	// If scheduled time is in the past, run immediately
+	if delay <= 0 {
+		logrus.WithField("job_id", jobID).Warn("Scheduled time is in the past, running immediately")
+		go func() {
+			job()
+			logrus.WithField("job_id", jobID).Debug("Immediate job completed")
+		}()
+		return nil
 	}
 
-	// Schedule the job
-	scheduledJob, err := ss.scheduler.Every(delay).Do(job)
-	if err != nil {
-		return err
-	}
+	// Create a timer for the scheduled job
+	timer := time.AfterFunc(delay, func() {
+		logrus.WithField("job_id", jobID).Info("Executing scheduled job")
 
-	// Store the job reference
-	ss.jobs[jobID] = scheduledJob
+		// Execute the original job
+		job()
+
+		// Remove the job from the jobs map after execution
+		ss.mutex.Lock()
+		delete(ss.jobs, jobID)
+		ss.mutex.Unlock()
+
+		logrus.WithField("job_id", jobID).Debug("Job removed from scheduler after execution")
+	})
+
+	// Store the timer reference
+	ss.jobs[jobID] = timer
 
 	return nil
 }
@@ -53,9 +72,10 @@ func (ss *SchedulerImpl) CancelJob(jobID string) error {
 	ss.mutex.Lock()
 	defer ss.mutex.Unlock()
 
-	if job, exists := ss.jobs[jobID]; exists {
-		ss.scheduler.RemoveByReference(job)
+	if timer, exists := ss.jobs[jobID]; exists {
+		timer.Stop()
 		delete(ss.jobs, jobID)
+		logrus.WithField("job_id", jobID).Debug("Job cancelled")
 		return nil
 	}
 
@@ -77,5 +97,15 @@ func (ss *SchedulerImpl) GetScheduledJobs() []string {
 
 // Stop stops the scheduler
 func (ss *SchedulerImpl) Stop() {
-	ss.scheduler.Stop()
+	ss.mutex.Lock()
+	defer ss.mutex.Unlock()
+
+	// Stop all timers
+	for jobID, timer := range ss.jobs {
+		timer.Stop()
+		logrus.WithField("job_id", jobID).Debug("Job stopped during scheduler shutdown")
+	}
+
+	// Clear the jobs map
+	ss.jobs = make(map[string]*time.Timer)
 }

@@ -118,3 +118,62 @@ func NotificationSchedulerExample() {
 
 	fmt.Println("=== Notification Scheduler Example Completed ===")
 }
+
+// OneTimeJobExample demonstrates one-time job execution with automatic cleanup
+func OneTimeJobExample() {
+	fmt.Println("=== One-Time Job Example ===")
+
+	// Create a new scheduler
+	sched := scheduler.NewScheduler()
+	defer sched.Stop()
+
+	// Track job execution count
+	executionCount := 0
+	jobID := "one-time-job"
+
+	// Schedule a job to run in 3 seconds
+	scheduledTime := time.Now().Add(3 * time.Second)
+	fmt.Printf("Scheduling one-time job '%s' to run at %s\n", jobID, scheduledTime.Format("15:04:05"))
+
+	// Define the job function
+	job := func() {
+		executionCount++
+		fmt.Printf("🎯 One-time job '%s' executed (count: %d) at %s\n", jobID, executionCount, time.Now().Format("15:04:05"))
+	}
+
+	// Schedule the job
+	err := sched.ScheduleJob(jobID, scheduledTime, job)
+	if err != nil {
+		fmt.Printf("❌ Failed to schedule job: %v\n", err)
+		return
+	}
+
+	fmt.Printf("✅ One-time job '%s' scheduled successfully\n", jobID)
+
+	// Check scheduled jobs before execution
+	jobs := sched.GetScheduledJobs()
+	fmt.Printf("📋 Scheduled jobs before execution: %v\n", jobs)
+
+	// Wait for job to execute (4 seconds)
+	fmt.Println("⏳ Waiting for job to execute...")
+	time.Sleep(4 * time.Second)
+
+	// Check scheduled jobs after execution
+	jobs = sched.GetScheduledJobs()
+	fmt.Printf("📋 Scheduled jobs after execution: %v\n", jobs)
+
+	// Wait a bit more to ensure no re-execution
+	fmt.Println("⏳ Waiting additional 2 seconds to ensure no re-execution...")
+	time.Sleep(2 * time.Second)
+
+	fmt.Printf("📊 Final execution count: %d\n", executionCount)
+	fmt.Printf("📋 Final scheduled jobs: %v\n", sched.GetScheduledJobs())
+
+	if executionCount == 1 && len(sched.GetScheduledJobs()) == 0 {
+		fmt.Println("✅ SUCCESS: Job executed exactly once and was automatically removed!")
+	} else {
+		fmt.Println("❌ FAILED: Job did not behave as expected")
+	}
+
+	fmt.Println("=== One-Time Job Example Completed ===")
+}
