@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gaurav2721/notification-service/models"
@@ -151,13 +152,14 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 		return
 	}
 
-	// Create notification messages for each recipient and post to Kafka channels
+	// Process notifications based on type and fetch relevant user information
 	var responses []interface{}
 	notificationID := generateID()
 
 	logrus.WithFields(logrus.Fields{
-		"notification_id": notificationID,
-		"recipient_count": len(users),
+		"notification_id":   notificationID,
+		"recipient_count":   len(users),
+		"notification_type": request.Type,
 	}).Debug("Processing notification for recipients")
 
 	for _, user := range users {
@@ -166,37 +168,27 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 			"email":   user.Email,
 		}).Debug("Processing notification for user")
 
-		// Create personalized notification message for this user
-		notificationMessage := h.createNotificationMessage(notificationID, request, user)
-
-		fmt.Println("---------------> gaurav notificationMessage", notificationMessage)
-
-		// Post to relevant Kafka channel based on notification type
-		err := h.postToKafkaChannel(request.Type, notificationMessage)
+		// Get detailed user notification info based on notification type
+		userNotificationInfo, err := h.userService.GetUserNotificationInfo(c.Request.Context(), user.ID)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
 				"user_id": user.ID,
 				"error":   err.Error(),
-			}).Error("Failed to post notification to Kafka channel")
-			// Log error but continue with other recipients
-			logrus.WithFields(logrus.Fields{
-				"user_id": user.ID,
-				"error":   err.Error(),
-			}).Error("Failed to post notification for user")
+			}).Error("Failed to get user notification info")
 			continue
 		}
 
-		logrus.WithField("user_id", user.ID).Debug("Notification queued successfully for user")
-
-		// Create response for this recipient
-		response := &models.NotificationResponse{
-			ID:      notificationID,
-			Status:  "queued",
-			Message: fmt.Sprintf("Notification queued for user %s", user.FullName),
-			SentAt:  time.Now(),
-			Channel: request.Type,
+		// Process notification based on type
+		userResponses, err := h.processNotificationByType(notificationID, request, userNotificationInfo)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"user_id": user.ID,
+				"error":   err.Error(),
+			}).Error("Failed to process notification for user")
+			continue
 		}
-		responses = append(responses, response)
+
+		responses = append(responses, userResponses...)
 	}
 
 	logrus.WithFields(logrus.Fields{
@@ -214,54 +206,8 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 	})
 }
 
-// createNotificationMessage creates a personalized notification message for a specific user
-func (h *NotificationHandler) createNotificationMessage(notificationID string, request models.NotificationRequest, user *models.User) map[string]interface{} {
-	// Create base notification message
-	message := map[string]interface{}{
-		"notification_id": notificationID,
-		"type":            request.Type,
-		"content":         request.Content,
-		"template":        request.Template,
-		"created_at":      time.Now(),
-		"recipient": map[string]interface{}{
-			"user_id":       user.ID,
-			"email":         user.Email,
-			"full_name":     user.FullName,
-			"slack_user_id": user.SlackUserID,
-			"slack_channel": user.SlackChannel,
-			"phone_number":  user.PhoneNumber,
-		},
-	}
-
-	// Add "from" field for email notifications
-	if request.Type == "email" && request.From != nil {
-		message["from"] = request.From
-	}
-
-	// Add personalized content based on user information
-	if request.Content != nil {
-		// Personalize content with user information
-		personalizedContent := make(map[string]interface{})
-		for key, value := range request.Content {
-			personalizedContent[key] = value
-		}
-
-		// Add user-specific personalization
-		if user.FullName != "" {
-			personalizedContent["recipient_name"] = user.FullName
-		}
-		if user.Email != "" {
-			personalizedContent["recipient_email"] = user.Email
-		}
-
-		message["content"] = personalizedContent
-	}
-
-	return message
-}
-
 // postToKafkaChannel posts the notification message to the appropriate Kafka channel
-func (h *NotificationHandler) postToKafkaChannel(notificationType string, message map[string]interface{}) error {
+func (h *NotificationHandler) postToKafkaChannel(notificationType string, message interface{}) error {
 	// Convert message to JSON
 	messageJSON, err := json.Marshal(message)
 	if err != nil {
@@ -303,17 +249,7 @@ func (h *NotificationHandler) postToKafkaChannel(notificationType string, messag
 		case h.kafkaService.GetAndroidPushNotificationChannel() <- messageStr:
 			// Message sent successfully
 		default:
-			return fmt.Errorf("Android push notification channel is full")
-		}
-
-	case "in_app":
-		// For in-app notifications, we can use either iOS or Android channel
-		// or create a separate in-app channel. For now, using iOS channel.
-		select {
-		case h.kafkaService.GetIOSPushNotificationChannel() <- messageStr:
-			// Message sent successfully
-		default:
-			return fmt.Errorf("in-app notification channel is full")
+			return fmt.Errorf("android push notification channel is full")
 		}
 
 	default:
@@ -321,6 +257,131 @@ func (h *NotificationHandler) postToKafkaChannel(notificationType string, messag
 	}
 
 	return nil
+}
+
+// processNotificationByType processes notifications based on type and user information
+func (h *NotificationHandler) processNotificationByType(notificationID string, request models.NotificationRequest, userInfo *models.UserNotificationInfo) ([]interface{}, error) {
+	var responses []interface{}
+
+	switch request.Type {
+	case "email":
+		// For email notifications, use email as recipient
+		if userInfo.Email == "" {
+			logrus.WithField("user_id", userInfo.ID).Warn("User has no email address")
+			return responses, nil
+		}
+
+		// Create email-specific message
+		emailMessage := h.createEmailMessage(notificationID, request, userInfo)
+
+		// Post to email channel
+		err := h.postToKafkaChannel("email", emailMessage)
+		if err != nil {
+			return responses, fmt.Errorf("failed to post email notification: %v", err)
+		}
+
+		// Create response
+		response := &models.NotificationResponse{
+			ID:      notificationID,
+			Status:  "queued",
+			Message: fmt.Sprintf("Email notification queued for user %s", userInfo.FullName),
+			SentAt:  time.Now(),
+			Channel: "email",
+		}
+		responses = append(responses, response)
+
+	case "slack":
+		// For slack notifications, use slack channel as recipient
+		if userInfo.SlackChannel == "" {
+			logrus.WithField("user_id", userInfo.ID).Warn("User has no slack channel")
+			return responses, nil
+		}
+
+		// Create slack-specific message
+		slackMessage := h.createSlackMessage(notificationID, request, userInfo)
+
+		// Post to slack channel
+		err := h.postToKafkaChannel("slack", slackMessage)
+		if err != nil {
+			return responses, fmt.Errorf("failed to post slack notification: %v", err)
+		}
+
+		// Create response
+		response := &models.NotificationResponse{
+			ID:      notificationID,
+			Status:  "queued",
+			Message: fmt.Sprintf("Slack notification queued for user %s", userInfo.FullName),
+			SentAt:  time.Now(),
+			Channel: "slack",
+		}
+		responses = append(responses, response)
+
+	case "in_app":
+		// For in_app notifications, determine push type based on user devices
+		if len(userInfo.Devices) == 0 {
+			logrus.WithField("user_id", userInfo.ID).Warn("User has no active devices")
+			return responses, nil
+		}
+
+		// Group devices by type
+		iosDevices := make([]*models.UserDeviceInfo, 0)
+		androidDevices := make([]*models.UserDeviceInfo, 0)
+
+		for _, device := range userInfo.Devices {
+			if device.IsActive && device.DeviceToken != "" {
+				switch device.DeviceType {
+				case "ios":
+					iosDevices = append(iosDevices, device)
+				case "android":
+					androidDevices = append(androidDevices, device)
+				}
+			}
+		}
+
+		// Send to iOS devices - one message per device token
+		for _, device := range iosDevices {
+			if device.IsActive && device.DeviceToken != "" {
+				iosMessage := h.createIndividualPushMessage(notificationID, request, userInfo, device.DeviceToken, "ios_push")
+				err := h.postToKafkaChannel("ios_push", iosMessage)
+				if err != nil {
+					logrus.WithError(err).WithField("device_token", device.DeviceToken).Error("Failed to post iOS push notification")
+				} else {
+					response := &models.NotificationResponse{
+						ID:      notificationID,
+						Status:  "queued",
+						Message: fmt.Sprintf("iOS push notification queued for user %s (device: %s)", userInfo.FullName, device.DeviceToken[:8]+"..."),
+						SentAt:  time.Now(),
+						Channel: "ios_push",
+					}
+					responses = append(responses, response)
+				}
+			}
+		}
+
+		// Send to Android devices - one message per device token
+		for _, device := range androidDevices {
+			if device.IsActive && device.DeviceToken != "" {
+				androidMessage := h.createIndividualPushMessage(notificationID, request, userInfo, device.DeviceToken, "android_push")
+				err := h.postToKafkaChannel("android_push", androidMessage)
+				if err != nil {
+					logrus.WithError(err).WithField("device_token", device.DeviceToken).Error("Failed to post Android push notification")
+				} else {
+					response := &models.NotificationResponse{
+						ID:      notificationID,
+						Status:  "queued",
+						Message: fmt.Sprintf("Android push notification queued for user %s (device: %s)", userInfo.FullName, device.DeviceToken[:8]+"..."),
+						SentAt:  time.Now(),
+						Channel: "android_push",
+					}
+					responses = append(responses, response)
+				}
+			}
+		}
+	default:
+		return responses, fmt.Errorf("unsupported notification type: %s", request.Type)
+	}
+
+	return responses, nil
 }
 
 // GetNotificationStatus handles GET /notifications/:id
@@ -439,4 +500,117 @@ func (h *NotificationHandler) HealthCheck(c *gin.Context) {
 // Helper function to generate a simple ID
 func generateID() string {
 	return strconv.FormatInt(time.Now().UnixNano(), 10)
+}
+
+// createEmailMessage creates an email-specific notification message
+func (h *NotificationHandler) createEmailMessage(notificationID string, request models.NotificationRequest, userInfo *models.UserNotificationInfo) *models.EmailNotificationRequest {
+	// Extract content from request
+	var subject, emailBody string
+	if request.Content != nil {
+		if subj, ok := request.Content["subject"].(string); ok {
+			subject = subj
+		}
+		if body, ok := request.Content["email_body"].(string); ok {
+			emailBody = body
+		}
+	}
+
+	// Personalize content with user information
+	if userInfo.FullName != "" {
+		emailBody = strings.ReplaceAll(emailBody, "{{recipient_name}}", userInfo.FullName)
+		emailBody = strings.ReplaceAll(emailBody, "{{name}}", userInfo.FullName)
+	}
+	if userInfo.Email != "" {
+		emailBody = strings.ReplaceAll(emailBody, "{{recipient_email}}", userInfo.Email)
+		emailBody = strings.ReplaceAll(emailBody, "{{email}}", userInfo.Email)
+	}
+
+	emailNotification := &models.EmailNotificationRequest{
+		ID:   notificationID,
+		Type: "email",
+		Content: models.EmailContent{
+			Subject:   subject,
+			EmailBody: emailBody,
+		},
+		Recipients: []string{userInfo.Email},
+	}
+
+	// Add from field if provided
+	if request.From != nil {
+		emailNotification.From = &models.EmailSender{
+			Email: request.From.Email,
+		}
+	}
+
+	return emailNotification
+}
+
+// createSlackMessage creates a slack-specific notification message
+func (h *NotificationHandler) createSlackMessage(notificationID string, request models.NotificationRequest, userInfo *models.UserNotificationInfo) *models.SlackNotificationRequest {
+	// Extract content from request
+	var text string
+	if request.Content != nil {
+		if txt, ok := request.Content["text"].(string); ok {
+			text = txt
+		}
+	}
+
+	// Personalize content with user information
+	if userInfo.FullName != "" {
+		text = strings.ReplaceAll(text, "{{recipient_name}}", userInfo.FullName)
+		text = strings.ReplaceAll(text, "{{name}}", userInfo.FullName)
+	}
+	if userInfo.SlackUserID != "" {
+		text = strings.ReplaceAll(text, "{{recipient_slack_id}}", userInfo.SlackUserID)
+		text = strings.ReplaceAll(text, "{{slack_id}}", userInfo.SlackUserID)
+	}
+
+	slackNotification := &models.SlackNotificationRequest{
+		ID:         notificationID,
+		Type:       "slack",
+		Content:    models.SlackContent{Text: text},
+		Recipients: []string{userInfo.SlackChannel},
+	}
+
+	return slackNotification
+}
+
+// createIndividualPushMessage creates a push notification message for a single device token
+func (h *NotificationHandler) createIndividualPushMessage(notificationID string, request models.NotificationRequest, userInfo *models.UserNotificationInfo, deviceToken string, pushType string) interface{} {
+	// Extract content from request
+	var title, body string
+	if request.Content != nil {
+		if t, ok := request.Content["title"].(string); ok {
+			title = t
+		}
+		if b, ok := request.Content["body"].(string); ok {
+			body = b
+		}
+	}
+
+	// Return appropriate notification type based on pushType
+	switch pushType {
+	case "ios_push":
+		return &models.APNSNotificationRequest{
+			ID:         notificationID,
+			Type:       "ios_push",
+			Content:    models.APNSContent{Title: title, Body: body},
+			Recipients: []string{deviceToken},
+		}
+	case "android_push":
+		return &models.FCMNotificationRequest{
+			ID:         notificationID,
+			Type:       "android_push",
+			Content:    models.FCMContent{Title: title, Body: body},
+			Recipients: []string{deviceToken},
+		}
+	default:
+		// Fallback to generic map for unsupported types
+		return map[string]interface{}{
+			"notification_id": notificationID,
+			"type":            pushType,
+			"content":         map[string]interface{}{"title": title, "body": body},
+			"recipients":      []string{deviceToken},
+		}
+	}
 }
