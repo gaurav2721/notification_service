@@ -250,7 +250,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
     "content": {
       "text": "📅 *Daily Standup Reminder*\n\nTime: 9:00 AM\nChannel: #daily-standup\nAgenda: Project updates and blockers"
     },
-    "recipients": ["user-001", "user-002", "user-003"],
+    "recipients": ["user-001"],
     "scheduled_at": "2024-01-16T09:00:00Z"
   }'
 ```
@@ -537,7 +537,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
         "activation_link": "https://tuskira.com/activate?token=def456ghi789"
       }
     },
-    "recipients": ["user-456"],
+    "recipients": ["user-001"],
     "scheduled_at": "2024-01-15T15:00:00Z",
     "from": {
       "email": "noreply@company.com"
@@ -705,7 +705,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
   -d '{
     "type": "email",
     "template": {
-      "id": "template-password-reset-custom",
+      "id": "2a94230b-cb5f-4605-9078-19708bf57323",
       "version": 1,
       "data": {
         "user_name": "Jane Smith",
