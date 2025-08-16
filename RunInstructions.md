@@ -139,7 +139,10 @@ curl -X POST http://localhost:8080/api/v1/notifications \
       "subject": "Welcome to Our Platform!",
       "email_body": "Hello,\n\nWelcome to our platform! We are excited to have you on board.\n\nBest regards,\nThe Team"
     },
-    "recipients": ["user-001", "user-002"]
+    "recipients": ["user-001", "user-002"],
+    "from": {
+      "email": "noreply@company.com"
+    }
   }'
 ```
 
@@ -219,7 +222,10 @@ curl -X POST http://localhost:8080/api/v1/notifications \
       "email_body": "Hello,\n\nThis is a friendly reminder to complete your profile information.\n\nBest regards,\nThe Team"
     },
     "recipients": ["user-001"],
-    "scheduled_at": "2024-01-15T14:00:00Z"
+    "scheduled_at": "2024-01-15T14:00:00Z",
+    "from": {
+      "email": "noreply@company.com"
+    }
   }'
 ```
 
@@ -394,7 +400,10 @@ curl -X POST http://localhost:8080/api/v1/notifications \
         "activation_link": "https://tuskira.com/activate?token=abc123def456"
       }
     },
-    "recipients": ["user-001"]
+    "recipients": ["user-001"],
+    "from": {
+      "email": "noreply@company.com"
+    }
   }'
 ```
 
@@ -499,7 +508,10 @@ curl -X POST http://localhost:8080/api/v1/notifications \
       }
     },
     "recipients": ["user-456"],
-    "scheduled_at": "2024-01-15T15:00:00Z"
+    "scheduled_at": "2024-01-15T15:00:00Z",
+    "from": {
+      "email": "noreply@company.com"
+    }
   }'
 ```
 
@@ -634,7 +646,10 @@ curl -X POST http://localhost:8080/api/v1/notifications \
         "expiry_hours": 24
       }
     },
-    "recipients": ["user-123"]
+    "recipients": ["user-123"],
+    "from": {
+      "email": "noreply@company.com"
+    }
   }'
 ```
 
@@ -666,7 +681,10 @@ curl -X POST http://localhost:8080/api/v1/notifications \
       }
     },
     "recipients": ["user-002"],
-    "scheduled_at": "2024-01-15T16:00:00Z"
+    "scheduled_at": "2024-01-15T16:00:00Z",
+    "from": {
+      "email": "noreply@company.com"
+    }
   }'
 ```
 
@@ -723,6 +741,8 @@ curl -X GET http://localhost:8080/health
 - All timestamps are in ISO 8601 format (UTC)
 - User IDs are used as recipients instead of email addresses for better security
 - The service supports three notification types: `email`, `slack`, and `in_app`
+- **Email notifications require a mandatory "from" field with an email address**
+- **Non-email notifications should not include the "from" field**
 - Templates support variable substitution using `{{variable_name}}` syntax
 - Scheduled notifications are processed by the service's internal scheduler
 - All API responses include appropriate HTTP status codes

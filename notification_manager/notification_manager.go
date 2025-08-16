@@ -59,6 +59,9 @@ func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notific
 		Template    *models.TemplateData
 		Recipients  []string
 		ScheduledAt *time.Time
+		From        *struct {
+			Email string `json:"email"`
+		}
 	})
 	if !ok {
 		logrus.Error("Unsupported notification type")

@@ -73,6 +73,9 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 		Template    *models.TemplateData   `json:"template,omitempty"`
 		Recipients  []string               `json:"recipients" binding:"required"`
 		ScheduledAt *time.Time             `json:"scheduled_at"`
+		From        *struct {
+			Email string `json:"email"`
+		} `json:"from,omitempty"`
 	}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -81,11 +84,27 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 		return
 	}
 
+	// Validate "from" field based on notification type
+	if request.Type == "email" {
+		if request.From == nil || request.From.Email == "" {
+			logrus.Warn("Email notification requires 'from' field with email")
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Email notifications require 'from' field with email address"})
+			return
+		}
+	} else {
+		if request.From != nil {
+			logrus.Warn("Non-email notifications should not include 'from' field")
+			c.JSON(http.StatusBadRequest, gin.H{"error": "'from' field is only allowed for email notifications"})
+			return
+		}
+	}
+
 	logrus.WithFields(logrus.Fields{
 		"type":        request.Type,
 		"recipients":  len(request.Recipients),
 		"scheduled":   request.ScheduledAt != nil,
 		"hasTemplate": request.Template != nil,
+		"hasFrom":     request.From != nil,
 	}).Debug("Processing notification request")
 
 	// Check if it's a scheduled notification
@@ -99,6 +118,9 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 			Template    *models.TemplateData
 			Recipients  []string
 			ScheduledAt *time.Time
+			From        *struct {
+				Email string `json:"email"`
+			}
 		}{
 			ID:          generateID(),
 			Type:        request.Type,
@@ -106,6 +128,7 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 			Template:    request.Template,
 			Recipients:  request.Recipients,
 			ScheduledAt: request.ScheduledAt,
+			From:        request.From,
 		}
 
 		// Schedule notification
@@ -208,6 +231,9 @@ func (h *NotificationHandler) createNotificationMessage(notificationID string, r
 	Template    *models.TemplateData   `json:"template,omitempty"`
 	Recipients  []string               `json:"recipients" binding:"required"`
 	ScheduledAt *time.Time             `json:"scheduled_at"`
+	From        *struct {
+		Email string `json:"email"`
+	}
 }, user *models.User) map[string]interface{} {
 	// Create base notification message
 	message := map[string]interface{}{
@@ -224,6 +250,11 @@ func (h *NotificationHandler) createNotificationMessage(notificationID string, r
 			"slack_channel": user.SlackChannel,
 			"phone_number":  user.PhoneNumber,
 		},
+	}
+
+	// Add "from" field for email notifications
+	if request.Type == "email" && request.From != nil {
+		message["from"] = request.From
 	}
 
 	// Add personalized content based on user information

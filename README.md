@@ -111,6 +111,9 @@ Request Body (Immediate Notification without template):
   "content": {
     "subject": "Welcome To Tuskira",
     "email_body": "Hi! John Doe we welcome you to tuskira"
+  },
+  "from": {
+    "email": "noreply@company.com"
   }
 }
 ```
@@ -124,7 +127,10 @@ Request Body (Scheduled Notification without template):
     "subject": "Welcome To Tuskira",
     "email_body": "Hi! John Doe we welcome you to tuskira"
   },
-  "scheduled_at": "2024-01-01T12:00:00Z"
+  "scheduled_at": "2024-01-01T12:00:00Z",
+  "from": {
+    "email": "noreply@company.com"
+  }
 }
 ```
 
@@ -139,6 +145,9 @@ Request Body (Using Template):
       "name": "John Doe",
       "platform": "Tuskira"
     }
+  },
+  "from": {
+    "email": "noreply@company.com"
   }
 }
 ```
@@ -155,7 +164,10 @@ Request Body (Scheduled Notification using Template):
       "platform": "Tuskira"
     }
   },
-  "scheduled_at": "2024-01-01T12:00:00Z"
+  "scheduled_at": "2024-01-01T12:00:00Z",
+  "from": {
+    "email": "noreply@company.com"
+  }
 }
 ```
 
@@ -170,8 +182,12 @@ Request Body (Scheduled Notification using Template):
   - `id` (string): Template identifier in UUID format
   - `data` (object): Key-value pairs for template parameters
 - `scheduled_at` (optional): ISO 8601 timestamp (UTC) for scheduled delivery
+- `from` (required for email notifications): Object containing sender information:
+  - `email` (string): Sender email address
 
 **Note**: Either `content` OR `template` must be provided, but not both. When using a template, the `data` object contains the key-value pairs that will replace the template variables.
+
+**Important**: Email notifications require a mandatory `from` field with an email address. Non-email notifications should not include the `from` field.
 
 
 ## Notification Scheduling
@@ -250,7 +266,10 @@ curl -X POST http://localhost:8080/api/v1/notifications \
       "email_body": "This email was scheduled for future delivery"
     },
     "recipients": ["user-123", "user-456"],
-    "scheduled_at": "2024-01-01T12:00:00Z"
+    "scheduled_at": "2024-01-01T12:00:00Z",
+    "from": {
+      "email": "noreply@company.com"
+    }
   }'
 ```
 

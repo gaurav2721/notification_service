@@ -52,6 +52,9 @@ func (es *EmailServiceImpl) SendEmail(ctx context.Context, notification interfac
 			Data map[string]interface{}
 		}
 		Recipients []string
+		From       *struct {
+			Email string `json:"email"`
+		}
 	})
 	if !ok {
 		return nil, ErrEmailSendFailed
@@ -59,7 +62,14 @@ func (es *EmailServiceImpl) SendEmail(ctx context.Context, notification interfac
 
 	// Create email message
 	m := gomail.NewMessage()
-	m.SetHeader("From", os.Getenv("SMTP_USERNAME"))
+
+	// Use "from" field if provided, otherwise fall back to environment variable
+	fromEmail := os.Getenv("SMTP_USERNAME")
+	if notif.From != nil && notif.From.Email != "" {
+		fromEmail = notif.From.Email
+	}
+
+	m.SetHeader("From", fromEmail)
 	m.SetHeader("To", notif.Recipients...)
 
 	// Extract subject and body from content
