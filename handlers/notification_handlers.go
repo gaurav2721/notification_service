@@ -200,36 +200,24 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 		logrus.WithField("generated_content", generatedContent).Debug("Template content generated and merged")
 	}
 
+	id := generateID()
 	// Check if it's a scheduled notification
 	if request.ScheduledAt != nil {
 		logrus.Debug("Processing scheduled notification")
 		// Create notification object for scheduling
-		notification := &struct {
-			ID          string
-			Type        string
-			Content     map[string]interface{}
-			Template    *models.TemplateData
-			Recipients  []string
-			ScheduledAt *time.Time
-			From        *struct {
-				Email string `json:"email"`
-			}
-		}{
-			ID:          generateID(),
-			Type:        request.Type,
-			Content:     request.Content,
-			Template:    request.Template,
-			Recipients:  request.Recipients,
-			ScheduledAt: request.ScheduledAt,
-			From:        request.From,
-		}
 
 		// Schedule notification with a job function
-		err := h.notificationService.ScheduleNotification(c.Request.Context(), notification.ID, &request, func() error {
+		err := h.notificationService.ScheduleNotification(c.Request.Context(), id, &request, func() error {
 			// This job will be executed at the scheduled time
 			// It should send the notification
-			logrus.WithField("notification_id", notification.ID).Info("Executing scheduled notification job")
+			logrus.WithField("notification_id", id).Info("Executing scheduled notification job")
 
+			// Get recipient information from userService
+			_, err := h.processNotificationForRecipients(c, &request, id)
+			if err != nil {
+				logrus.WithError(err).Error("Failed to process notification for recipients")
+				return err
+			}
 			// TODO: Implement the actual notification sending logic here
 			// For now, just log that the job would be executed
 			return nil
@@ -241,9 +229,9 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 			return
 		}
 
-		logrus.WithField("notification_id", notification.ID).Debug("Notification scheduled successfully")
+		logrus.WithField("notification_id", id).Debug("Notification scheduled successfully")
 		c.JSON(http.StatusOK, gin.H{
-			"id":           notification.ID,
+			"id":           id,
 			"status":       "scheduled",
 			"message":      "Notification scheduled successfully",
 			"scheduled_at": request.ScheduledAt,
@@ -252,71 +240,23 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 	}
 
 	// Get recipient information from userService
-	logrus.Debug("Fetching recipient information from user service")
-	users, err := h.userService.GetUsersByIDs(c.Request.Context(), request.Recipients)
+	responses, err := h.processNotificationForRecipients(c, &request, id)
 	if err != nil {
-		logrus.WithError(err).Error("Failed to get recipient information")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to get recipient information: %v", err)})
+		logrus.WithError(err).Error("Failed to process notification for recipients")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	logrus.WithField("valid_users", len(users)).Debug("Retrieved user information")
-
-	if len(users) == 0 {
-		logrus.Warn("No valid recipients found for notification")
-		c.JSON(http.StatusBadRequest, gin.H{"error": "No valid recipients found"})
-		return
-	}
-
-	// Process notifications based on type and fetch relevant user information
-	var responses []interface{}
-	notificationID := generateID()
-
 	logrus.WithFields(logrus.Fields{
-		"notification_id":   notificationID,
-		"recipient_count":   len(users),
-		"notification_type": request.Type,
-	}).Debug("Processing notification for recipients")
-
-	for _, user := range users {
-		logrus.WithFields(logrus.Fields{
-			"user_id": user.ID,
-			"email":   user.Email,
-		}).Debug("Processing notification for user")
-
-		// Get detailed user notification info based on notification type
-		userNotificationInfo, err := h.userService.GetUserNotificationInfo(c.Request.Context(), user.ID)
-		if err != nil {
-			logrus.WithFields(logrus.Fields{
-				"user_id": user.ID,
-				"error":   err.Error(),
-			}).Error("Failed to get user notification info")
-			continue
-		}
-
-		// Process notification based on type
-		userResponses, err := h.processNotificationByType(notificationID, request, userNotificationInfo)
-		if err != nil {
-			logrus.WithFields(logrus.Fields{
-				"user_id": user.ID,
-				"error":   err.Error(),
-			}).Error("Failed to process notification for user")
-			continue
-		}
-
-		responses = append(responses, userResponses...)
-	}
-
-	logrus.WithFields(logrus.Fields{
-		"notification_id":  notificationID,
-		"total_recipients": len(users),
+		"notification_id":  id,
+		"total_recipients": len(request.Recipients),
 		"queued_count":     len(responses),
 	}).Debug("Notification processing completed")
 
 	// Return aggregated response
 	c.JSON(http.StatusOK, gin.H{
-		"notification_id":  notificationID,
-		"total_recipients": len(users),
+		"notification_id":  id,
+		"total_recipients": len(request.Recipients),
 		"queued_count":     len(responses),
 		"responses":        responses,
 	})
@@ -495,6 +435,64 @@ func (h *NotificationHandler) processNotificationByType(notificationID string, r
 		}
 	default:
 		return responses, fmt.Errorf("unsupported notification type: %s", request.Type)
+	}
+
+	return responses, nil
+}
+
+// processNotificationForRecipients processes notifications for all recipients
+func (h *NotificationHandler) processNotificationForRecipients(c *gin.Context, request *models.NotificationRequest, notificationID string) ([]interface{}, error) {
+	// Get recipient information from userService
+	logrus.Debug("Fetching recipient information from user service")
+	users, err := h.userService.GetUsersByIDs(c.Request.Context(), request.Recipients)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to get recipient information")
+		return nil, fmt.Errorf("failed to get recipient information: %v", err)
+	}
+
+	logrus.WithField("valid_users", len(users)).Debug("Retrieved user information")
+
+	if len(users) == 0 {
+		logrus.Warn("No valid recipients found for notification")
+		return nil, fmt.Errorf("no valid recipients found")
+	}
+
+	// Process notifications based on type and fetch relevant user information
+	var responses []interface{}
+
+	logrus.WithFields(logrus.Fields{
+		"notification_id":   notificationID,
+		"recipient_count":   len(users),
+		"notification_type": request.Type,
+	}).Debug("Processing notification for recipients")
+
+	for _, user := range users {
+		logrus.WithFields(logrus.Fields{
+			"user_id": user.ID,
+			"email":   user.Email,
+		}).Debug("Processing notification for user")
+
+		// Get detailed user notification info based on notification type
+		userNotificationInfo, err := h.userService.GetUserNotificationInfo(c.Request.Context(), user.ID)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"user_id": user.ID,
+				"error":   err.Error(),
+			}).Error("Failed to get user notification info")
+			continue
+		}
+
+		// Process notification based on type
+		userResponses, err := h.processNotificationByType(notificationID, *request, userNotificationInfo)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"user_id": user.ID,
+				"error":   err.Error(),
+			}).Error("Failed to process notification for user")
+			continue
+		}
+
+		responses = append(responses, userResponses...)
 	}
 
 	return responses, nil
