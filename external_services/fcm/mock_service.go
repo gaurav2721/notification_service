@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/gaurav2721/notification-service/models"
 )
 
 // MockFCMServiceImpl implements the FCMService interface for testing/mock purposes
@@ -30,31 +32,18 @@ func NewMockFCMService() FCMService {
 // SendPushNotification writes FCM notification to file instead of sending actual push notification
 func (fcm *MockFCMServiceImpl) SendPushNotification(ctx context.Context, notification interface{}) (interface{}, error) {
 	// Type assertion to get the notification
-	notif, ok := notification.(*struct {
-		ID       string
-		Type     string
-		Content  map[string]interface{}
-		Template *struct {
-			ID   string
-			Data map[string]interface{}
-		}
-		Recipient   string
-		ScheduledAt *time.Time
-	})
+	notif, ok := notification.(*models.FCMNotificationRequest)
 	if !ok {
 		return nil, ErrInvalidNotificationPayload
 	}
 
+	// Validate the FCM notification
+	if err := models.ValidateFCMNotification(notif); err != nil {
+		return nil, fmt.Errorf("FCM validation failed: %w", err)
+	}
+
 	// Create mock response
-	response := &struct {
-		ID           string    `json:"id"`
-		Status       string    `json:"status"`
-		Message      string    `json:"message"`
-		SentAt       time.Time `json:"sent_at"`
-		Channel      string    `json:"channel"`
-		SuccessCount int       `json:"success_count"`
-		FailureCount int       `json:"failure_count"`
-	}{
+	response := &models.FCMResponse{
 		ID:           notif.ID,
 		Status:       "mock_sent",
 		Message:      "FCM notification written to file (mock mode)",
@@ -66,15 +55,13 @@ func (fcm *MockFCMServiceImpl) SendPushNotification(ctx context.Context, notific
 
 	// Prepare notification data for file output
 	notificationData := map[string]interface{}{
-		"timestamp":    time.Now().Format(time.RFC3339),
-		"id":           notif.ID,
-		"type":         notif.Type,
-		"content":      notif.Content,
-		"recipient":    notif.Recipient,
-		"template":     notif.Template,
-		"scheduled_at": notif.ScheduledAt,
-		"status":       "mock_sent",
-		"channel":      "fcm",
+		"timestamp": time.Now().Format(time.RFC3339),
+		"id":        notif.ID,
+		"type":      notif.Type,
+		"content":   notif.Content,
+		"recipient": notif.Recipient,
+		"status":    "mock_sent",
+		"channel":   "fcm",
 	}
 
 	// Convert to JSON

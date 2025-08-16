@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gaurav2721/notification-service/models"
 	"github.com/slack-go/slack"
 )
 
@@ -37,27 +38,18 @@ func NewSlackService() SlackService {
 // SendSlackMessage sends a Slack notification
 func (ss *SlackServiceImpl) SendSlackMessage(ctx context.Context, notification interface{}) (interface{}, error) {
 	// Type assertion to get the notification
-	notif, ok := notification.(*struct {
-		ID       string
-		Type     string
-		Content  map[string]interface{}
-		Template *struct {
-			ID   string
-			Data map[string]interface{}
-		}
-		Recipients []string
-	})
+	notif, ok := notification.(*models.SlackNotificationRequest)
 	if !ok {
 		return nil, ErrSlackSendFailed
 	}
 
-	// Extract text from content
-	text := ""
-	if content, ok := notif.Content["text"]; ok {
-		if txt, ok := content.(string); ok {
-			text = txt
-		}
+	// Validate the slack notification
+	if err := models.ValidateSlackNotification(notif); err != nil {
+		return nil, fmt.Errorf("slack validation failed: %w", err)
 	}
+
+	// Extract text from content
+	text := notif.Content.Text
 
 	// Create Slack message
 	msg := slack.MsgOptionText(text, false)
@@ -69,13 +61,7 @@ func (ss *SlackServiceImpl) SendSlackMessage(ctx context.Context, notification i
 	}
 
 	// Return success response
-	return &struct {
-		ID      string    `json:"id"`
-		Status  string    `json:"status"`
-		Message string    `json:"message"`
-		SentAt  time.Time `json:"sent_at"`
-		Channel string    `json:"channel"`
-	}{
+	return &models.SlackResponse{
 		ID:      notif.ID,
 		Status:  "sent",
 		Message: "Slack message sent successfully",

@@ -193,7 +193,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
       "title": "New Feature Available",
       "body": "We have just released a new feature! Check it out in your dashboard."
     },
-    "recipients": ["user-001", "user-002", "user-003"]
+    "recipients": ["user-001"]
   }'
 ```
 

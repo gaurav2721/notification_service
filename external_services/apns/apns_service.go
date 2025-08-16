@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gaurav2721/notification-service/models"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -53,36 +54,24 @@ func NewAPNSService() APNSService {
 // SendPushNotification sends a push notification to Apple devices
 func (aps *APNSServiceImpl) SendPushNotification(ctx context.Context, notification interface{}) (interface{}, error) {
 	// Type assertion to get the notification
-	notif, ok := notification.(*struct {
-		ID       string
-		Type     string
-		Content  map[string]interface{}
-		Template *struct {
-			ID   string
-			Data map[string]interface{}
-		}
-		Recipient   string
-		ScheduledAt *time.Time
-	})
+	notif, ok := notification.(*models.APNSNotificationRequest)
 	if !ok {
 		return nil, ErrInvalidNotificationPayload
 	}
 
+	// Validate the APNS notification
+	if err := models.ValidateAPNSNotification(notif); err != nil {
+		return nil, fmt.Errorf("APNS validation failed: %w", err)
+	}
+
 	// Extract device token from recipient
-	// Recipient should contain iOS device token
 	deviceToken := notif.Recipient
 
 	if deviceToken == "" {
-		return &struct {
-			ID      string    `json:"id"`
-			Status  string    `json:"status"`
-			Message string    `json:"message"`
-			SentAt  time.Time `json:"sent_at"`
-			Channel string    `json:"channel"`
-		}{
+		return &models.APNSResponse{
 			ID:      notif.ID,
 			Status:  "no_devices",
-			Message: "No device tokens provided in recipients",
+			Message: "No device token provided in recipient",
 			SentAt:  time.Now(),
 			Channel: "apns",
 		}, nil
@@ -91,15 +80,7 @@ func (aps *APNSServiceImpl) SendPushNotification(ctx context.Context, notificati
 	// Check if config is available for JWT authentication
 	if aps.config == nil || aps.privateKey == nil {
 		// Return mock response for demo purposes when config is not available
-		return &struct {
-			ID           string    `json:"id"`
-			Status       string    `json:"status"`
-			Message      string    `json:"message"`
-			SentAt       time.Time `json:"sent_at"`
-			Channel      string    `json:"channel"`
-			SuccessCount int       `json:"success_count"`
-			FailureCount int       `json:"failure_count"`
-		}{
+		return &models.APNSResponse{
 			ID:           notif.ID,
 			Status:       "demo_mode",
 			Message:      "APNS notification simulated (no config provided)",
@@ -126,16 +107,12 @@ func (aps *APNSServiceImpl) SendPushNotification(ctx context.Context, notificati
 	payload := map[string]interface{}{
 		"aps": map[string]interface{}{
 			"alert": map[string]interface{}{
-				"title": notif.Content["title"],
-				"body":  notif.Content["body"],
+				"title": notif.Content.Title,
+				"body":  notif.Content.Body,
 			},
 			"sound": "default",
 			"badge": 1,
 		},
-	}
-
-	if notif.Content["data"] != nil {
-		payload["aps"].(map[string]interface{})["custom-data"] = notif.Content["data"]
 	}
 
 	payloadBytes, err := json.Marshal(payload)
@@ -173,15 +150,7 @@ func (aps *APNSServiceImpl) SendPushNotification(ctx context.Context, notificati
 	}
 
 	// Return success response
-	return &struct {
-		ID           string    `json:"id"`
-		Status       string    `json:"status"`
-		Message      string    `json:"message"`
-		SentAt       time.Time `json:"sent_at"`
-		Channel      string    `json:"channel"`
-		SuccessCount int       `json:"success_count"`
-		FailureCount int       `json:"failure_count"`
-	}{
+	return &models.APNSResponse{
 		ID:           notif.ID,
 		Status:       "sent",
 		Message:      fmt.Sprintf("APNS notification sent successfully. Success: %d, Failed: %d", successCount, failureCount),

@@ -10,6 +10,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/gaurav2721/notification-service/models"
 )
 
 // FCMServiceImpl implements the FCMService interface
@@ -97,36 +99,24 @@ func NewFCMService() FCMService {
 // SendPushNotification sends a push notification to Android devices via FCM
 func (fcm *FCMServiceImpl) SendPushNotification(ctx context.Context, notification interface{}) (interface{}, error) {
 	// Type assertion to get the notification
-	notif, ok := notification.(*struct {
-		ID       string
-		Type     string
-		Content  map[string]interface{}
-		Template *struct {
-			ID   string
-			Data map[string]interface{}
-		}
-		Recipient   string
-		ScheduledAt *time.Time
-	})
+	notif, ok := notification.(*models.FCMNotificationRequest)
 	if !ok {
 		return nil, ErrInvalidNotificationPayload
 	}
 
+	// Validate the FCM notification
+	if err := models.ValidateFCMNotification(notif); err != nil {
+		return nil, fmt.Errorf("FCM validation failed: %w", err)
+	}
+
 	// Extract device token from recipient
-	// Recipient should contain Android device token
 	deviceToken := notif.Recipient
 
 	if deviceToken == "" {
-		return &struct {
-			ID      string    `json:"id"`
-			Status  string    `json:"status"`
-			Message string    `json:"message"`
-			SentAt  time.Time `json:"sent_at"`
-			Channel string    `json:"channel"`
-		}{
+		return &models.FCMResponse{
 			ID:      notif.ID,
 			Status:  "no_devices",
-			Message: "No device tokens provided in recipients",
+			Message: "No device token provided in recipient",
 			SentAt:  time.Now(),
 			Channel: "fcm",
 		}, nil
@@ -134,33 +124,20 @@ func (fcm *FCMServiceImpl) SendPushNotification(ctx context.Context, notificatio
 
 	// Prepare notification payload
 	fcmNotification := &FCMNotification{
-		Title: fmt.Sprintf("%v", notif.Content["title"]),
-		Body:  fmt.Sprintf("%v", notif.Content["body"]),
+		Title: notif.Content.Title,
+		Body:  notif.Content.Body,
 		Sound: "default",
 	}
 
 	// Prepare data payload
 	data := make(map[string]interface{})
-	if notif.Content["data"] != nil {
-		if dataMap, ok := notif.Content["data"].(map[string]interface{}); ok {
-			data = dataMap
-		}
-	}
 	data["notification_id"] = notif.ID
 	data["type"] = notif.Type
 
 	// Check if config is available
 	if fcm.config == nil {
 		// Return mock response for demo purposes when config is not available
-		return &struct {
-			ID           string    `json:"id"`
-			Status       string    `json:"status"`
-			Message      string    `json:"message"`
-			SentAt       time.Time `json:"sent_at"`
-			Channel      string    `json:"channel"`
-			SuccessCount int       `json:"success_count"`
-			FailureCount int       `json:"failure_count"`
-		}{
+		return &models.FCMResponse{
 			ID:           notif.ID,
 			Status:       "demo_mode",
 			Message:      "FCM notification simulated (no config provided)",
@@ -179,15 +156,7 @@ func (fcm *FCMServiceImpl) SendPushNotification(ctx context.Context, notificatio
 	}
 
 	// Return success response
-	return &struct {
-		ID           string    `json:"id"`
-		Status       string    `json:"status"`
-		Message      string    `json:"message"`
-		SentAt       time.Time `json:"sent_at"`
-		Channel      string    `json:"channel"`
-		SuccessCount int       `json:"success_count"`
-		FailureCount int       `json:"failure_count"`
-	}{
+	return &models.FCMResponse{
 		ID:           notif.ID,
 		Status:       "sent",
 		Message:      fmt.Sprintf("FCM notification sent successfully. Success: %d, Failed: %d", success, failure),
