@@ -17,7 +17,21 @@ import (
 func main() {
 	// Configure logrus
 	logrus.SetFormatter(&logrus.JSONFormatter{})
-	logrus.SetLevel(logrus.DebugLevel)
+
+	// Set log level from environment variable or default to InfoLevel
+	logLevel := os.Getenv("LOG_LEVEL")
+	switch logLevel {
+	case "debug":
+		logrus.SetLevel(logrus.DebugLevel)
+	case "info":
+		logrus.SetLevel(logrus.InfoLevel)
+	case "warn":
+		logrus.SetLevel(logrus.WarnLevel)
+	case "error":
+		logrus.SetLevel(logrus.ErrorLevel)
+	default:
+		logrus.SetLevel(logrus.InfoLevel) // Default to InfoLevel to disable debug logs
+	}
 
 	// Load environment variables
 	if err := godotenv.Load(); err != nil {
