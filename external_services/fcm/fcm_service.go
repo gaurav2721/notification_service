@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 )
 
@@ -51,10 +53,39 @@ type Result struct {
 }
 
 // NewFCMService creates a new FCM service instance
+// It checks environment variables and returns mock service if config is incomplete
 func NewFCMService() FCMService {
+	serverKey := os.Getenv("FCM_SERVER_KEY")
+	timeoutStr := os.Getenv("FCM_TIMEOUT")
+	batchSizeStr := os.Getenv("FCM_BATCH_SIZE")
+
+	// Check if all required environment variables are present and non-empty
+	if serverKey == "" {
+		return NewMockFCMService()
+	}
+
+	timeout := 30 // default timeout
+	if timeoutStr != "" {
+		if t, err := strconv.Atoi(timeoutStr); err == nil && t > 0 {
+			timeout = t
+		}
+	}
+
+	batchSize := 1000 // default batch size
+	if batchSizeStr != "" {
+		if b, err := strconv.Atoi(batchSizeStr); err == nil && b > 0 {
+			batchSize = b
+		}
+	}
+
 	return &FCMServiceImpl{
+		config: &FCMConfig{
+			ServerKey: serverKey,
+			Timeout:   timeout,
+			BatchSize: batchSize,
+		},
 		client: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: time.Duration(timeout) * time.Second,
 		},
 	}
 }

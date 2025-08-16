@@ -16,11 +16,17 @@ type EmailServiceImpl struct {
 }
 
 // NewEmailService creates a new email service instance
+// It checks environment variables and returns mock service if config is incomplete
 func NewEmailService() EmailService {
 	host := os.Getenv("SMTP_HOST")
 	portStr := os.Getenv("SMTP_PORT")
 	username := os.Getenv("SMTP_USERNAME")
 	password := os.Getenv("SMTP_PASSWORD")
+
+	// Check if all required environment variables are present and non-empty
+	if host == "" || portStr == "" || username == "" || password == "" {
+		return NewMockEmailService()
+	}
 
 	port, _ := strconv.Atoi(portStr)
 	if port == 0 {

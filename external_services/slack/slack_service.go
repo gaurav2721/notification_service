@@ -16,9 +16,15 @@ type SlackServiceImpl struct {
 }
 
 // NewSlackService creates a new Slack service instance
+// It checks environment variables and returns mock service if config is incomplete
 func NewSlackService() SlackService {
 	token := os.Getenv("SLACK_BOT_TOKEN")
 	channel := os.Getenv("SLACK_CHANNEL_ID")
+
+	// Check if all required environment variables are present and non-empty
+	if token == "" || channel == "" {
+		return NewMockSlackService()
+	}
 
 	client := slack.New(token)
 
