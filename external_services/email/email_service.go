@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gaurav2721/notification-service/models"
 	"gopkg.in/gomail.v2"
 )
 
@@ -43,21 +44,14 @@ func NewEmailService() EmailService {
 // SendEmail sends an email notification
 func (es *EmailServiceImpl) SendEmail(ctx context.Context, notification interface{}) (interface{}, error) {
 	// Type assertion to get the notification
-	notif, ok := notification.(*struct {
-		ID       string
-		Type     string
-		Content  map[string]interface{}
-		Template *struct {
-			ID   string
-			Data map[string]interface{}
-		}
-		Recipients []string
-		From       *struct {
-			Email string `json:"email"`
-		}
-	})
+	notif, ok := notification.(*models.EmailNotificationRequest)
 	if !ok {
 		return nil, ErrEmailSendFailed
+	}
+
+	// Validate the email notification
+	if err := models.ValidateEmailNotification(notif); err != nil {
+		return nil, fmt.Errorf("email validation failed: %w", err)
 	}
 
 	// Create email message
@@ -95,13 +89,7 @@ func (es *EmailServiceImpl) SendEmail(ctx context.Context, notification interfac
 	}
 
 	// Return success response
-	return &struct {
-		ID      string    `json:"id"`
-		Status  string    `json:"status"`
-		Message string    `json:"message"`
-		SentAt  time.Time `json:"sent_at"`
-		Channel string    `json:"channel"`
-	}{
+	return &models.EmailResponse{
 		ID:      notif.ID,
 		Status:  "sent",
 		Message: "Email sent successfully",

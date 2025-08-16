@@ -9,6 +9,7 @@ import (
 	"github.com/gaurav2721/notification-service/external_services/kafka"
 	"github.com/gaurav2721/notification-service/external_services/slack"
 	"github.com/gaurav2721/notification-service/external_services/user"
+	"github.com/gaurav2721/notification-service/models"
 	"github.com/gaurav2721/notification-service/notification_manager"
 )
 
@@ -39,7 +40,7 @@ type (
 var (
 	// Email service errors
 	ErrEmailSendFailed       = email.ErrEmailSendFailed
-	ErrInvalidEmail          = email.ErrInvalidEmail
+	ErrInvalidEmail          = models.ErrInvalidEmail
 	ErrEmailTemplateNotFound = email.ErrEmailTemplateNotFound
 
 	// Slack service errors

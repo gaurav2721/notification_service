@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/gaurav2721/notification-service/models"
 )
 
 // MockEmailServiceImpl implements the EmailService interface for testing/mock purposes
@@ -30,28 +32,18 @@ func NewMockEmailService() EmailService {
 // SendEmail writes email notification to file instead of sending actual email
 func (es *MockEmailServiceImpl) SendEmail(ctx context.Context, notification interface{}) (interface{}, error) {
 	// Type assertion to get the notification
-	notif, ok := notification.(*struct {
-		ID       string
-		Type     string
-		Content  map[string]interface{}
-		Template *struct {
-			ID   string
-			Data map[string]interface{}
-		}
-		Recipients []string
-	})
+	notif, ok := notification.(*models.EmailNotificationRequest)
 	if !ok {
 		return nil, ErrEmailSendFailed
 	}
 
+	// Validate the email notification
+	if err := models.ValidateEmailNotification(notif); err != nil {
+		return nil, fmt.Errorf("email validation failed: %w", err)
+	}
+
 	// Create mock response
-	response := &struct {
-		ID      string    `json:"id"`
-		Status  string    `json:"status"`
-		Message string    `json:"message"`
-		SentAt  time.Time `json:"sent_at"`
-		Channel string    `json:"channel"`
-	}{
+	response := &models.EmailResponse{
 		ID:      notif.ID,
 		Status:  "mock_sent",
 		Message: "Email notification written to file (mock mode)",
@@ -66,7 +58,7 @@ func (es *MockEmailServiceImpl) SendEmail(ctx context.Context, notification inte
 		"type":       notif.Type,
 		"content":    notif.Content,
 		"recipients": notif.Recipients,
-		"template":   notif.Template,
+		"from":       notif.From,
 		"status":     "mock_sent",
 		"channel":    "email",
 	}
