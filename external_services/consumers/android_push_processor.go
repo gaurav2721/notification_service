@@ -21,7 +21,7 @@ func (ap *androidPushProcessor) ProcessNotification(ctx context.Context, message
 		"type":            message.Type,
 		"payload":         message.Payload,
 		"timestamp":       message.Timestamp,
-	}).Info("Processing Android push notification")
+	}).Debug("Processing Android push notification")
 
 	// TODO: Implement actual Android push notification logic
 	// This would integrate with your Android push service (e.g., FCM, Firebase)

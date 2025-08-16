@@ -21,7 +21,7 @@ func (sp *slackProcessor) ProcessNotification(ctx context.Context, message Notif
 		"type":            message.Type,
 		"payload":         message.Payload,
 		"timestamp":       message.Timestamp,
-	}).Info("Processing slack notification")
+	}).Debug("Processing slack notification")
 
 	// TODO: Implement actual slack message sending logic
 	// This would integrate with your slack service

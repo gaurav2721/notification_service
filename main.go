@@ -38,16 +38,16 @@ func main() {
 		logrus.Info("No .env file found, using system environment variables")
 	}
 
-	logrus.Info("Starting notification service initialization")
+	logrus.Debug("Starting notification service initialization")
 
 	// Initialize service container (manages all service dependencies)
 	serviceContainer := services.NewServiceContainer()
-	logrus.Info("Service container initialized successfully")
+	logrus.Debug("Service container initialized successfully")
 
 	// Initialize handlers with required dependencies
 	notificationHandler := handlers.NewNotificationHandler(serviceContainer.GetNotificationService(), serviceContainer.GetUserService(), serviceContainer.GetKafkaService())
 	userHandler := handlers.NewUserHandler(serviceContainer.GetUserService())
-	logrus.Info("Handlers initialized successfully")
+	logrus.Debug("Handlers initialized successfully")
 
 	// Setup Gin router
 	router := gin.Default()
@@ -89,10 +89,10 @@ func main() {
 	<-ctx.Done()
 
 	// Gracefully shutdown services
-	logrus.Info("Initiating graceful shutdown of services")
+	logrus.Debug("Initiating graceful shutdown of services")
 	if err := serviceContainer.Shutdown(context.Background()); err != nil {
 		logrus.WithError(err).Error("Error during shutdown")
 	}
 
-	logrus.Info("Notification service stopped gracefully")
+	logrus.Debug("Notification service stopped gracefully")
 }

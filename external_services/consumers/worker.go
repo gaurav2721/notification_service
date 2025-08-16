@@ -50,7 +50,7 @@ func (w *worker) Start(ctx context.Context) error {
 	logrus.WithFields(logrus.Fields{
 		"worker_id": w.id,
 		"type":      w.processor.GetNotificationType(),
-	}).Info("Worker started")
+	}).Debug("Worker started")
 	return nil
 }
 
@@ -71,7 +71,7 @@ func (w *worker) Stop() error {
 	// Wait for the worker to finish processing
 	w.wg.Wait()
 
-	logrus.WithField("worker_id", w.id).Info("Worker stopped")
+	logrus.WithField("worker_id", w.id).Debug("Worker stopped")
 	return nil
 }
 
@@ -171,6 +171,6 @@ func (w *worker) processMessage(message string) error {
 		"worker_id":       w.id,
 		"notification_id": notificationMsg.ID,
 		"duration":        time.Since(start),
-	}).Info("Worker processed notification successfully")
+	}).Debug("Worker processed notification successfully")
 	return nil
 }

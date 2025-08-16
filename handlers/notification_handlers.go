@@ -116,7 +116,7 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 			return
 		}
 
-		logrus.WithField("notification_id", notification.ID).Info("Notification scheduled successfully")
+		logrus.WithField("notification_id", notification.ID).Debug("Notification scheduled successfully")
 		c.JSON(http.StatusOK, response)
 		return
 	}
@@ -145,7 +145,7 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 	logrus.WithFields(logrus.Fields{
 		"notification_id": notificationID,
 		"recipient_count": len(users),
-	}).Info("Processing notification for recipients")
+	}).Debug("Processing notification for recipients")
 
 	for _, user := range users {
 		logrus.WithFields(logrus.Fields{
@@ -164,7 +164,10 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 				"error":   err.Error(),
 			}).Error("Failed to post notification to Kafka channel")
 			// Log error but continue with other recipients
-			fmt.Printf("Failed to post notification for user %s: %v\n", user.ID, err)
+			logrus.WithFields(logrus.Fields{
+				"user_id": user.ID,
+				"error":   err.Error(),
+			}).Error("Failed to post notification for user")
 			continue
 		}
 
@@ -185,7 +188,7 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 		"notification_id":  notificationID,
 		"total_recipients": len(users),
 		"queued_count":     len(responses),
-	}).Info("Notification processing completed")
+	}).Debug("Notification processing completed")
 
 	// Return aggregated response
 	c.JSON(http.StatusOK, gin.H{

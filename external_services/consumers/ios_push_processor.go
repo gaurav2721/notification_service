@@ -21,7 +21,7 @@ func (ip *iosPushProcessor) ProcessNotification(ctx context.Context, message Not
 		"type":            message.Type,
 		"payload":         message.Payload,
 		"timestamp":       message.Timestamp,
-	}).Info("Processing iOS push notification")
+	}).Debug("Processing iOS push notification")
 
 	// TODO: Implement actual iOS push notification logic
 	// This would integrate with your iOS push service (e.g., APNs, Firebase)

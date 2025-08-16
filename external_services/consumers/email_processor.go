@@ -2,6 +2,7 @@ package consumers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/sirupsen/logrus"
 )
@@ -21,7 +22,9 @@ func (ep *emailProcessor) ProcessNotification(ctx context.Context, message Notif
 		"type":            message.Type,
 		"payload":         message.Payload,
 		"timestamp":       message.Timestamp,
-	}).Info("Processing email notification")
+	}).Debug("Processing email notification")
+
+	fmt.Println("---------------> Processing email notification", message.Payload)
 
 	// TODO: Implement actual email sending logic
 	// This would integrate with your email service (e.g., SendGrid, AWS SES, etc.)

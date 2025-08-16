@@ -53,7 +53,7 @@ func (cm *consumerManager) Initialize(ctx context.Context) error {
 	logrus.Debug("Creating Android push worker pool")
 	cm.createAndroidPushWorkerPool()
 
-	logrus.WithField("worker_pools", len(cm.workerPools)).Info("Consumer manager initialized successfully")
+	logrus.WithField("worker_pools", len(cm.workerPools)).Debug("Consumer manager initialized successfully")
 	return nil
 }
 
@@ -88,7 +88,7 @@ func (cm *consumerManager) Start(ctx context.Context) error {
 		}(notificationType, pool)
 	}
 
-	logrus.Info("Consumer manager started all worker pools")
+	logrus.Debug("Consumer manager started all worker pools")
 	return nil
 }
 
@@ -125,7 +125,7 @@ func (cm *consumerManager) Stop() error {
 	logrus.Debug("Waiting for all worker pools to finish")
 	cm.wg.Wait()
 
-	logrus.Info("Consumer manager stopped all worker pools")
+	logrus.Debug("Consumer manager stopped all worker pools")
 	return nil
 }
 

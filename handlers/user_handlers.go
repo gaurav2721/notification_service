@@ -102,7 +102,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	logrus.WithFields(logrus.Fields{
 		"user_id": newUser.ID,
 		"email":   request.Email,
-	}).Info("User created successfully")
+	}).Debug("User created successfully")
 	c.JSON(http.StatusCreated, newUser)
 }
 

@@ -25,7 +25,7 @@ func NewServiceContainer() *ServiceContainer {
 	logrus.Debug("Creating new service container")
 	container := &ServiceContainer{}
 	container.initializeServices()
-	logrus.Info("Service container created successfully")
+	logrus.Debug("Service container created successfully")
 	return container
 }
 
@@ -70,14 +70,14 @@ func (c *ServiceContainer) initializeServices() {
 		logrus.WithError(err).Fatal("Failed to start consumer manager")
 		panic("Failed to start consumer manager: " + err.Error())
 	}
-	logrus.Info("Consumer manager started successfully")
+	logrus.Debug("Consumer manager started successfully")
 
 	// Initialize notification service with user service and Kafka service
 	logrus.Debug("Initializing notification service")
 	c.notificationService = factory.NewNotificationManagerWithUserService(c.userService, c.kafkaService)
 	logrus.Debug("Notification service initialized")
 
-	logrus.Info("All service dependencies initialized successfully")
+	logrus.Debug("All service dependencies initialized successfully")
 }
 
 // GetEmailService returns the email service
@@ -138,7 +138,7 @@ func (c *ServiceContainer) Shutdown(ctx context.Context) error {
 
 	// Add any cleanup logic here if needed
 	// For now, all services are stateless, so no cleanup is required
-	logrus.Info("Service container shutdown completed")
+	logrus.Debug("Service container shutdown completed")
 	return nil
 }
 

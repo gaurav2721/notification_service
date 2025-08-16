@@ -43,7 +43,7 @@ func NewKafkaService() (KafkaService, error) {
 		closed:                         false,
 	}
 
-	logrus.Info("Kafka service created successfully")
+	logrus.Debug("Kafka service created successfully")
 	return service, nil
 }
 
@@ -94,7 +94,7 @@ func (k *kafkaServiceImpl) Close() {
 	close(k.iosPushNotificationChannel)
 	close(k.androidPushNotificationChannel)
 
-	logrus.Info("Kafka service closed successfully")
+	logrus.Debug("Kafka service closed successfully")
 }
 
 // getEnvAsInt reads an environment variable and converts it to int
