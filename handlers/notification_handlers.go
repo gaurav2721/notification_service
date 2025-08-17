@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gaurav2721/notification-service/models"
-	"github.com/gaurav2721/notification-service/validation"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -150,26 +149,23 @@ func (h *NotificationHandler) processTemplateString(templateStr string, data map
 func (h *NotificationHandler) SendNotification(c *gin.Context) {
 	logrus.Debug("Received notification send request")
 
-	var request models.NotificationRequest
-
-	if err := c.ShouldBindJSON(&request); err != nil {
-		logrus.WithError(err).Warn("Invalid request body for notification")
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// Get validated request from middleware
+	validatedRequestInterface, exists := c.Get("validated_request")
+	if !exists {
+		logrus.Error("Validated request not found in context")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	// Use comprehensive validation
-	validator := validation.NewNotificationValidator()
-
-	validationResult := validator.ValidateNotificationRequest(&request)
-	if !validationResult.IsValid {
-		logrus.WithField("errors", validationResult.Errors).Warn("Validation failed for notification request")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Validation failed",
-			"details": validationResult.Errors,
-		})
+	requestPtr, ok := validatedRequestInterface.(*models.NotificationRequest)
+	if !ok {
+		logrus.Error("Failed to cast validated request to NotificationRequest")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
+
+	// Dereference the pointer to get the actual request
+	request := *requestPtr
 
 	logrus.WithFields(logrus.Fields{
 		"type":        request.Type,
@@ -540,18 +536,23 @@ func (h *NotificationHandler) GetNotificationStatus(c *gin.Context) {
 
 // CreateTemplate handles POST /templates
 func (h *NotificationHandler) CreateTemplate(c *gin.Context) {
-	var request models.TemplateRequest
-
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// Get validated request from middleware
+	validatedRequestInterface, exists := c.Get("validated_template_request")
+	if !exists {
+		logrus.Error("Validated template request not found in context")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	// Validate template content
-	if err := request.Content.ValidateTemplateContent(request.Type); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	requestPtr, ok := validatedRequestInterface.(*models.TemplateRequest)
+	if !ok {
+		logrus.Error("Failed to cast validated request to TemplateRequest")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
+
+	// Dereference the pointer to get the actual request
+	request := *requestPtr
 
 	// Create template object
 	template := &models.Template{
@@ -600,20 +601,14 @@ func (h *NotificationHandler) GetPredefinedTemplates(c *gin.Context) {
 // GetTemplateVersion handles GET /templates/:templateId/versions/:version
 func (h *NotificationHandler) GetTemplateVersion(c *gin.Context) {
 	templateID := c.Param("templateId")
-	if templateID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "template ID is required"})
-		return
-	}
-
 	versionStr := c.Param("version")
-	if versionStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "version is required"})
-		return
-	}
 
+	// Parameters are already validated by middleware
 	version, err := strconv.Atoi(versionStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid version number"})
+		// This should not happen as middleware validates this
+		logrus.WithError(err).Error("Failed to parse version parameter")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
