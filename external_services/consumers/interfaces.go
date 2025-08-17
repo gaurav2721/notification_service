@@ -2,6 +2,12 @@ package consumers
 
 import (
 	"context"
+
+	"github.com/gaurav2721/notification-service/external_services/apns"
+	"github.com/gaurav2721/notification-service/external_services/email"
+	"github.com/gaurav2721/notification-service/external_services/fcm"
+	"github.com/gaurav2721/notification-service/external_services/kafka"
+	"github.com/gaurav2721/notification-service/external_services/slack"
 )
 
 // NotificationType represents the type of notification
@@ -83,27 +89,13 @@ type ConsumerConfig struct {
 	AndroidPushWorkerCount int `json:"android_push_worker_count" env:"ANDROID_PUSH_WORKER_COUNT" env-default:"3"`
 
 	// Service dependencies
-	EmailService interface {
-		SendEmail(ctx context.Context, notification interface{}) (interface{}, error)
-	}
-	SlackService interface {
-		SendSlackMessage(ctx context.Context, notification interface{}) (interface{}, error)
-	}
-	APNSService interface {
-		SendPushNotification(ctx context.Context, notification interface{}) (interface{}, error)
-	}
-	FCMService interface {
-		SendPushNotification(ctx context.Context, notification interface{}) (interface{}, error)
-	}
+	EmailService email.EmailService
+	SlackService slack.SlackService
+	APNSService  apns.APNSService
+	FCMService   fcm.FCMService
 
 	// Kafka service interface for getting channels
-	KafkaService interface {
-		GetEmailChannel() chan string
-		GetSlackChannel() chan string
-		GetIOSPushNotificationChannel() chan string
-		GetAndroidPushNotificationChannel() chan string
-		Close()
-	}
+	KafkaService kafka.KafkaService
 }
 
 // NotificationProcessor defines the interface for processing notifications

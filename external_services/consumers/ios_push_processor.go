@@ -5,15 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/gaurav2721/notification-service/external_services/apns"
 	"github.com/gaurav2721/notification-service/models"
 	"github.com/sirupsen/logrus"
 )
 
 // iosPushProcessor handles iOS push notification processing
 type iosPushProcessor struct {
-	apnsService interface {
-		SendPushNotification(ctx context.Context, notification interface{}) (interface{}, error)
-	}
+	apnsService apns.APNSService
 }
 
 // NewIOSPushProcessor creates a new iOS push notification processor
@@ -22,9 +21,7 @@ func NewIOSPushProcessor() NotificationProcessor {
 }
 
 // NewIOSPushProcessorWithService creates a new iOS push processor with a specific APNS service
-func NewIOSPushProcessorWithService(apnsService interface {
-	SendPushNotification(ctx context.Context, notification interface{}) (interface{}, error)
-}) NotificationProcessor {
+func NewIOSPushProcessorWithService(apnsService apns.APNSService) NotificationProcessor {
 	return &iosPushProcessor{
 		apnsService: apnsService,
 	}

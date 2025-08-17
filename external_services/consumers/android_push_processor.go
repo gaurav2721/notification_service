@@ -5,15 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/gaurav2721/notification-service/external_services/fcm"
 	"github.com/gaurav2721/notification-service/models"
 	"github.com/sirupsen/logrus"
 )
 
 // androidPushProcessor handles Android push notification processing
 type androidPushProcessor struct {
-	fcmService interface {
-		SendPushNotification(ctx context.Context, notification interface{}) (interface{}, error)
-	}
+	fcmService fcm.FCMService
 }
 
 // NewAndroidPushProcessor creates a new Android push notification processor
@@ -22,9 +21,7 @@ func NewAndroidPushProcessor() NotificationProcessor {
 }
 
 // NewAndroidPushProcessorWithService creates a new Android push processor with a specific FCM service
-func NewAndroidPushProcessorWithService(fcmService interface {
-	SendPushNotification(ctx context.Context, notification interface{}) (interface{}, error)
-}) NotificationProcessor {
+func NewAndroidPushProcessorWithService(fcmService fcm.FCMService) NotificationProcessor {
 	return &androidPushProcessor{
 		fcmService: fcmService,
 	}

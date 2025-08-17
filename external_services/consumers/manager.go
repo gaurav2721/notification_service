@@ -5,6 +5,11 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/gaurav2721/notification-service/external_services/apns"
+	"github.com/gaurav2721/notification-service/external_services/email"
+	"github.com/gaurav2721/notification-service/external_services/fcm"
+	"github.com/gaurav2721/notification-service/external_services/kafka"
+	"github.com/gaurav2721/notification-service/external_services/slack"
 	"github.com/sirupsen/logrus"
 )
 
@@ -30,25 +35,11 @@ func NewConsumerManager(config ConsumerConfig) ConsumerManager {
 
 // NewConsumerManagerWithServices creates a new consumer manager with service dependencies
 func NewConsumerManagerWithServices(
-	emailService interface {
-		SendEmail(ctx context.Context, notification interface{}) (interface{}, error)
-	},
-	slackService interface {
-		SendSlackMessage(ctx context.Context, notification interface{}) (interface{}, error)
-	},
-	apnsService interface {
-		SendPushNotification(ctx context.Context, notification interface{}) (interface{}, error)
-	},
-	fcmService interface {
-		SendPushNotification(ctx context.Context, notification interface{}) (interface{}, error)
-	},
-	kafkaService interface {
-		GetEmailChannel() chan string
-		GetSlackChannel() chan string
-		GetIOSPushNotificationChannel() chan string
-		GetAndroidPushNotificationChannel() chan string
-		Close()
-	},
+	emailService email.EmailService,
+	slackService slack.SlackService,
+	apnsService apns.APNSService,
+	fcmService fcm.FCMService,
+	kafkaService kafka.KafkaService,
 	config ConsumerConfig,
 ) ConsumerManager {
 	// Update config with service dependencies

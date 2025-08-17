@@ -5,15 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/gaurav2721/notification-service/external_services/slack"
 	"github.com/gaurav2721/notification-service/models"
 	"github.com/sirupsen/logrus"
 )
 
 // slackProcessor handles slack notification processing
 type slackProcessor struct {
-	slackService interface {
-		SendSlackMessage(ctx context.Context, notification interface{}) (interface{}, error)
-	}
+	slackService slack.SlackService
 }
 
 // NewSlackProcessor creates a new slack processor
@@ -22,9 +21,7 @@ func NewSlackProcessor() NotificationProcessor {
 }
 
 // NewSlackProcessorWithService creates a new slack processor with a specific slack service
-func NewSlackProcessorWithService(slackService interface {
-	SendSlackMessage(ctx context.Context, notification interface{}) (interface{}, error)
-}) NotificationProcessor {
+func NewSlackProcessorWithService(slackService slack.SlackService) NotificationProcessor {
 	return &slackProcessor{
 		slackService: slackService,
 	}

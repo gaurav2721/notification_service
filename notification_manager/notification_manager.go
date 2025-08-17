@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gaurav2721/notification-service/external_services/kafka"
 	"github.com/gaurav2721/notification-service/models"
 	"github.com/gaurav2721/notification-service/notification_manager/scheduler"
 	"github.com/gaurav2721/notification-service/notification_manager/templates"
@@ -14,7 +15,7 @@ import (
 // NotificationManagerImpl implements the NotificationManager interface
 type NotificationManagerImpl struct {
 	userService     interface{}
-	kafkaService    interface{}
+	kafkaService    kafka.KafkaService
 	scheduler       scheduler.Scheduler
 	templateManager templates.TemplateManager
 	storage         *InMemoryStorage
@@ -23,7 +24,7 @@ type NotificationManagerImpl struct {
 // NewNotificationManager creates a new notification manager instance
 func NewNotificationManager(
 	userService interface{},
-	kafkaService interface{},
+	kafkaService kafka.KafkaService,
 	scheduler scheduler.Scheduler,
 	templateManager templates.TemplateManager,
 ) *NotificationManagerImpl {
@@ -40,7 +41,7 @@ func NewNotificationManager(
 // The scheduler is initialized internally within the notification manager
 func NewNotificationManagerWithDefaultTemplate(
 	userService interface{},
-	kafkaService interface{},
+	kafkaService kafka.KafkaService,
 ) *NotificationManagerImpl {
 	return NewNotificationManager(
 		userService,
@@ -141,23 +142,19 @@ func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notific
 	case "email":
 		// Send to email channel
 		if nm.kafkaService != nil {
-			if kafkaService, ok := nm.kafkaService.(interface {
-				GetEmailChannel() chan string
-			}); ok {
-				// Convert to JSON string (simplified for now)
-				// TODO: Use proper JSON marshaling
-				message := fmt.Sprintf("Email notification: %s", notif.ID)
+			// Convert to JSON string (simplified for now)
+			// TODO: Use proper JSON marshaling
+			message := fmt.Sprintf("Email notification: %s", notif.ID)
 
-				// Send to Kafka channel
-				select {
-				case kafkaService.GetEmailChannel() <- message:
-					logrus.WithField("notification_id", notif.ID).Debug("Email notification sent to Kafka channel")
-					// Message sent successfully
-				default:
-					logrus.WithField("notification_id", notif.ID).Warn("Email channel is full")
-					// Channel is full, handle accordingly
-					// TODO: Add proper error handling
-				}
+			// Send to Kafka channel
+			select {
+			case nm.kafkaService.GetEmailChannel() <- message:
+				logrus.WithField("notification_id", notif.ID).Debug("Email notification sent to Kafka channel")
+				// Message sent successfully
+			default:
+				logrus.WithField("notification_id", notif.ID).Warn("Email channel is full")
+				// Channel is full, handle accordingly
+				// TODO: Add proper error handling
 			}
 		}
 
@@ -190,21 +187,17 @@ func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notific
 	case "slack":
 		// Send to slack channel
 		if nm.kafkaService != nil {
-			if kafkaService, ok := nm.kafkaService.(interface {
-				GetSlackChannel() chan string
-			}); ok {
-				// Convert to JSON string (simplified for now)
-				// TODO: Use proper JSON marshaling
-				message := fmt.Sprintf("Slack notification: %s", notif.ID)
+			// Convert to JSON string (simplified for now)
+			// TODO: Use proper JSON marshaling
+			message := fmt.Sprintf("Slack notification: %s", notif.ID)
 
-				// Send to Kafka channel
-				select {
-				case kafkaService.GetSlackChannel() <- message:
-					// Message sent successfully
-				default:
-					// Channel is full, handle accordingly
-					// TODO: Add proper error handling
-				}
+			// Send to Kafka channel
+			select {
+			case nm.kafkaService.GetSlackChannel() <- message:
+				// Message sent successfully
+			default:
+				// Channel is full, handle accordingly
+				// TODO: Add proper error handling
 			}
 		}
 
@@ -219,21 +212,17 @@ func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notific
 	case "ios_push":
 		// Send to iOS push notification channel
 		if nm.kafkaService != nil {
-			if kafkaService, ok := nm.kafkaService.(interface {
-				GetIOSPushNotificationChannel() chan string
-			}); ok {
-				// Convert to JSON string (simplified for now)
-				// TODO: Use proper JSON marshaling
-				message := fmt.Sprintf("iOS push notification: %s", notif.ID)
+			// Convert to JSON string (simplified for now)
+			// TODO: Use proper JSON marshaling
+			message := fmt.Sprintf("iOS push notification: %s", notif.ID)
 
-				// Send to Kafka channel
-				select {
-				case kafkaService.GetIOSPushNotificationChannel() <- message:
-					// Message sent successfully
-				default:
-					// Channel is full, handle accordingly
-					// TODO: Add proper error handling
-				}
+			// Send to Kafka channel
+			select {
+			case nm.kafkaService.GetIOSPushNotificationChannel() <- message:
+				// Message sent successfully
+			default:
+				// Channel is full, handle accordingly
+				// TODO: Add proper error handling
 			}
 		}
 
@@ -248,21 +237,17 @@ func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notific
 	case "android_push":
 		// Send to Android push notification channel
 		if nm.kafkaService != nil {
-			if kafkaService, ok := nm.kafkaService.(interface {
-				GetAndroidPushNotificationChannel() chan string
-			}); ok {
-				// Convert to JSON string (simplified for now)
-				// TODO: Use proper JSON marshaling
-				message := fmt.Sprintf("Android push notification: %s", notif.ID)
+			// Convert to JSON string (simplified for now)
+			// TODO: Use proper JSON marshaling
+			message := fmt.Sprintf("Android push notification: %s", notif.ID)
 
-				// Send to Kafka channel
-				select {
-				case kafkaService.GetAndroidPushNotificationChannel() <- message:
-					// Message sent successfully
-				default:
-					// Channel is full, handle accordingly
-					// TODO: Add proper error handling
-				}
+			// Send to Kafka channel
+			select {
+			case nm.kafkaService.GetAndroidPushNotificationChannel() <- message:
+				// Message sent successfully
+			default:
+				// Channel is full, handle accordingly
+				// TODO: Add proper error handling
 			}
 		}
 

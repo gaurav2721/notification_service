@@ -5,16 +5,11 @@ import (
 	"strconv"
 
 	"github.com/gaurav2721/notification-service/constants"
+	"github.com/gaurav2721/notification-service/external_services/kafka"
 )
 
 // NewConsumerManagerFromEnv creates a new consumer manager with configuration from environment variables
-func NewConsumerManagerFromEnv(kafkaService interface {
-	GetEmailChannel() chan string
-	GetSlackChannel() chan string
-	GetIOSPushNotificationChannel() chan string
-	GetAndroidPushNotificationChannel() chan string
-	Close()
-}) ConsumerManager {
+func NewConsumerManagerFromEnv(kafkaService kafka.KafkaService) ConsumerManager {
 	config := ConsumerConfig{
 		EmailWorkerCount:       getEnvAsInt(constants.EmailWorkerCountEnvVar, constants.DefaultEmailWorkerCount),
 		SlackWorkerCount:       getEnvAsInt(constants.SlackWorkerCountEnvVar, constants.DefaultSlackWorkerCount),

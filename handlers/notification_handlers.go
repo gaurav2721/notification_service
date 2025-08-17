@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,7 +8,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gaurav2721/notification-service/external_services/kafka"
+	"github.com/gaurav2721/notification-service/external_services/user"
 	"github.com/gaurav2721/notification-service/models"
+	"github.com/gaurav2721/notification-service/notification_manager"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -17,52 +19,16 @@ import (
 
 // NotificationHandler handles HTTP requests for notifications
 type NotificationHandler struct {
-	notificationService interface {
-		SendNotification(ctx context.Context, notification interface{}) (interface{}, error)
-		ScheduleNotification(ctx context.Context, notificationId string, notification *models.NotificationRequest, job func() error) error
-		GetNotificationStatus(ctx context.Context, notificationID string) (interface{}, error)
-		SetNotificationStatus(ctx context.Context, notificationId string, notification *models.NotificationRequest, status string) error
-		CreateTemplate(ctx context.Context, template interface{}) (interface{}, error)
-		GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error)
-		GetPredefinedTemplates() []*models.Template
-		GetTemplateByID(templateID string) (*models.Template, error)
-		GetTemplateByIDAndVersion(templateID string, version int) (*models.Template, error)
-	}
-	userService interface {
-		GetUsersByIDs(ctx context.Context, userIDs []string) ([]*models.User, error)
-		GetUserNotificationInfo(ctx context.Context, userID string) (*models.UserNotificationInfo, error)
-	}
-	kafkaService interface {
-		GetEmailChannel() chan string
-		GetSlackChannel() chan string
-		GetIOSPushNotificationChannel() chan string
-		GetAndroidPushNotificationChannel() chan string
-	}
+	notificationService notification_manager.NotificationManager
+	userService         user.UserService
+	kafkaService        kafka.KafkaService
 }
 
 // NewNotificationHandler creates a new notification handler
 func NewNotificationHandler(
-	notificationService interface {
-		SendNotification(ctx context.Context, notification interface{}) (interface{}, error)
-		ScheduleNotification(ctx context.Context, notificationId string, notification *models.NotificationRequest, job func() error) error
-		GetNotificationStatus(ctx context.Context, notificationID string) (interface{}, error)
-		SetNotificationStatus(ctx context.Context, notificationId string, notification *models.NotificationRequest, status string) error
-		CreateTemplate(ctx context.Context, template interface{}) (interface{}, error)
-		GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error)
-		GetPredefinedTemplates() []*models.Template
-		GetTemplateByID(templateID string) (*models.Template, error)
-		GetTemplateByIDAndVersion(templateID string, version int) (*models.Template, error)
-	},
-	userService interface {
-		GetUsersByIDs(ctx context.Context, userIDs []string) ([]*models.User, error)
-		GetUserNotificationInfo(ctx context.Context, userID string) (*models.UserNotificationInfo, error)
-	},
-	kafkaService interface {
-		GetEmailChannel() chan string
-		GetSlackChannel() chan string
-		GetIOSPushNotificationChannel() chan string
-		GetAndroidPushNotificationChannel() chan string
-	},
+	notificationService notification_manager.NotificationManager,
+	userService user.UserService,
+	kafkaService kafka.KafkaService,
 ) *NotificationHandler {
 	return &NotificationHandler{
 		notificationService: notificationService,
