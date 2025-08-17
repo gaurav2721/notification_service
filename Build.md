@@ -122,6 +122,7 @@ The notification service comes with a default `.env` file that includes basic co
 # Server Configuration
 PORT=8080
 LOG_LEVEL=info
+API_KEY=gaurav
 
 # # Email Configuration
 # SMTP_HOST=smtp.gmail.com
@@ -151,25 +152,11 @@ EMAIL_WORKER_COUNT=5
 SLACK_WORKER_COUNT=3
 IOS_PUSH_WORKER_COUNT=3
 ANDROID_PUSH_WORKER_COUNT=3 
-
-API_KEY=gaurav%
 ```
-
-### Additional Configuration Options
-
-For a complete list of all available configuration options, you can also reference the `.env.example` file which includes:
-
-- APNS Configuration (Apple Push Notification Service)
-- FCM Configuration (Firebase Cloud Messaging)
-- Feature Flags
-- Additional security settings
 
 ### Setup Instructions
 1. The default `.env` file is already included in the repository for ease of testing
 2. For production, create a new `.env` file with your actual values
-3. Fill in your actual values for each service you plan to use
-4. For development, you can leave optional variables unset
-5. The service will use system environment variables if `.env` file is not found
 
 ### Security Notes
 - The default `.env` file has been committed in this repo for ease of testing
