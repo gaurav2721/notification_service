@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gaurav2721/notification-service/external_services/kafka"
+	"github.com/gaurav2721/notification-service/external_services/user"
 	"github.com/gaurav2721/notification-service/models"
 	"github.com/gaurav2721/notification-service/notification_manager/scheduler"
 	"github.com/gaurav2721/notification-service/notification_manager/templates"
@@ -16,7 +17,7 @@ import (
 
 // NotificationManagerImpl implements the NotificationManager interface
 type NotificationManagerImpl struct {
-	userService     interface{}
+	userService     user.UserService
 	kafkaService    kafka.KafkaService
 	scheduler       scheduler.Scheduler
 	templateManager templates.TemplateManager
@@ -26,7 +27,7 @@ type NotificationManagerImpl struct {
 // NewNotificationManagerWithDefaultTemplate creates a new notification manager with default template manager
 // The scheduler is initialized internally within the notification manager
 func NewNotificationManagerWithDefaultTemplate(
-	userService interface{},
+	userService user.UserService,
 	kafkaService kafka.KafkaService,
 ) *NotificationManagerImpl {
 	return &NotificationManagerImpl{
@@ -362,16 +363,12 @@ func (nm *NotificationManagerImpl) processNotificationForRecipients(request *mod
 	// Get recipient information from userService
 	logrus.Debug("Fetching recipient information from user service")
 
-	// Type assert userService to get the GetUsersByIDs method
-	userService, ok := nm.userService.(interface {
-		GetUsersByIDs(userIDs []string) ([]*models.User, error)
-		GetUserNotificationInfo(userID string) (*models.UserNotificationInfo, error)
-	})
-	if !ok {
-		return nil, fmt.Errorf("userService does not implement required methods")
+	// Check if userService is available
+	if nm.userService == nil {
+		return nil, fmt.Errorf("userService is not available")
 	}
 
-	users, err := userService.GetUsersByIDs(request.Recipients)
+	users, err := nm.userService.GetUsersByIDs(request.Recipients)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to get recipient information")
 		return nil, fmt.Errorf("failed to get recipient information: %v", err)
@@ -400,7 +397,7 @@ func (nm *NotificationManagerImpl) processNotificationForRecipients(request *mod
 		}).Debug("Processing notification for user")
 
 		// Get detailed user notification info based on notification type
-		userNotificationInfo, err := userService.GetUserNotificationInfo(user.ID)
+		userNotificationInfo, err := nm.userService.GetUserNotificationInfo(user.ID)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
 				"user_id": user.ID,

@@ -174,12 +174,5 @@ func (f *ServiceFactory) NewNotificationManagerComplete(
 	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService)
 }
 
-// NewNotificationManagerWithKafkaOnly creates a new notification manager with only Kafka service
-// This is used when the notification manager only needs to push notifications to Kafka channels
-// The scheduler is initialized internally within the notification manager
-func (f *ServiceFactory) NewNotificationManagerWithKafkaOnly(kafkaService KafkaService) NotificationManager {
-	return notification_manager.NewNotificationManagerWithDefaultTemplate(nil, kafkaService)
-}
-
 // Note: Scheduler is now initialized internally within the notification manager
 // No need to create it externally

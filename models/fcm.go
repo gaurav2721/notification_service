@@ -19,11 +19,6 @@ type FCMContent struct {
 	Body  string `json:"body"`
 }
 
-// FCMSender represents the sender information for FCM
-type FCMSender struct {
-	DeviceToken string `json:"device_token"`
-}
-
 // FCMResponse represents the response from FCM push notification sending
 type FCMResponse struct {
 	ID           string    `json:"id"`

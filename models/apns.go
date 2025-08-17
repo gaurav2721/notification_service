@@ -19,11 +19,6 @@ type APNSContent struct {
 	Body  string `json:"body"`
 }
 
-// APNSSender represents the sender information for APNS
-type APNSSender struct {
-	DeviceToken string `json:"device_token"`
-}
-
 // APNSResponse represents the response from APNS push notification sending
 type APNSResponse struct {
 	ID           string    `json:"id"`

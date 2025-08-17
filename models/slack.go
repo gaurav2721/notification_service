@@ -19,11 +19,6 @@ type SlackContent struct {
 	Text string `json:"text"`
 }
 
-// SlackSender represents the sender information for slack
-type SlackSender struct {
-	UserID string `json:"user_id"`
-}
-
 // SlackResponse represents the response from slack message sending
 type SlackResponse struct {
 	ID      string    `json:"id"`
