@@ -3,6 +3,7 @@ package logger
 import (
 	"os"
 
+	"github.com/gaurav2721/notification-service/constants"
 	"github.com/sirupsen/logrus"
 )
 
@@ -12,7 +13,7 @@ func Configure() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 
 	// Set log level from environment variable or default to InfoLevel
-	logLevel := os.Getenv("LOG_LEVEL")
+	logLevel := os.Getenv(constants.LOG_LEVEL)
 	switch logLevel {
 	case "debug":
 		logrus.SetLevel(logrus.DebugLevel)

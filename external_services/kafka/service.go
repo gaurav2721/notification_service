@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/gaurav2721/notification-service/constants"
 	"github.com/sirupsen/logrus"
 )
 
@@ -23,10 +24,10 @@ func NewKafkaService() (KafkaService, error) {
 	logrus.Debug("Creating new Kafka service")
 
 	// Read buffer sizes from environment variables with defaults
-	emailBufferSize := getEnvAsInt("EMAIL_CHANNEL_BUFFER_SIZE", 100)
-	slackBufferSize := getEnvAsInt("SLACK_CHANNEL_BUFFER_SIZE", 100)
-	iosPushBufferSize := getEnvAsInt("IOS_PUSH_CHANNEL_BUFFER_SIZE", 100)
-	androidPushBufferSize := getEnvAsInt("ANDROID_PUSH_CHANNEL_BUFFER_SIZE", 100)
+	emailBufferSize := getEnvAsInt(constants.EmailChannelBufferSizeEnvVar, 100)
+	slackBufferSize := getEnvAsInt(constants.SlackChannelBufferSizeEnvVar, 100)
+	iosPushBufferSize := getEnvAsInt(constants.IOSPushChannelBufferSizeEnvVar, 100)
+	androidPushBufferSize := getEnvAsInt(constants.AndroidPushChannelBufferSizeEnvVar, 100)
 
 	logrus.WithFields(logrus.Fields{
 		"email_buffer_size":   emailBufferSize,

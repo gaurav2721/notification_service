@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gaurav2721/notification-service/constants"
 	"github.com/gaurav2721/notification-service/models"
 	"github.com/slack-go/slack"
 )
@@ -19,8 +20,8 @@ type SlackServiceImpl struct {
 // NewSlackService creates a new Slack service instance
 // It checks environment variables and returns mock service if config is incomplete
 func NewSlackService() SlackService {
-	token := os.Getenv("SLACK_BOT_TOKEN")
-	channel := os.Getenv("SLACK_CHANNEL_ID")
+	token := os.Getenv(constants.SLACK_BOT_TOKEN)
+	channel := os.Getenv(constants.SLACK_CHANNEL_ID)
 
 	// Check if all required environment variables are present and non-empty
 	if token == "" || channel == "" {

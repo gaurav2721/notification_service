@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gaurav2721/notification-service/constants"
 	"github.com/gaurav2721/notification-service/models"
 )
 
@@ -55,17 +56,16 @@ type Result struct {
 }
 
 // NewFCMService creates a new FCM service instance
-// It checks environment variables and returns mock service if any required config is missing or empty
-// Required environment variables:
+// It checks the following environment variables:
 //   - FCM_SERVER_KEY: Firebase Cloud Messaging server key (mandatory)
 //   - FCM_TIMEOUT: Request timeout in seconds (mandatory, must be > 0)
 //   - FCM_BATCH_SIZE: Number of tokens to send in a single request (mandatory, must be > 0)
 //
 // If any of these variables are missing, empty, or invalid, the service will use mock implementation
 func NewFCMService() FCMService {
-	serverKey := os.Getenv("FCM_SERVER_KEY")
-	timeoutStr := os.Getenv("FCM_TIMEOUT")
-	batchSizeStr := os.Getenv("FCM_BATCH_SIZE")
+	serverKey := os.Getenv(constants.FCM_SERVER_KEY)
+	timeoutStr := os.Getenv(constants.FCM_TIMEOUT)
+	batchSizeStr := os.Getenv(constants.FCM_BATCH_SIZE)
 
 	// Check if all required environment variables are present and non-empty
 	if serverKey == "" || timeoutStr == "" || batchSizeStr == "" {

@@ -4,6 +4,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/gaurav2721/notification-service/constants"
 	"github.com/gaurav2721/notification-service/handlers"
 	"github.com/gaurav2721/notification-service/routes/middleware"
 	"github.com/gin-gonic/gin"
@@ -36,7 +37,7 @@ func SetupRoutes(router *gin.Engine, notificationHandler *handlers.NotificationH
 
 // isUserRoutesEnabled checks if user routes should be enabled based on environment variable
 func isUserRoutesEnabled() bool {
-	enableUserRoutes := os.Getenv("ENABLE_USER_ROUTES")
+	enableUserRoutes := os.Getenv(constants.ENABLE_USER_ROUTES)
 	if enableUserRoutes == "" {
 		return false // Default to disabled
 	}

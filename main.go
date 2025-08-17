@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/gaurav2721/notification-service/constants"
 	"github.com/gaurav2721/notification-service/handlers"
 	"github.com/gaurav2721/notification-service/logger"
 	"github.com/gaurav2721/notification-service/routes"
@@ -42,7 +43,7 @@ func main() {
 	logrus.Debug("Routes configured successfully")
 
 	// Get port from environment or use default
-	port := os.Getenv("PORT")
+	port := os.Getenv(constants.PORT)
 	if port == "" {
 		port = "8080"
 	}

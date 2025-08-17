@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/gaurav2721/notification-service/constants"
 	"github.com/gaurav2721/notification-service/external_services/consumers"
 	"github.com/gaurav2721/notification-service/external_services/kafka"
 	"github.com/sirupsen/logrus"
@@ -63,10 +64,10 @@ func (c *ServiceContainer) initializeServices() {
 	logrus.Debug("Initializing consumer manager")
 	// Use the new constructor with service dependencies
 	config := consumers.ConsumerConfig{
-		EmailWorkerCount:       getEnvAsInt("EMAIL_WORKER_COUNT", 5),
-		SlackWorkerCount:       getEnvAsInt("SLACK_WORKER_COUNT", 3),
-		IOSPushWorkerCount:     getEnvAsInt("IOS_PUSH_WORKER_COUNT", 3),
-		AndroidPushWorkerCount: getEnvAsInt("ANDROID_PUSH_WORKER_COUNT", 3),
+		EmailWorkerCount:       getEnvAsInt(constants.EmailWorkerCountEnvVar, 5),
+		SlackWorkerCount:       getEnvAsInt(constants.SlackWorkerCountEnvVar, 3),
+		IOSPushWorkerCount:     getEnvAsInt(constants.IOSPushWorkerCountEnvVar, 3),
+		AndroidPushWorkerCount: getEnvAsInt(constants.AndroidPushWorkerCountEnvVar, 3),
 	}
 	c.consumerManager = consumers.NewConsumerManagerWithServices(
 		c.emailService,

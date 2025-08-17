@@ -3,6 +3,8 @@ package consumers
 import (
 	"os"
 	"strconv"
+
+	"github.com/gaurav2721/notification-service/constants"
 )
 
 // NewConsumerManagerFromEnv creates a new consumer manager with configuration from environment variables
@@ -14,10 +16,10 @@ func NewConsumerManagerFromEnv(kafkaService interface {
 	Close()
 }) ConsumerManager {
 	config := ConsumerConfig{
-		EmailWorkerCount:       getEnvAsInt("EMAIL_WORKER_COUNT", 5),
-		SlackWorkerCount:       getEnvAsInt("SLACK_WORKER_COUNT", 3),
-		IOSPushWorkerCount:     getEnvAsInt("IOS_PUSH_WORKER_COUNT", 3),
-		AndroidPushWorkerCount: getEnvAsInt("ANDROID_PUSH_WORKER_COUNT", 3),
+		EmailWorkerCount:       getEnvAsInt(constants.EmailWorkerCountEnvVar, 5),
+		SlackWorkerCount:       getEnvAsInt(constants.SlackWorkerCountEnvVar, 3),
+		IOSPushWorkerCount:     getEnvAsInt(constants.IOSPushWorkerCountEnvVar, 3),
+		AndroidPushWorkerCount: getEnvAsInt(constants.AndroidPushWorkerCountEnvVar, 3),
 		KafkaService:           kafkaService,
 	}
 

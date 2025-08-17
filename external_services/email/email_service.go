@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gaurav2721/notification-service/constants"
 	"github.com/gaurav2721/notification-service/models"
 	"gopkg.in/gomail.v2"
 )
@@ -19,10 +20,10 @@ type EmailServiceImpl struct {
 // NewEmailService creates a new email service instance
 // It checks environment variables and returns mock service if config is incomplete
 func NewEmailService() EmailService {
-	host := os.Getenv("SMTP_HOST")
-	portStr := os.Getenv("SMTP_PORT")
-	username := os.Getenv("SMTP_USERNAME")
-	password := os.Getenv("SMTP_PASSWORD")
+	host := os.Getenv(constants.SMTP_HOST)
+	portStr := os.Getenv(constants.SMTP_PORT)
+	username := os.Getenv(constants.SMTP_USERNAME)
+	password := os.Getenv(constants.SMTP_PASSWORD)
 
 	// Check if all required environment variables are present and non-empty
 	if host == "" || portStr == "" || username == "" || password == "" {
@@ -58,7 +59,7 @@ func (es *EmailServiceImpl) SendEmail(ctx context.Context, notification interfac
 	m := gomail.NewMessage()
 
 	// Use "from" field if provided, otherwise fall back to environment variable
-	fromEmail := os.Getenv("SMTP_USERNAME")
+	fromEmail := os.Getenv(constants.SMTP_USERNAME)
 	if notif.From != nil && notif.From.Email != "" {
 		fromEmail = notif.From.Email
 	}

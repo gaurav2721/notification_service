@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gaurav2721/notification-service/constants"
 	"github.com/gaurav2721/notification-service/models"
 	"github.com/golang-jwt/jwt/v4"
 )
@@ -26,11 +27,11 @@ type APNSServiceImpl struct {
 // NewAPNSService creates a new APNS service instance
 // It checks environment variables and returns mock service if config is incomplete
 func NewAPNSService() APNSService {
-	bundleID := os.Getenv("APNS_BUNDLE_ID")
-	keyID := os.Getenv("APNS_KEY_ID")
-	teamID := os.Getenv("APNS_TEAM_ID")
-	privateKeyPath := os.Getenv("APNS_PRIVATE_KEY_PATH")
-	timeoutStr := os.Getenv("APNS_TIMEOUT")
+	bundleID := os.Getenv(constants.APNS_BUNDLE_ID)
+	keyID := os.Getenv(constants.APNS_KEY_ID)
+	teamID := os.Getenv(constants.APNS_TEAM_ID)
+	privateKeyPath := os.Getenv(constants.APNS_PRIVATE_KEY_PATH)
+	timeoutStr := os.Getenv(constants.APNS_TIMEOUT)
 
 	// Check if all required environment variables are present and non-empty
 	if bundleID == "" || keyID == "" || teamID == "" || privateKeyPath == "" {

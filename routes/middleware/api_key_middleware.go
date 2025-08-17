@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gaurav2721/notification-service/constants"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,7 +13,7 @@ import (
 func APIKeyMiddleware() gin.HandlerFunc {
 	return gin.HandlerFunc(func(c *gin.Context) {
 		// Get API key from environment variable
-		expectedAPIKey := os.Getenv("API_KEY")
+		expectedAPIKey := os.Getenv(constants.API_KEY)
 
 		if expectedAPIKey == "" {
 			// If no API key is configured, allow the request (for development)
