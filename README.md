@@ -69,7 +69,7 @@ notification_service/
   main.go
   services/ -> creates a service container that basically has reference to all the external service objects and internal objects for eg email,slack,apns,fcm,user,consumer, notification_manager
   validation/ -> has the logic to validate inputs for notification and template apis
-  routes/ -> defines all the routes for notfication,user,templates
+  routes/ -> defines all the routes for notification,user,templates
   notification_manager/ -> handles all the business logic for notifications for eg scheduling, templates, pushing to the appropriate channel
   models/ -> defines all the models
   logger/ -> sets up logger 
