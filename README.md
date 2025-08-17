@@ -27,21 +27,35 @@ For detailed API documentation, please refer to [API.md](API.md).
 
 ## Assumptions for this service
 
-1. Interfaces for sending emails, Slack messages, and in-app notifications will be mocked in the first iteration to focus on building scalable service logic with features such as templates and scheduling.(If the .env does not have creds for the email, slack, apns and fcm , the information will be printed in a simple output/<service_name>.txt for eg output/email.txt)
+1. Interfaces for sending emails, slack messages, and in-app notifications will be mocked in the first iteration to focus on building scalable service logic(for eg using pub-sub, worker pool design pattern etc) with features such as templates and scheduling.(If the .env does not have creds for the email, slack, apns and fcm , the information will be printed in a simple output/<service_name>.txt for eg output/email.txt , output/slack.txt etc.)
 2. When a customer raises a notification request, only user IDs will be provided as recipients. The service will retrieve other necessary details from the pre-stored user information.
 3. Only text-based content will be supported for notifications in this iteration.
-4. Each notification request raised by customer/user will be linked to only one notification type/channel in this iteration.
+4. Each notification request raised by customer/user will be linked to only one notification type in this iteration.
 5. In-app notifications will be limited to mobile push notifications for iOS and Android in this iteration.
-6. All the information is stored in memory , database persistence may be added later
-7. User and UserDeviceInfo have been preloaded and the apis for these are disabled by default , since it is considered to be out of scope
+6. All the information is stored in memory , database persistence will be added in further iterations
+7. User and UserDeviceInfo have been preloaded and the apis for these are disabled by default , since it is considered to be out of scope for this iteration
 
 ## Development
 
 Following things have been implemented 
 
-1. Logging with different log levels for eg info, debug
-2. Constants package 
-3. Input validation has been done for the notification and template apis
+Functional Requirement
+1. For different notification types appropriate channel routing has been implemented(we have used buffered channels in golang as queues in the project)
+2. Notification Scheduling – Two types:
+    Immediate
+    Scheduled for a later time
+3. Notification Templates(Customization using parameters has been implemented):
+    Predefined notification templates are available
+    Ability for users to create their own templates and use them
+
+Other things implemented are
+1. Authentication via Api key
+2. Input Validation for notification and template apis
+3. Implemened logging with different levels 
+
+Design Patterns implemented
+1. Publisher/Subscriber
+2. Worker Pool
 
 Future enhancements 
 1. Creating a requestId for observability 
