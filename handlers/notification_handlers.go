@@ -270,8 +270,6 @@ func (h *NotificationHandler) postToKafkaChannel(notificationType string, messag
 
 	messageStr := string(messageJSON)
 
-	fmt.Println("---------------> gaurav messageStr", messageStr)
-
 	// Post to appropriate channel based on notification type
 	switch notificationType {
 	case "email":

@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/gaurav2721/notification-service/handlers"
+	"github.com/gaurav2721/notification-service/logger"
 	"github.com/gaurav2721/notification-service/routes"
 	"github.com/gaurav2721/notification-service/services"
 	"github.com/gin-gonic/gin"
@@ -21,24 +22,8 @@ func main() {
 		logrus.Info("No .env file found, using system environment variables")
 	}
 
-	// Configure logrus
-	logrus.SetFormatter(&logrus.JSONFormatter{})
-
-	// Set log level from environment variable or default to InfoLevel
-	logLevel := os.Getenv("LOG_LEVEL")
-	switch logLevel {
-	case "debug":
-		logrus.SetLevel(logrus.DebugLevel)
-	case "info":
-		logrus.SetLevel(logrus.InfoLevel)
-	case "warn":
-		logrus.SetLevel(logrus.WarnLevel)
-	case "error":
-		logrus.SetLevel(logrus.ErrorLevel)
-	default:
-		logrus.SetLevel(logrus.InfoLevel) // Default to InfoLevel to disable debug logs
-	}
-
+	// Configure logging
+	logger.Configure()
 	logrus.Debug("Starting notification service initialization")
 
 	// Initialize service container (manages all service dependencies)
@@ -55,7 +40,7 @@ func main() {
 
 	// Setup all routes using the routes package
 	routes.SetupRoutes(router, notificationHandler, userHandler)
-	logrus.Info("Routes configured successfully")
+	logrus.Debug("Routes configured successfully")
 
 	// Get port from environment or use default
 	port := os.Getenv("PORT")
@@ -79,7 +64,7 @@ func main() {
 
 	// Start server in a goroutine
 	go func() {
-		logrus.WithField("port", port).Info("Starting notification service")
+		logrus.WithField("port", port).Debug("Starting notification service")
 		if err := router.Run(":" + port); err != nil {
 			logrus.WithError(err).Error("Server error")
 			cancel()

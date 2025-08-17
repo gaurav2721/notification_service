@@ -2,7 +2,6 @@ package templates
 
 import (
 	"context"
-	"log"
 	"sync"
 	"time"
 
@@ -43,11 +42,9 @@ func (tm *TemplateManagerImpl) loadPredefinedTemplates() {
 
 	for _, template := range predefinedTemplates {
 		tm.templates[template.ID] = template
-		log.Printf("Loaded predefined template: %s (ID: %s)", template.Name, template.ID)
 	}
 
 	tm.initialized = true
-	log.Printf("Loaded %d predefined templates", len(predefinedTemplates))
 }
 
 // CreateTemplate creates a new notification template

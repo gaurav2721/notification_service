@@ -24,6 +24,6 @@ func SetupRoutes(router *gin.Engine, notificationHandler *handlers.NotificationH
 		SetupTemplateRoutes(api, notificationHandler)
 
 		// Setup user routes
-		SetupUserRoutes(api, userHandler)
+		// SetupUserRoutes(api, userHandler)
 	}
 }

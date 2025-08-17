@@ -125,7 +125,6 @@ func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notific
 	// Send notification to Kafka channel based on type
 	logrus.WithField("type", notif.Type).Debug("Sending notification to Kafka channel")
 
-	fmt.Println("------> gaurav123", notif)
 	switch notif.Type {
 	case "email":
 		// Send to email channel
@@ -301,7 +300,6 @@ func (nm *NotificationManagerImpl) ScheduleNotification(ctx context.Context, not
 
 	// Convert the job function to match scheduler interface (func() instead of func() error)
 	schedulerJob := func() {
-		fmt.Println("--------------------------> gaurav testing job", notificationId)
 		logrus.WithField("notification_id", notificationId).Info("Executing scheduled notification job")
 		if err := job(); err != nil {
 			logrus.WithError(err).WithField("notification_id", notificationId).Error("Scheduled notification job failed")

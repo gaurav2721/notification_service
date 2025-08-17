@@ -64,7 +64,6 @@ func (wp *workerPool) Start(ctx context.Context) error {
 		}(worker)
 	}
 
-	log.Printf("Started worker pool for %s with %d workers", wp.notificationType, wp.workerCount)
 	return nil
 }
 
@@ -91,8 +90,6 @@ func (wp *workerPool) Stop() error {
 
 	// Wait for all workers to finish
 	wp.wg.Wait()
-
-	log.Printf("Stopped worker pool for %s", wp.notificationType)
 	return nil
 }
 
