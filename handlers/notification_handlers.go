@@ -11,6 +11,7 @@ import (
 
 	"github.com/gaurav2721/notification-service/models"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -630,9 +631,9 @@ func (h *NotificationHandler) HealthCheck(c *gin.Context) {
 	})
 }
 
-// Helper function to generate a simple ID
+// Helper function to generate a UUID
 func generateID() string {
-	return strconv.FormatInt(time.Now().UnixNano(), 10)
+	return uuid.New().String()
 }
 
 // createEmailMessage creates an email-specific notification message

@@ -400,7 +400,7 @@ consumerManager := factory.NewConsumerManagerWithServices(
 ### Email Notification
 ```json
 {
-  "notification_id": "email-123",
+  "notification_id": "123e4567-e89b-12d3-a456-426614174000",
   "type": "email",
   "content": {
     "subject": "Welcome!",
@@ -418,7 +418,7 @@ consumerManager := factory.NewConsumerManagerWithServices(
 ### Slack Notification
 ```json
 {
-  "notification_id": "slack-456",
+  "notification_id": "456e7890-e89b-12d3-a456-426614174001",
   "type": "slack",
   "content": {
     "text": "Hello from our service!"
@@ -430,7 +430,7 @@ consumerManager := factory.NewConsumerManagerWithServices(
 ### iOS Push Notification
 ```json
 {
-  "notification_id": "ios-789",
+  "notification_id": "789e0123-e89b-12d3-a456-426614174002",
   "type": "ios_push",
   "content": {
     "title": "New Message",
@@ -443,7 +443,7 @@ consumerManager := factory.NewConsumerManagerWithServices(
 ### Android Push Notification
 ```json
 {
-  "notification_id": "android-101",
+  "notification_id": "101e2345-e89b-12d3-a456-426614174003",
   "type": "android_push",
   "content": {
     "title": "New Message",

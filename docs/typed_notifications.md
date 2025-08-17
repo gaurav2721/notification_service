@@ -32,7 +32,7 @@ type EmailSender struct {
 **Example Message**:
 ```json
 {
-  "id": "1234567890",
+  "id": "123e4567-e89b-12d3-a456-426614174000",
   "type": "email",
   "content": {
     "subject": "Welcome to Our Service",
@@ -65,7 +65,7 @@ type SlackContent struct {
 **Example Message**:
 ```json
 {
-  "id": "1234567890",
+  "id": "123e4567-e89b-12d3-a456-426614174000",
   "type": "slack",
   "content": {
     "text": "Hi John Doe, you have a new message!"
@@ -95,7 +95,7 @@ type APNSContent struct {
 **Example Message**:
 ```json
 {
-  "id": "1234567890",
+  "id": "123e4567-e89b-12d3-a456-426614174000",
   "type": "ios_push",
   "content": {
     "title": "New Message",
@@ -126,7 +126,7 @@ type FCMContent struct {
 **Example Message**:
 ```json
 {
-  "id": "1234567890",
+  "id": "123e4567-e89b-12d3-a456-426614174000",
   "type": "android_push",
   "content": {
     "title": "New Message",

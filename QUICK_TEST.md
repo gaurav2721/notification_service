@@ -25,7 +25,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "123e4567-e89b-12d3-a456-426614174000",
   "status": "sent"
 }
 ```
@@ -48,7 +48,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "456e7890-e89b-12d3-a456-426614174001",
   "status": "sent"
 }
 ```
@@ -72,7 +72,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "777e8901-e89b-12d3-a456-426614174019",
   "status": "sent"
 }
 ```
@@ -102,7 +102,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "789e0123-e89b-12d3-a456-426614174002",
   "status": "scheduled"
 }
 ```
@@ -139,7 +139,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "101e2345-e89b-12d3-a456-426614174003",
   "status": "sent"
 }
 ```
@@ -177,7 +177,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "202e3456-e89b-12d3-a456-426614174004",
   "status": "scheduled"
 }
 ```
@@ -244,7 +244,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "303e4567-e89b-12d3-a456-426614174005",
   "status": "sent"
 }
 ```
@@ -278,7 +278,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "404e5678-e89b-12d3-a456-426614174006",
   "status": "scheduled"
 }
 ```

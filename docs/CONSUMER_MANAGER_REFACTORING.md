@@ -190,7 +190,7 @@ func (sp *slackProcessor) ProcessNotification(ctx context.Context, message Notif
     }
 
     logrus.WithFields(logrus.Fields{
-        "notification_id": message.ID,
+        "notification_id": message.ID, // UUID format: 123e4567-e89b-12d3-a456-426614174000
         "response":        response,
     }).Info("Slack notification sent successfully")
 

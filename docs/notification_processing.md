@@ -58,7 +58,7 @@ Each notification type gets properly formatted messages for consumers:
 #### **Email Message Format**
 ```json
 {
-  "notification_id": "1234567890",
+  "notification_id": "123e4567-e89b-12d3-a456-426614174000",
   "type": "email",
   "content": {
     "subject": "Welcome to Our Service",
@@ -82,7 +82,7 @@ Each notification type gets properly formatted messages for consumers:
 #### **Slack Message Format**
 ```json
 {
-  "notification_id": "1234567890",
+  "notification_id": "123e4567-e89b-12d3-a456-426614174000",
   "type": "slack",
   "content": {
     "text": "Hi John Doe, you have a new message!",
@@ -103,7 +103,7 @@ Each notification type gets properly formatted messages for consumers:
 #### **Push Notification Message Format**
 ```json
 {
-  "notification_id": "1234567890",
+  "notification_id": "123e4567-e89b-12d3-a456-426614174000",
   "type": "ios_push",
   "content": {
     "title": "New Message",
@@ -236,19 +236,19 @@ The system returns detailed responses for each successful notification:
 
 ```json
 {
-  "notification_id": "1234567890",
+  "notification_id": "123e4567-e89b-12d3-a456-426614174000",
   "total_recipients": 3,
   "queued_count": 5,
   "responses": [
     {
-      "id": "1234567890",
+      "id": "123e4567-e89b-12d3-a456-426614174000",
       "status": "queued",
       "message": "Email notification queued for user John Doe",
       "sent_at": "2024-01-15T10:00:00Z",
       "channel": "email"
     },
     {
-      "id": "1234567890", 
+      "id": "123e4567-e89b-12d3-a456-426614174000", 
       "status": "queued",
       "message": "iOS push notification queued for user John Doe (2 devices)",
       "sent_at": "2024-01-15T10:00:00Z",
@@ -256,6 +256,7 @@ The system returns detailed responses for each successful notification:
     }
   ]
 }
+```
 ```
 
 ## Benefits

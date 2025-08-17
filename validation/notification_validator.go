@@ -416,3 +416,38 @@ func (v *NotificationValidator) validateScheduledAt(scheduledAt time.Time) []Val
 
 	return errors
 }
+
+// ValidateNotificationID validates a notification ID parameter
+func (v *NotificationValidator) ValidateNotificationID(notificationID string) ValidationResult {
+	var errors []ValidationError
+
+	if notificationID == "" {
+		errors = append(errors, ValidationError{
+			Field:   "id",
+			Message: "notification ID is required",
+		})
+		return ValidationResult{IsValid: false, Errors: errors}
+	}
+
+	// Validate UUID format
+	uuidRegex := regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+	if !uuidRegex.MatchString(strings.ToLower(notificationID)) {
+		errors = append(errors, ValidationError{
+			Field:   "id",
+			Message: "notification ID must be a valid UUID",
+		})
+	}
+
+	// Check length constraints
+	if len(notificationID) > 36 {
+		errors = append(errors, ValidationError{
+			Field:   "id",
+			Message: "notification ID cannot exceed 36 characters",
+		})
+	}
+
+	return ValidationResult{
+		IsValid: len(errors) == 0,
+		Errors:  errors,
+	}
+}

@@ -13,5 +13,5 @@ func SetupNotificationRoutes(api *gin.RouterGroup, handler *handlers.Notificatio
 
 	// Notification endpoints with validation
 	api.POST("/notifications", validationLayer.ValidateNotificationRequest(), handler.SendNotification)
-	api.GET("/notifications/:id", handler.GetNotificationStatus)
+	api.GET("/notifications/:id", validationLayer.ValidateNotificationID(), handler.GetNotificationStatus)
 }

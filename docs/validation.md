@@ -60,6 +60,13 @@ Each notification type has specific content requirements:
 - Must be a valid email format
 - Not allowed for non-email notifications
 
+### 8. Notification ID Validation
+- Notification IDs are generated as UUIDs (RFC 4122 format)
+- Format: `123e4567-e89b-12d3-a456-426614174000`
+- Must be a valid UUID when provided in API requests
+- Maximum length: 36 characters (including hyphens)
+- Case-insensitive validation
+
 ## Usage Examples
 
 ### Valid Email Notification

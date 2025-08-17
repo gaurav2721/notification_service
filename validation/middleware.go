@@ -144,6 +144,26 @@ func (vm *ValidationLayer) ValidateTemplateVersion() gin.HandlerFunc {
 	}
 }
 
+// ValidateNotificationID is middleware that validates notification ID parameter
+func (vm *ValidationLayer) ValidateNotificationID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		notificationID := c.Param("id")
+
+		validationResult := vm.notificationValidator.ValidateNotificationID(notificationID)
+		if !validationResult.IsValid {
+			logrus.WithField("errors", validationResult.Errors).Warn("Validation failed for notification ID")
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":   "Validation failed",
+				"details": validationResult.Errors,
+			})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
 // ValidateUserRequest is middleware that validates user requests
 func (vm *ValidationLayer) ValidateUserRequest() gin.HandlerFunc {
 	return func(c *gin.Context) {

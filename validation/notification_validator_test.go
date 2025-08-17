@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gaurav2721/notification-service/models"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNotificationValidator_ValidateNotificationRequest(t *testing.T) {
@@ -352,6 +353,72 @@ func TestNotificationValidator_ValidateTemplateVersion(t *testing.T) {
 				if !isValid {
 					t.Logf("Validation errors: %+v", errors)
 				}
+			}
+		})
+	}
+}
+
+func TestNotificationValidator_ValidateNotificationID(t *testing.T) {
+	validator := NewNotificationValidator()
+
+	tests := []struct {
+		name           string
+		notificationID string
+		expectedValid  bool
+		expectedErrors []string
+	}{
+		{
+			name:           "valid UUID",
+			notificationID: "123e4567-e89b-12d3-a456-426614174000",
+			expectedValid:  true,
+			expectedErrors: []string{},
+		},
+		{
+			name:           "valid UUID uppercase",
+			notificationID: "123E4567-E89B-12D3-A456-426614174000",
+			expectedValid:  true,
+			expectedErrors: []string{},
+		},
+		{
+			name:           "empty notification ID",
+			notificationID: "",
+			expectedValid:  false,
+			expectedErrors: []string{"notification ID is required"},
+		},
+		{
+			name:           "invalid UUID format",
+			notificationID: "invalid-uuid-format",
+			expectedValid:  false,
+			expectedErrors: []string{"notification ID must be a valid UUID"},
+		},
+		{
+			name:           "too long notification ID",
+			notificationID: "123e4567-e89b-12d3-a456-426614174000-extra",
+			expectedValid:  false,
+			expectedErrors: []string{"notification ID must be a valid UUID", "notification ID cannot exceed 36 characters"},
+		},
+		{
+			name:           "partial UUID",
+			notificationID: "123e4567-e89b-12d3",
+			expectedValid:  false,
+			expectedErrors: []string{"notification ID must be a valid UUID"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := validator.ValidateNotificationID(tt.notificationID)
+
+			assert.Equal(t, tt.expectedValid, result.IsValid, "Expected valid to be %v, got %v", tt.expectedValid, result.IsValid)
+
+			if len(tt.expectedErrors) > 0 {
+				assert.Len(t, result.Errors, len(tt.expectedErrors), "Expected %d errors, got %d", len(tt.expectedErrors), len(result.Errors))
+
+				for i, expectedError := range tt.expectedErrors {
+					assert.Contains(t, result.Errors[i].Message, expectedError, "Expected error message to contain '%s'", expectedError)
+				}
+			} else {
+				assert.Empty(t, result.Errors, "Expected no errors, got %d", len(result.Errors))
 			}
 		})
 	}

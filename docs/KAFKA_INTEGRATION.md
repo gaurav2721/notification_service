@@ -90,7 +90,7 @@ case "email":
     if kafkaService, ok := nm.kafkaService.(interface {
         GetEmailChannel() chan string
     }); ok {
-        message := fmt.Sprintf("Email notification: %s", notif.ID)
+        message := fmt.Sprintf("Email notification: %s", notif.ID) // UUID format: 123e4567-e89b-12d3-a456-426614174000
         select {
         case kafkaService.GetEmailChannel() <- message:
             // Message sent successfully

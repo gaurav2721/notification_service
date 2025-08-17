@@ -114,7 +114,7 @@ The request body supports two modes:
 **Success Response (200 OK):**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "888e9012-e89b-12d3-a456-426614174020",
   "status": "sent" // or "scheduled" for scheduled notifications
 }
 ```
@@ -177,7 +177,7 @@ Retrieve the status of a specific notification by its ID.
 **Success Response (200 OK):**
 ```json
 {
-  "id": "1755400733586253000",
+  "id": "123e4567-e89b-12d3-a456-426614174000",
   "status": "sent" // or "scheduled", "failed", "pending"
 }
 ```
@@ -186,14 +186,14 @@ Retrieve the status of a specific notification by its ID.
 ```json
 {
   "error": "Notification not found",
-  "message": "Notification with ID 1755400733586253000 not found"
+  "message": "Notification with ID 123e4567-e89b-12d3-a456-426614174000 not found"
 }
 ```
 
 #### Example
 
 ```bash
-curl -X GET http://localhost:8080/api/v1/notifications/1705312345678901234 \
+curl -X GET http://localhost:8080/api/v1/notifications/123e4567-e89b-12d3-a456-426614174000 \
   -H "Authorization: Bearer gaurav"
 ```
 

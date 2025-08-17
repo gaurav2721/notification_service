@@ -125,7 +125,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "505e6789-e89b-12d3-a456-426614174007",
   "status": "sent"
 }
 ```
@@ -148,7 +148,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "606e7890-e89b-12d3-a456-426614174008",
   "status": "sent"
 }
 ```
@@ -172,7 +172,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "111e2345-e89b-12d3-a456-426614174013",
   "status": "sent"
 }
 ```
@@ -202,7 +202,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "707e8901-e89b-12d3-a456-426614174009",
   "status": "scheduled"
 }
 ```
@@ -226,7 +226,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "808e9012-e89b-12d3-a456-426614174010",
   "status": "scheduled"
 }
 ```
@@ -251,7 +251,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "222e3456-e89b-12d3-a456-426614174014",
   "status": "scheduled"
 }
 ```
@@ -402,7 +402,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "909e0123-e89b-12d3-a456-426614174011",
   "status": "sent"
 }
 ```
@@ -437,7 +437,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "010e1234-e89b-12d3-a456-426614174012",
   "status": "sent"
 }
 ```
@@ -469,7 +469,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "333e4567-e89b-12d3-a456-426614174015",
   "status": "sent"
 }
 ```
@@ -507,7 +507,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "444e5678-e89b-12d3-a456-426614174016",
   "status": "scheduled"
 }
 ```
@@ -543,7 +543,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "555e6789-e89b-12d3-a456-426614174017",
   "status": "scheduled"
 }
 ```
@@ -576,7 +576,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "666e7890-e89b-12d3-a456-426614174018",
   "status": "scheduled"
 }
 ```
@@ -643,7 +643,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "123e4567-e89b-12d3-a456-426614174000",
   "status": "sent"
 }
 ```
@@ -677,7 +677,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755399957828083000",
+  "id": "123e4567-e89b-12d3-a456-426614174000",
   "status": "scheduled"
 }
 ```
@@ -687,14 +687,14 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 You can check the status of any notification using its ID.
 
 ```bash
-curl -X GET http://localhost:8080/api/v1/notifications/1705312345678901234 \
+curl -X GET http://localhost:8080/api/v1/notifications/123e4567-e89b-12d3-a456-426614174000 \
   -H "Authorization: Bearer gaurav"
 ```
 
 **Expected Output:**
 ```json
 {
-  "id": "1755400733586253000",
+  "id": "123e4567-e89b-12d3-a456-426614174000",
   "status": "sent"
 }
 ```
