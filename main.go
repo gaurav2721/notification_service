@@ -15,6 +15,12 @@ import (
 )
 
 func main() {
+
+	// Load environment variables
+	if err := godotenv.Load(); err != nil {
+		logrus.Info("No .env file found, using system environment variables")
+	}
+
 	// Configure logrus
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 
@@ -31,11 +37,6 @@ func main() {
 		logrus.SetLevel(logrus.ErrorLevel)
 	default:
 		logrus.SetLevel(logrus.InfoLevel) // Default to InfoLevel to disable debug logs
-	}
-
-	// Load environment variables
-	if err := godotenv.Load(); err != nil {
-		logrus.Info("No .env file found, using system environment variables")
 	}
 
 	logrus.Debug("Starting notification service initialization")
