@@ -74,7 +74,7 @@ notification_service/
   models/ -> defines all the models
   logger/ -> sets up logger 
   handlers -> defines handlers for all the apis
-  external_services/ -> has logic for all the services that notification_manager would require
+  external_services/ -> has logic for all the services that notification service would require
     apns/ -> Apple Push Notification Service
     email/ -> email service
     fcm/ -> firebase cloud messaging 
