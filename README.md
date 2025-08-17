@@ -44,7 +44,7 @@ Functional Requirement
 2. Notification Scheduling – Two types:
     a) Immediate
     b) Scheduled for a later time
-3. Notification Templates(Customization using parameters has been implemented):
+3. Notification Templates(Customization using parameters has been implemented) :
     a) Predefined notification templates are available 
     b) Ability for users to create their own templates and use them
 
