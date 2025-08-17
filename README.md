@@ -1,278 +1,76 @@
-# Notification Service
+This service is used to send email , slack and in-app(for ios(apple push notification) and android(firebase cloud messaging)) notifications .
 
-A comprehensive notification service built in Go that supports multiple notification channels including email, Slack, and in-app notifications. The service provides scheduling capabilities, template management, and a RESTful API.
+### Quick Start
 
-## Features
+### Build and Run with Docker
+1. `make docker-build`
+2. `make docker-run`
 
-- **Multiple Notification Channels**: Email, Slack, and In-app notifications
-- **Notification Scheduling**: Schedule notifications for future delivery
-- **Template Management**: Create, update, and manage notification templates
-- **RESTful API**: Clean HTTP API for all operations
-- **Priority Levels**: Support for different notification priorities
-- **Metadata Support**: Additional data can be attached to notifications
-- **Health Checks**: Built-in health monitoring
+### View Docker Container Output(Run this to check if the notification has been sent or not)
+1. `make docker-exec`
 
-## Architecture
+### Quick Testing
 
-The service follows a clean architecture pattern with:
+For quick testing instructions and example API calls, please refer to [QUICK_TEST.md](QUICK_TEST.md).
 
-- **Models**: Data structures and types
-- **Services**: Business logic and external integrations
-- **Handlers**: HTTP request handling
-- **Main**: Application entry point and configuration
+### Detailed Testing
 
-## Prerequisites
+For comprehensive testing instructions, example API calls, and test data, please refer to [TEST.md](TEST.md). 
 
-- Go 1.21 or higher
-- Docker and Docker Compose (optional)
-- SMTP server credentials (for email notifications)
-- Slack Bot Token (for Slack notifications)
+## Building and Running
 
-## Installation
+For detailed instructions on building and running the notification service, please refer to [BUILD.md](BUILD.md).
 
-### Local Development
+## Api documentation 
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd notification_service
-```
+For detailed API documentation, please refer to [API.md](API.md).
 
-2. Install dependencies:
-```bash
-go mod tidy
-```
+## Assumptions for this service
 
-3. Set up environment variables:
-```bash
-cp env.example .env
-# Edit .env with your configuration
-```
-
-4. Run the service:
-```bash
-go run main.go
-```
-
-### Using Docker
-
-1. Build and run with Docker Compose:
-```bash
-docker-compose up --build
-```
-
-2. Or build and run manually:
-```bash
-docker build -t notification-service .
-docker run -p 8080:8080 --env-file .env notification-service
-```
-
-## Configuration
-
-Create a `.env` file with the following variables:
-
-```env
-# Server Configuration
-PORT=8080
-
-# Email Configuration
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USERNAME=your-email@gmail.com
-SMTP_PASSWORD=your-app-password
-
-# Slack Configuration
-SLACK_BOT_TOKEN=xoxb-your-slack-bot-token
-SLACK_CHANNEL_ID=C1234567890
-```
-
-## API Endpoints
-
-### Health Check
-```
-GET /health
-```
-
-### Notifications
-
-#### Send Notification
-```
-POST /api/v1/notifications
-```
-
-Request Body:
-```json
-{
-  "type": "email",
-  "priority": "normal",
-  "title": "Welcome!",
-  "message": "Welcome to our platform!",
-  "recipients": ["user@example.com"],
-  "metadata": {
-    "user_id": "123",
-    "campaign": "welcome"
-  },
-  "scheduled_at": "2024-01-01T10:00:00Z"
-}
-```
-
-#### Get Notification Status
-```
-GET /api/v1/notifications/{id}
-```
-
-### Templates
-
-#### Create Template
-```
-POST /api/v1/templates
-```
-
-Request Body:
-```json
-{
-  "name": "Welcome Email",
-  "type": "email",
-  "subject": "Welcome to {{platform}}",
-  "body": "Hello {{name}}, welcome to {{platform}}!",
-  "variables": ["name", "platform"]
-}
-```
-
-#### Get Template
-```
-GET /api/v1/templates/{id}
-```
-
-#### Update Template
-```
-PUT /api/v1/templates/{id}
-```
-
-#### Delete Template
-```
-DELETE /api/v1/templates/{id}
-```
-
-## Usage Examples
-
-### Send an Email Notification
-
-```bash
-curl -X POST http://localhost:8080/api/v1/notifications \
-  -H "Content-Type: application/json" \
-  -d '{
-    "type": "email",
-    "title": "Test Email",
-    "message": "This is a test email notification",
-    "recipients": ["test@example.com"]
-  }'
-```
-
-### Send a Slack Notification
-
-```bash
-curl -X POST http://localhost:8080/api/v1/notifications \
-  -H "Content-Type: application/json" \
-  -d '{
-    "type": "slack",
-    "title": "Slack Alert",
-    "message": "This is a test Slack notification",
-    "recipients": ["general"]
-  }'
-```
-
-### Schedule a Notification
-
-```bash
-curl -X POST http://localhost:8080/api/v1/notifications \
-  -H "Content-Type: application/json" \
-  -d '{
-    "type": "email",
-    "title": "Scheduled Email",
-    "message": "This email was scheduled",
-    "recipients": ["user@example.com"],
-    "scheduled_at": "2024-01-01T10:00:00Z"
-  }'
-```
-
-### Create a Template
-
-```bash
-curl -X POST http://localhost:8080/api/v1/templates \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Order Confirmation",
-    "type": "email",
-    "subject": "Order #{{order_id}} Confirmed",
-    "body": "Dear {{customer_name}}, your order #{{order_id}} has been confirmed.",
-    "variables": ["order_id", "customer_name"]
-  }'
-```
-
-## Notification Types
-
-- `email`: Send notifications via email using SMTP
-- `slack`: Send notifications to Slack channels
-- `in_app`: Store notifications for in-app display
-
-## Priority Levels
-
-- `low`: Low priority notifications
-- `normal`: Standard priority (default)
-- `high`: High priority notifications
-- `urgent`: Urgent notifications
+1. Interfaces for sending emails, Slack messages, and in-app notifications will be mocked in the first iteration to focus on building scalable service logic with features such as templates and scheduling.(If the .env does not have creds for the email, slack, apns and fcm , the information will be printed in a simple output/<service_name>.txt for eg output/email.txt)
+2. When a customer raises a notification request, only user IDs will be provided as recipients. The service will retrieve other necessary details from the pre-stored user information.
+3. Only text-based content will be supported for notifications in this iteration.
+4. Each notification request raised by customer/user will be linked to only one notification type/channel in this iteration.
+5. In-app notifications will be limited to mobile push notifications for iOS and Android in this iteration.
+6. All the information is stored in memory , database persistence may be added later
+7. User and UserDeviceInfo have been preloaded and the apis for these are disabled by default , since it is considered to be out of scope
 
 ## Development
 
-### Project Structure
+Following things have been implemented 
+
+1. Logging with different log levels for eg info, debug
+2. Constants package 
+3. Input validation has been done for the notification and template apis
+
+Future enhancements 
+1. Creating a requestId for observability 
+2. Adding a CORS check for apis
+
+Basic project structure explaining what each package is doing :
 
 ```
 notification_service/
-├── main.go                 # Application entry point
-├── go.mod                  # Go module file
-├── Dockerfile              # Docker configuration
-├── docker-compose.yml      # Docker Compose configuration
-├── env.example             # Environment variables template
-├── models/
-│   └── notification.go     # Data models and types
-├── services/
-│   ├── interfaces.go       # Service interfaces
-│   ├── notification_service.go  # Main notification service
-│   ├── email_service.go    # Email service implementation
-│   ├── slack_service.go    # Slack service implementation
-│   ├── inapp_service.go    # In-app service implementation
-│   └── scheduler_service.go # Scheduler service implementation
-└── handlers/
-    └── notification_handlers.go  # HTTP request handlers
+  main.go
+  services/ -> creates a service container that basically has reference to all the external service objects and internal objects for eg email,slack,apns,fcm,user,consumer, notification_manager
+  validation/ -> has the logic to validate inputs for notification and template apis
+  routes/ -> defines all the routes for notfication,user,templates
+  notification_manager/ -> handles all the business logic for notifications for eg scheduling, templates, pushing to the appropriate channel
+  models/ -> defines all the models
+  logger/ -> sets up logger 
+  handlers -> defines handlers for all the apis
+  external_services/ -> has logic for all the services that notification_manager would require
+    apns/ -> Apple Push Notification Service
+    email/ -> email service
+    fcm/ -> firebase cloud messaging 
+    slack/ -> slack service
+    user/ -> user service 
+    kafka/ -> kafka service having apns,fcm,email and slack queue
+    consumers/ -> consumer/workers that read from kafka queue and send notification via appropriate service for eg email,slack,apns,fcm service
 ```
 
-### Adding New Notification Channels
+Data Flow
 
-1. Create a new service implementation in `services/`
-2. Implement the appropriate interface
-3. Add the new channel type to the notification manager
-4. Update the routing logic in `SendNotification`
-
-### Testing
-
-Run tests:
-```bash
-go test ./...
 ```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License.
-
-## Support
-
-For support and questions, please open an issue in the repository.
+Api -> Notification Manager -> Kafka -> Consumers -> Email/Slack/APNS/FCM Service
+```
