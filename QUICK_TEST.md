@@ -205,7 +205,7 @@ curl -X POST http://localhost:8080/api/v1/templates \
 **Expected Output:**
 ```json
 {
-  "id": "template-password-reset-custom",
+  "id": "43138245-0467-49e4-a3cd-fef1d6b690f3",
   "name": "Password Reset Template",
   "type": "email",
   "version": 1,
@@ -225,7 +225,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
   -d '{
     "type": "email",
     "template": {
-      "id": "840dcb93-bf17-42ba-ae49-316f0cb6d192",
+      "id": "43138245-0467-49e4-a3cd-fef1d6b690f3",
       "version": 1,
       "data": {
         "user_name": "John Doe",
@@ -258,7 +258,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
   -d '{
     "type": "email",
     "template": {
-      "id": "2a94230b-cb5f-4605-9078-19708bf57323",
+      "id": "43138245-0467-49e4-a3cd-fef1d6b690f3",
       "version": 1,
       "data": {
         "user_name": "Jane Smith",

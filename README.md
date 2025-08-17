@@ -49,81 +49,28 @@ Future enhancements
 
 Basic project structure explaining what each package is doing :
 
+```
 notification_service/
   main.go
   services/ -> creates a service container that basically has reference to all the external service objects and internal objects for eg email,slack,apns,fcm,user,consumer, notification_manager
   validation/ -> has the logic to validate inputs for notification and template apis
+  routes/ -> defines all the routes for notfication,user,templates
+  notification_manager/ -> handles all the business logic for notifications for eg scheduling, templates, pushing to the appropriate channel
+  models/ -> defines all the models
+  logger/ -> sets up logger 
+  handlers -> defines handlers for all the apis
+  external_services/ -> has logic for all the services that notification_manager would require
+    apns/ -> Apple Push Notification Service
+    email/ -> email service
+    fcm/ -> firebase cloud messaging 
+    slack/ -> slack service
+    user/ -> user service 
+    kafka/ -> kafka service having apns,fcm,email and slack queue
+    consumers/ -> consumer/workers that read from kafka queue and send notification via appropriate service for eg email,slack,apns,fcm service
+```
+
+Data Flow
 
 ```
-notification_service/
-├── main.go                 # Application entry point
-├── go.mod                  # Go module file
-├── go.sum                  # Go module checksums
-├── Makefile                # Build and deployment scripts
-├── Dockerfile              # Docker configuration
-├── docker-compose.yml      # Docker Compose configuration
-├── env.example             # Environment variables template
-├── README.md               # Project documentation
-├── USER_README.md          # User-focused documentation
-├── bin/                    # Compiled binaries
-│   └── notification-service # Executable binary
-├── docs/                   # Documentation files
-├── examples/               # Example implementations
-│   ├── user_service_integration.go      # User service integration example
-│   └── service_architecture_example.go  # Service architecture example
-├── models/                 # Data models and types
-│   └── notification.go     # Notification data models
-├── handlers/               # HTTP request handlers
-│   └── notification_handlers.go  # Notification API handlers
-├── routes/                 # API routing configuration
-│   ├── routes.go           # Main routing setup
-│   ├── notification_routes.go    # Notification endpoints
-│   ├── user_routes.go      # User management endpoints
-│   ├── template_routes.go  # Template management endpoints
-│   ├── health_routes.go    # Health check endpoints
-│   └── middleware/         # HTTP middleware
-│       └── middleware.go   # Authentication and logging middleware
-├── services/               # Core service implementations
-│   ├── interfaces.go       # Service interfaces
-│   ├── notification_service.go  # Main notification service
-│   ├── email_service.go    # Email service implementation
-│   ├── slack_service.go    # Slack service implementation
-│   ├── inapp_service.go    # In-app service implementation
-│   └── scheduler_service.go # Scheduler service implementation
-├── notification_manager/   # Notification orchestration
-│   ├── interface.go        # Manager interface
-│   ├── notification_manager.go    # Main manager implementation
-│   ├── notification_manager_test.go  # Manager tests
-│   ├── config.go           # Manager configuration
-│   └── errors.go           # Manager error definitions
-├── external_services/      # External service integrations
-│   ├── service_factory.go  # Service factory pattern
-│   ├── service_provider.go # Service provider implementation
-│   ├── email/              # Email service module
-│   │   ├── interface.go    # Email service interface
-│   │   ├── email_service.go # Email service implementation
-│   │   ├── config.go       # Email configuration
-│   │   └── errors.go       # Email error definitions
-│   ├── slack/              # Slack service module
-│   │   ├── interface.go    # Slack service interface
-│   │   ├── slack_service.go # Slack service implementation
-│   │   ├── config.go       # Slack configuration
-│   │   └── errors.go       # Slack error definitions
-│   ├── inapp/              # In-app notification module
-│   │   ├── interface.go    # In-app service interface
-│   │   ├── inapp_service.go # In-app service implementation
-│   │   ├── config.go       # In-app configuration
-│   │   └── errors.go       # In-app error definitions
-│   └── user/               # User service module
-│       ├── interface.go    # User service interface
-│       ├── user_service.go # User service implementation
-│       ├── user_service_test.go # User service tests
-│       ├── config.go       # User service configuration
-│       └── errors.go       # User service error definitions
-└── helper/                 # Utility and helper functions
-    └── scheduler/          # Scheduler utilities
-        ├── interface.go    # Scheduler interface
-        ├── scheduler.go    # Scheduler implementation
-        ├── config.go       # Scheduler configuration
-        └── errors.go       # Scheduler error definitions
+Api -> Notification Manager -> Kafka -> Consumers -> Email/Slack/APNS/FCM Service
 ```
