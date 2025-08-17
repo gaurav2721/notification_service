@@ -1,60 +1,17 @@
-## Installation
+This service is used to send email , slack and in-app(for ios(apple push notification) and android(firebase cloud messaging)) notifications .
 
-### Local Development
+### Quick Start
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd notification_service
-```
+### Build and Run with Docker
+1. `make docker-build`
+2. `make docker-run`
 
-2. Install dependencies:
-```bash
-go mod tidy
-```
+### View Docker Container Output
+1. `make docker-exec`
 
-3. Set up environment variables:
-```bash
-cp env.example .env
-# Edit .env with your configuration
-```
+## Building and Running
 
-4. Run the service:
-```bash
-go run main.go
-```
-
-### Using Docker
-
-1. Build and run with Docker Compose:
-```bash
-docker-compose up --build
-```
-
-2. Or build and run manually:
-```bash
-docker build -t notification-service .
-docker run -p 8080:8080 --env-file .env notification-service
-```
-
-## Configuration
-
-Create a `.env` file with the following variables:
-
-```env
-# Server Configuration
-PORT=8080
-
-# Email Configuration
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USERNAME=your-email@gmail.com
-SMTP_PASSWORD=your-app-password
-
-# Slack Configuration
-SLACK_BOT_TOKEN=xoxb-your-slack-bot-token
-SLACK_CHANNEL_ID=C1234567890
-```
+For detailed instructions on building and running the notification service, please refer to [Build.md](Build.md).
 
 ## API Endpoints
 
@@ -703,9 +660,27 @@ curl -X GET http://localhost:8080/api/v1/templates/550e8400-e29b-41d4-a716-44665
 - `slack`: Send notifications to Slack channels
 - `in_app`: Store notifications for in-app display
 
-## Development
+## Building and Running
 
-### Project Structure
+For detailed instructions on building and running the notification service, please refer to [Build.md](Build.md).
+
+The Build.md file contains:
+- Docker build and run commands
+- Local development setup
+- Environment variable configuration
+- Testing instructions
+- Debug mode setup
+
+### Quick Start
+
+1. **Clone the repository**
+2. **Set up environment variables** (see [Build.md](Build.md) for detailed configuration)
+3. **Build and run** using one of the following methods:
+   - **Docker**: `make docker-build && make docker-run`
+   - **Local**: `make build && make run`
+   - **Debug**: `make run-debug`
+
+## Development
 
 ```
 notification_service/
