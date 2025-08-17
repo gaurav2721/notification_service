@@ -1,51 +1,15 @@
-# Notification Service - Run Instructions
+# Notification Service - Test Instructions
 
-This document provides step-by-step instructions to run the notification service and test all its features.
+## 1. Overview
 
-## Prerequisites
+This document provides comprehensive test instructions for the Notification Service API. The service supports multiple notification types including email, Slack, and in-app notifications, with both immediate and scheduled delivery options.
 
-- Docker and Docker Compose installed
-- curl (for API testing)
+## 2. Preloaded User Information
 
-## Authentication
+Use the following preloaded user information for testing:
 
-All `/api/v1/*` endpoints require API key authentication. The API key used in these examples is `gaurav`.
-
-**Authorization Header Format:**
-```
-Authorization: Bearer gaurav
-```
-
-**Note:** Health check endpoints (`/health/*`) do not require authentication.
-
-## 1. Build and Run the Service
-
-### 1.1 Build Docker Image
-```bash
-make docker-build
-```
-
-### 1.2 Run Docker Container
-```bash
-make docker-run
-```
-
-## 2. Get All Users
-
-The service comes with some pre-loaded users for testing purposes.
-
-**Note:** The service redirects `/api/v1/users` to `/api/v1/users/` (with trailing slash), so use the trailing slash version.
-
-```bash
-curl -X GET http://localhost:8080/api/v1/users/ \
-  -H "Authorization: Bearer gaurav"
-```
-
-**Expected Output:**
 ```json
-{
-  "count": 8,
-  "users": [
+"users": [
     {
       "id": "user-001",
       "email": "john.doe@company.com",
@@ -135,7 +99,6 @@ curl -X GET http://localhost:8080/api/v1/users/ \
       "updated_at": "2025-08-15T18:23:46.787198629Z"
     }
   ]
-}
 ```
 
 ## 3. Immediate Notifications
@@ -738,6 +701,8 @@ curl -X GET http://localhost:8080/api/v1/notifications/1705312345678901234 \
 
 ## 11. Health Check
 
+**Note:** Health check endpoints (`/health/*`) do not require authentication.
+
 Check if the service is running properly.
 
 ```bash
@@ -753,7 +718,7 @@ curl -X GET http://localhost:8080/health
 }
 ```
 
-## Additional Notes
+## 12. Additional Notes
 
 - All timestamps are in ISO 8601 format (UTC)
 - User IDs are used as recipients instead of email addresses for better security
@@ -766,7 +731,7 @@ curl -X GET http://localhost:8080/health
 - All API responses include appropriate HTTP status codes
 - Error responses include detailed error messages for debugging
 
-## Troubleshooting
+## 13. Troubleshooting
 
 If you encounter issues:
 
@@ -774,12 +739,3 @@ If you encounter issues:
 2. **Template not found**: Verify the template ID exists using the predefined templates endpoint
 3. **User not found**: Ensure the user ID exists in the system
 4. **Scheduled notifications not sending**: Check the service logs for scheduler errors
-
-## Environment Configuration
-
-Make sure to set up your environment variables in a `.env` file based on `env.example`:
-
-```bash
-cp env.example .env
-# Edit .env with your actual configuration values
-```

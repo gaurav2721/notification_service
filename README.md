@@ -6,12 +6,16 @@ This service is used to send email , slack and in-app(for ios(apple push notific
 1. `make docker-build`
 2. `make docker-run`
 
-### View Docker Container Output
+### View Docker Container Output(Run this to check if the notification has been sent or not)
 1. `make docker-exec`
 
 ### Quick Testing
 
 For quick testing instructions and example API calls, please refer to [QUICK_TEST.md](QUICK_TEST.md).
+
+### Detailed Testing
+
+
 
 ## Building and Running
 
