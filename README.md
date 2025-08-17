@@ -9,6 +9,10 @@ This service is used to send email , slack and in-app(for ios(apple push notific
 ### View Docker Container Output
 1. `make docker-exec`
 
+### Quick Testing
+
+For quick testing instructions and example API calls, please refer to [QUICK_TEST.md](QUICK_TEST.md).
+
 ## Building and Running
 
 For detailed instructions on building and running the notification service, please refer to [BUILD.md](BUILD.md).
