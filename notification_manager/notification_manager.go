@@ -37,15 +37,15 @@ func NewNotificationManager(
 }
 
 // NewNotificationManagerWithDefaultTemplate creates a new notification manager with default template manager
+// The scheduler is initialized internally within the notification manager
 func NewNotificationManagerWithDefaultTemplate(
 	userService interface{},
 	kafkaService interface{},
-	scheduler scheduler.Scheduler,
 ) *NotificationManagerImpl {
 	return NewNotificationManager(
 		userService,
 		kafkaService,
-		scheduler,
+		scheduler.NewScheduler(),
 		templates.NewTemplateManager(),
 	)
 }

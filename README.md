@@ -41,10 +41,18 @@ Following things have been implemented
 
 1. Logging with different log levels for eg info, debug
 2. Constants package 
+3. Input validation has been done for the notification and template apis
 
 Future enhancements 
 1. Creating a requestId for observability 
 2. Adding a CORS check for apis
+
+Basic project structure explaining what each package is doing :
+
+notification_service/
+  main.go
+  services/ -> creates a service container that basically has reference to all the external service objects and internal objects for eg email,slack,apns,fcm,user,consumer, notification_manager
+  validation/ -> has the logic to validate inputs for notification and template apis
 
 ```
 notification_service/

@@ -11,7 +11,6 @@ import (
 	"github.com/gaurav2721/notification-service/external_services/user"
 	"github.com/gaurav2721/notification-service/models"
 	"github.com/gaurav2721/notification-service/notification_manager"
-	"github.com/gaurav2721/notification-service/notification_manager/scheduler"
 )
 
 // Re-export all interfaces and types for convenience
@@ -142,47 +141,47 @@ func (f *ServiceFactory) NewConsumerManagerWithServices(
 }
 
 // NewNotificationManager creates a new notification manager instance
+// The scheduler is initialized internally within the notification manager
 func (f *ServiceFactory) NewNotificationManager(
 	userService UserService,
 	kafkaService KafkaService,
-	scheduler scheduler.Scheduler,
 ) NotificationManager {
-	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService, scheduler)
+	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService)
 }
 
 // NewNotificationManagerWithUserService creates a new notification manager with user service
+// The scheduler is initialized internally within the notification manager
 func (f *ServiceFactory) NewNotificationManagerWithUserService(
 	userService UserService,
 	kafkaService KafkaService,
 ) NotificationManager {
-	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService, nil)
+	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService)
 }
 
-// NewNotificationManagerWithScheduler creates a new notification manager with scheduler
+// NewNotificationManagerWithScheduler creates a new notification manager
+// The scheduler is initialized internally within the notification manager
 func (f *ServiceFactory) NewNotificationManagerWithScheduler(
 	userService UserService,
 	kafkaService KafkaService,
-	scheduler scheduler.Scheduler,
 ) NotificationManager {
-	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService, scheduler)
+	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService)
 }
 
 // NewNotificationManagerComplete creates a new notification manager with all dependencies
+// The scheduler is initialized internally within the notification manager
 func (f *ServiceFactory) NewNotificationManagerComplete(
 	userService UserService,
 	kafkaService KafkaService,
-	scheduler scheduler.Scheduler,
 ) NotificationManager {
-	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService, scheduler)
+	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService)
 }
 
 // NewNotificationManagerWithKafkaOnly creates a new notification manager with only Kafka service
 // This is used when the notification manager only needs to push notifications to Kafka channels
+// The scheduler is initialized internally within the notification manager
 func (f *ServiceFactory) NewNotificationManagerWithKafkaOnly(kafkaService KafkaService) NotificationManager {
-	return notification_manager.NewNotificationManagerWithDefaultTemplate(nil, kafkaService, nil)
+	return notification_manager.NewNotificationManagerWithDefaultTemplate(nil, kafkaService)
 }
 
-// NewScheduler creates a new scheduler instance
-func (f *ServiceFactory) NewScheduler() scheduler.Scheduler {
-	return scheduler.NewScheduler()
-}
+// Note: Scheduler is now initialized internally within the notification manager
+// No need to create it externally

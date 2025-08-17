@@ -150,7 +150,7 @@ func (f *ServiceFactory) NewNotificationManager(
 - `NewNotificationManager(...)` - Creates notification manager with basic dependencies
 - `NewNotificationManagerWithKafkaOnly(kafkaService)` - Creates notification manager with only Kafka service (for channel pushing)
 - `NewNotificationManagerWithUserService(...)` - Creates notification manager with user service
-- `NewNotificationManagerWithScheduler(...)` - Creates notification manager with scheduler
+- `NewNotificationManagerWithScheduler(...)` - Creates notification manager (scheduler initialized internally)
 - `NewNotificationManagerComplete(...)` - Creates notification manager with all dependencies
 
 ### 5. Consumer Processor Implementation

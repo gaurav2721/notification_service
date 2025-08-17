@@ -94,11 +94,8 @@ func (c *ServiceContainer) initializeServices() {
 	// Initialize notification service with user service and Kafka service
 	logrus.Debug("Initializing notification service")
 
-	// Create scheduler for notification scheduling
-	scheduler := factory.NewScheduler()
-	logrus.Debug("Scheduler created")
-
-	c.notificationService = factory.NewNotificationManagerWithScheduler(c.userService, c.kafkaService, scheduler)
+	// The scheduler is initialized internally within the notification manager
+	c.notificationService = factory.NewNotificationManagerWithScheduler(c.userService, c.kafkaService)
 	logrus.Debug("Notification service initialized")
 
 	logrus.Debug("All service dependencies initialized successfully")
