@@ -67,14 +67,14 @@ Basic project structure explaining what each package is doing :
 ```
 notification_service/
   main.go
-  services/ -> creates a service container that basically has reference to all the external service objects and internal objects for eg email,slack,apns,fcm,user,consumer, notification_manager
+  services/ -> creates a service container that basically creates and has reference to all the external service objects and internal objects for eg email,slack,apns,fcm,user,consumer, notification_manager
   validation/ -> has the logic to validate inputs for notification and template apis
-  routes/ -> defines all the routes for notification,user,templates
+  routes/ -> defines all the routes for notification,user,template apis
   notification_manager/ -> handles all the business logic for notifications for eg scheduling, templates, pushing to the appropriate channel
   models/ -> defines all the models
   logger/ -> sets up logger 
   handlers -> defines handlers for all the apis
-  external_services/ -> has logic for all the services that notification service would require
+  external_services/ -> has logic for all the external services that notification service would require
     apns/ -> Apple Push Notification service
     email/ -> email service
     fcm/ -> Firebase Cloud Messaging service
