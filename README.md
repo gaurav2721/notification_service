@@ -42,11 +42,11 @@ Following things have been implemented
 Functional Requirement
 1. For different notification types appropriate channel routing has been implemented(we have used buffered channels in golang as queues in the project)
 2. Notification Scheduling – Two types:
-    Immediate
-    Scheduled for a later time
+    a) Immediate
+    b) Scheduled for a later time
 3. Notification Templates(Customization using parameters has been implemented):
-    Predefined notification templates are available
-    Ability for users to create their own templates and use them
+    a) Predefined notification templates are available 
+    b) Ability for users to create their own templates and use them
 
 Other things implemented are
 1. Authentication via Api key
