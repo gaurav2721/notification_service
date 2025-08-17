@@ -58,8 +58,9 @@ Design Patterns implemented
 2. Worker Pool
 
 Future enhancements 
-1. Creating a requestId for observability 
-2. Adding a CORS check for apis
+1. Adding retries for enhancing reliability
+2. Adding database persistence for enhancing reliability
+3. Implementing event tracking 
 
 Basic project structure explaining what each package is doing :
 
