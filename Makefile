@@ -1,4 +1,4 @@
-.PHONY: build run test docker-build docker-run docker-exec docker-shell test-all test-quick
+.PHONY: build run test docker-build docker-run docker-exec docker-shell
 
 # Build the application
 build:
@@ -32,14 +32,6 @@ docker-exec:
 docker-shell:
 	docker exec -it $$(docker ps -q --filter ancestor=notification-service) /bin/sh
 
-# Run comprehensive API tests (builds and runs Docker container)
-test-all:
-	./test_all_apis.sh
-
-# Run quick API tests (assumes service is already running)
-test-quick:
-	./quick_test.sh
-
 # Help
 help:
 	@echo "Available commands:"
@@ -47,8 +39,6 @@ help:
 	@echo "  run                - Run the application"
 	@echo "  run-debug          - Run the application with debug output"
 	@echo "  test               - Run Go unit tests"
-	@echo "  test-all           - Run comprehensive API tests (Docker)"
-	@echo "  test-quick         - Run quick API tests (service must be running)"
 	@echo "  docker-build       - Build Docker image"
 	@echo "  docker-run         - Run Docker container"
 	@echo "  docker-exec        - Exec into running container and view output files"
