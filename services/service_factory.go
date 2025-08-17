@@ -116,16 +116,6 @@ func (f *ServiceFactory) NewConsumerManager(kafkaService KafkaService) ConsumerM
 	return consumers.NewConsumerManager(config)
 }
 
-// NewConsumerManagerWithConfig creates a new consumer manager with custom configuration
-func (f *ServiceFactory) NewConsumerManagerWithConfig(config ConsumerConfig) ConsumerManager {
-	return consumers.NewConsumerManager(config)
-}
-
-// NewConsumerManagerFromEnv creates a new consumer manager with configuration from environment variables
-func (f *ServiceFactory) NewConsumerManagerFromEnv(kafkaService KafkaService) ConsumerManager {
-	return consumers.NewConsumerManagerFromEnv(kafkaService)
-}
-
 // NewConsumerManagerWithServices creates a new consumer manager with service dependencies
 func (f *ServiceFactory) NewConsumerManagerWithServices(
 	emailService EmailService,
@@ -147,27 +137,9 @@ func (f *ServiceFactory) NewNotificationManager(
 	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService)
 }
 
-// NewNotificationManagerWithUserService creates a new notification manager with user service
-// The scheduler is initialized internally within the notification manager
-func (f *ServiceFactory) NewNotificationManagerWithUserService(
-	userService UserService,
-	kafkaService KafkaService,
-) NotificationManager {
-	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService)
-}
-
 // NewNotificationManagerWithScheduler creates a new notification manager
 // The scheduler is initialized internally within the notification manager
 func (f *ServiceFactory) NewNotificationManagerWithScheduler(
-	userService UserService,
-	kafkaService KafkaService,
-) NotificationManager {
-	return notification_manager.NewNotificationManagerWithDefaultTemplate(userService, kafkaService)
-}
-
-// NewNotificationManagerComplete creates a new notification manager with all dependencies
-// The scheduler is initialized internally within the notification manager
-func (f *ServiceFactory) NewNotificationManagerComplete(
 	userService UserService,
 	kafkaService KafkaService,
 ) NotificationManager {
