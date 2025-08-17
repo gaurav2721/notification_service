@@ -24,34 +24,19 @@ type NotificationManagerImpl struct {
 	storage         *InMemoryStorage
 }
 
-// NewNotificationManager creates a new notification manager instance
-func NewNotificationManager(
-	userService interface{},
-	kafkaService kafka.KafkaService,
-	scheduler scheduler.Scheduler,
-	templateManager templates.TemplateManager,
-) *NotificationManagerImpl {
-	return &NotificationManagerImpl{
-		userService:     userService,
-		kafkaService:    kafkaService,
-		scheduler:       scheduler,
-		templateManager: templateManager,
-		storage:         NewInMemoryStorage(),
-	}
-}
-
 // NewNotificationManagerWithDefaultTemplate creates a new notification manager with default template manager
 // The scheduler is initialized internally within the notification manager
 func NewNotificationManagerWithDefaultTemplate(
 	userService interface{},
 	kafkaService kafka.KafkaService,
 ) *NotificationManagerImpl {
-	return NewNotificationManager(
-		userService,
-		kafkaService,
-		scheduler.NewScheduler(),
-		templates.NewTemplateManager(),
-	)
+	return &NotificationManagerImpl{
+		userService:     userService,
+		kafkaService:    kafkaService,
+		scheduler:       scheduler.NewScheduler(),
+		templateManager: templates.NewTemplateManager(),
+		storage:         NewInMemoryStorage(),
+	}
 }
 
 // ScheduleNotification schedules a notification for future delivery
@@ -93,7 +78,7 @@ func (nm *NotificationManagerImpl) ScheduleNotification(ctx context.Context, not
 }
 
 // GetNotificationStatus retrieves the status of a notification
-func (nm *NotificationManagerImpl) GetNotificationStatus(ctx context.Context, notificationID string) (interface{}, error) {
+func (nm *NotificationManagerImpl) GetNotificationStatus(notificationID string) (interface{}, error) {
 	// Get notification from in-memory storage
 	record, err := nm.storage.GetNotification(notificationID)
 	if err != nil {
@@ -111,7 +96,7 @@ func (nm *NotificationManagerImpl) GetNotificationStatus(ctx context.Context, no
 }
 
 // SetNotificationStatus sets the status of a notification
-func (nm *NotificationManagerImpl) SetNotificationStatus(ctx context.Context, notificationId string, notification *models.NotificationRequest, status string) error {
+func (nm *NotificationManagerImpl) SetNotificationStatus(notificationId string, notification *models.NotificationRequest, status string) error {
 	if notification == nil {
 		return ErrUnsupportedNotificationType
 	}
@@ -182,34 +167,24 @@ func (nm *NotificationManagerImpl) SetNotificationStatus(ctx context.Context, no
 }
 
 // CreateTemplate creates a new notification template
-func (nm *NotificationManagerImpl) CreateTemplate(ctx context.Context, template interface{}) (interface{}, error) {
+func (nm *NotificationManagerImpl) CreateTemplate(template interface{}) (interface{}, error) {
 	// Type assertion to get template
 	tmpl, ok := template.(*models.Template)
 	if !ok {
 		return nil, ErrTemplateNotFound
 	}
 
-	return nm.templateManager.CreateTemplate(ctx, tmpl)
+	return nm.templateManager.CreateTemplate(context.Background(), tmpl)
 }
 
 // GetTemplateVersion retrieves a specific version of a notification template
-func (nm *NotificationManagerImpl) GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error) {
-	return nm.templateManager.GetTemplateVersion(ctx, templateID, version)
+func (nm *NotificationManagerImpl) GetTemplateVersion(templateID string, version int) (interface{}, error) {
+	return nm.templateManager.GetTemplateVersion(context.Background(), templateID, version)
 }
 
 // GetPredefinedTemplates returns all predefined templates
 func (nm *NotificationManagerImpl) GetPredefinedTemplates() []*models.Template {
 	return nm.templateManager.GetPredefinedTemplates()
-}
-
-// GetTemplateByID returns a template by ID (latest version)
-func (nm *NotificationManagerImpl) GetTemplateByID(templateID string) (*models.Template, error) {
-	return nm.templateManager.GetTemplateByID(templateID)
-}
-
-// GetTemplateByIDAndVersion returns a specific version of a template
-func (nm *NotificationManagerImpl) GetTemplateByIDAndVersion(templateID string, version int) (*models.Template, error) {
-	return nm.templateManager.GetTemplateByIDAndVersion(templateID, version)
 }
 
 // ProcessNotificationRequest handles the complete notification request processing
@@ -222,7 +197,7 @@ func (nm *NotificationManagerImpl) ProcessNotificationRequest(ctx context.Contex
 	// Process template if provided and generate content
 	if request.Template != nil {
 		logrus.Debug("Processing template to generate content")
-		generatedContent, err := nm.ProcessTemplateToContent(request.Template, request.Type)
+		generatedContent, err := nm.processTemplateToContent(request.Template, request.Type)
 		if err != nil {
 			logrus.WithError(err).Error("Failed to process template")
 			return nil, fmt.Errorf("template processing failed: %v", err)
@@ -251,18 +226,18 @@ func (nm *NotificationManagerImpl) ProcessNotificationRequest(ctx context.Contex
 			logrus.WithField("notification_id", notificationID).Info("Executing scheduled notification job")
 
 			// Process notification for recipients
-			_, err := nm.ProcessNotificationForRecipients(ctx, request, notificationID)
+			_, err := nm.processNotificationForRecipients(ctx, request, notificationID)
 			if err != nil {
 				logrus.WithError(err).Error("Failed to process notification for recipients")
 				// Set status to failed if processing fails
-				if statusErr := nm.SetNotificationStatus(ctx, notificationID, request, "failed"); statusErr != nil {
+				if statusErr := nm.SetNotificationStatus(notificationID, request, "failed"); statusErr != nil {
 					logrus.WithError(statusErr).WithField("notification_id", notificationID).Warn("Failed to set notification status to failed")
 				}
 				return err
 			}
 
 			// Set notification status to sent after successful processing
-			if err := nm.SetNotificationStatus(ctx, notificationID, request, "sent"); err != nil {
+			if err := nm.SetNotificationStatus(notificationID, request, "sent"); err != nil {
 				logrus.WithError(err).WithField("notification_id", notificationID).Warn("Failed to set notification status to sent")
 			}
 
@@ -275,7 +250,7 @@ func (nm *NotificationManagerImpl) ProcessNotificationRequest(ctx context.Contex
 		}
 
 		// Set notification status to scheduled
-		if err := nm.SetNotificationStatus(ctx, notificationID, request, "scheduled"); err != nil {
+		if err := nm.SetNotificationStatus(notificationID, request, "scheduled"); err != nil {
 			logrus.WithError(err).WithField("notification_id", notificationID).Warn("Failed to set notification status to scheduled")
 		}
 
@@ -287,11 +262,11 @@ func (nm *NotificationManagerImpl) ProcessNotificationRequest(ctx context.Contex
 	}
 
 	// Process notification for recipients
-	responses, err := nm.ProcessNotificationForRecipients(ctx, request, notificationID)
+	responses, err := nm.processNotificationForRecipients(ctx, request, notificationID)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to process notification for recipients")
 		// Set notification status to failed
-		if statusErr := nm.SetNotificationStatus(ctx, notificationID, request, "failed"); statusErr != nil {
+		if statusErr := nm.SetNotificationStatus(notificationID, request, "failed"); statusErr != nil {
 			logrus.WithError(statusErr).WithField("notification_id", notificationID).Warn("Failed to set notification status to failed")
 		}
 		return nil, err
@@ -304,7 +279,7 @@ func (nm *NotificationManagerImpl) ProcessNotificationRequest(ctx context.Contex
 	}).Debug("Notification processing completed")
 
 	// Set notification status to sent
-	if err := nm.SetNotificationStatus(ctx, notificationID, request, "sent"); err != nil {
+	if err := nm.SetNotificationStatus(notificationID, request, "sent"); err != nil {
 		logrus.WithError(err).WithField("notification_id", notificationID).Warn("Failed to set notification status to sent")
 	}
 
@@ -315,14 +290,14 @@ func (nm *NotificationManagerImpl) ProcessNotificationRequest(ctx context.Contex
 	}, nil
 }
 
-// ProcessTemplateToContent processes a template and returns the generated content
-func (nm *NotificationManagerImpl) ProcessTemplateToContent(template *models.TemplateData, notificationType string) (map[string]interface{}, error) {
+// processTemplateToContent processes a template and returns the generated content
+func (nm *NotificationManagerImpl) processTemplateToContent(template *models.TemplateData, notificationType string) (map[string]interface{}, error) {
 	if template == nil {
 		return nil, fmt.Errorf("template cannot be nil")
 	}
 
 	// Get the template from the template manager using the specified version
-	templateObj, err := nm.GetTemplateByIDAndVersion(template.ID, template.Version)
+	templateObj, err := nm.templateManager.GetTemplateByIDAndVersion(template.ID, template.Version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get template: %v", err)
 	}
@@ -389,8 +364,8 @@ func (nm *NotificationManagerImpl) processTemplateString(templateStr string, dat
 	return result
 }
 
-// ProcessNotificationForRecipients processes notifications for all recipients
-func (nm *NotificationManagerImpl) ProcessNotificationForRecipients(ctx context.Context, request *models.NotificationRequest, notificationID string) ([]interface{}, error) {
+// processNotificationForRecipients processes notifications for all recipients
+func (nm *NotificationManagerImpl) processNotificationForRecipients(ctx context.Context, request *models.NotificationRequest, notificationID string) ([]interface{}, error) {
 	// Get recipient information from userService
 	logrus.Debug("Fetching recipient information from user service")
 

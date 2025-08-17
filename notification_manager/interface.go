@@ -8,18 +8,11 @@ import (
 
 // NotificationManager interface defines methods for notification management
 type NotificationManager interface {
-	ScheduleNotification(ctx context.Context, notificationId string, notification *models.NotificationRequest, job func() error) error
-
-	GetNotificationStatus(ctx context.Context, notificationID string) (interface{}, error)
-	SetNotificationStatus(ctx context.Context, notificationId string, notification *models.NotificationRequest, status string) error
-	CreateTemplate(ctx context.Context, template interface{}) (interface{}, error)
-	GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error)
-	GetTemplateByID(templateID string) (*models.Template, error)
-	GetTemplateByIDAndVersion(templateID string, version int) (*models.Template, error)
+	GetNotificationStatus(notificationID string) (interface{}, error)
+	CreateTemplate(template interface{}) (interface{}, error)
+	GetTemplateVersion(templateID string, version int) (interface{}, error)
 	GetPredefinedTemplates() []*models.Template
 
-	// New methods for handling complete notification processing
+	// Main method for handling complete notification processing
 	ProcessNotificationRequest(ctx context.Context, request *models.NotificationRequest) (interface{}, error)
-	ProcessTemplateToContent(template *models.TemplateData, notificationType string) (map[string]interface{}, error)
-	ProcessNotificationForRecipients(ctx context.Context, request *models.NotificationRequest, notificationID string) ([]interface{}, error)
 }

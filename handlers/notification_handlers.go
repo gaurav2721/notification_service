@@ -74,7 +74,7 @@ func (h *NotificationHandler) GetNotificationStatus(c *gin.Context) {
 		return
 	}
 
-	response, err := h.notificationService.GetNotificationStatus(c.Request.Context(), notificationID)
+	response, err := h.notificationService.GetNotificationStatus(notificationID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -112,7 +112,7 @@ func (h *NotificationHandler) CreateTemplate(c *gin.Context) {
 		Description:       request.Description,
 	}
 
-	response, err := h.notificationService.CreateTemplate(c.Request.Context(), template)
+	response, err := h.notificationService.CreateTemplate(template)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -161,7 +161,7 @@ func (h *NotificationHandler) GetTemplateVersion(c *gin.Context) {
 		return
 	}
 
-	template, err := h.notificationService.GetTemplateVersion(c.Request.Context(), templateID, version)
+	template, err := h.notificationService.GetTemplateVersion(templateID, version)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
