@@ -38,7 +38,7 @@ func NewAPNSService() APNSService {
 		return NewMockAPNSService()
 	}
 
-	timeout := 30 // default timeout
+	timeout := constants.DefaultAPNSTimeout // default timeout
 	if timeoutStr != "" {
 		if t, err := strconv.Atoi(timeoutStr); err == nil && t > 0 {
 			timeout = t

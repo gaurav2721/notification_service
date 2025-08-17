@@ -48,3 +48,31 @@ const (
 	IOSPushChannelBufferSizeEnvVar     = "IOS_PUSH_CHANNEL_BUFFER_SIZE"
 	AndroidPushChannelBufferSizeEnvVar = "ANDROID_PUSH_CHANNEL_BUFFER_SIZE"
 )
+
+// Default values for environment variables
+const (
+	// Server configuration defaults
+	DefaultPort = "8080"
+
+	// SMTP Configuration defaults
+	DefaultSMTPPort = 587
+
+	// FCM Configuration defaults
+	DefaultFCMTimeout   = 30
+	DefaultFCMBatchSize = 100
+
+	// APNS Configuration defaults
+	DefaultAPNSTimeout = 30
+
+	// Worker Configuration defaults
+	DefaultEmailWorkerCount       = 5
+	DefaultSlackWorkerCount       = 3
+	DefaultIOSPushWorkerCount     = 3
+	DefaultAndroidPushWorkerCount = 3
+
+	// Kafka Buffer Configuration defaults
+	DefaultEmailChannelBufferSize       = 100
+	DefaultSlackChannelBufferSize       = 100
+	DefaultIOSPushChannelBufferSize     = 100
+	DefaultAndroidPushChannelBufferSize = 100
+)

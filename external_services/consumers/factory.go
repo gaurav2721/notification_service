@@ -16,10 +16,10 @@ func NewConsumerManagerFromEnv(kafkaService interface {
 	Close()
 }) ConsumerManager {
 	config := ConsumerConfig{
-		EmailWorkerCount:       getEnvAsInt(constants.EmailWorkerCountEnvVar, 5),
-		SlackWorkerCount:       getEnvAsInt(constants.SlackWorkerCountEnvVar, 3),
-		IOSPushWorkerCount:     getEnvAsInt(constants.IOSPushWorkerCountEnvVar, 3),
-		AndroidPushWorkerCount: getEnvAsInt(constants.AndroidPushWorkerCountEnvVar, 3),
+		EmailWorkerCount:       getEnvAsInt(constants.EmailWorkerCountEnvVar, constants.DefaultEmailWorkerCount),
+		SlackWorkerCount:       getEnvAsInt(constants.SlackWorkerCountEnvVar, constants.DefaultSlackWorkerCount),
+		IOSPushWorkerCount:     getEnvAsInt(constants.IOSPushWorkerCountEnvVar, constants.DefaultIOSPushWorkerCount),
+		AndroidPushWorkerCount: getEnvAsInt(constants.AndroidPushWorkerCountEnvVar, constants.DefaultAndroidPushWorkerCount),
 		KafkaService:           kafkaService,
 	}
 

@@ -32,7 +32,7 @@ func NewEmailService() EmailService {
 
 	port, _ := strconv.Atoi(portStr)
 	if port == 0 {
-		port = 587 // default SMTP port
+		port = constants.DefaultSMTPPort // default SMTP port
 	}
 
 	dialer := gomail.NewDialer(host, port, username, password)

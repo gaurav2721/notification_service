@@ -75,13 +75,13 @@ func NewFCMService() FCMService {
 	// Parse timeout - must be a valid positive integer
 	timeout, err := strconv.Atoi(timeoutStr)
 	if err != nil || timeout <= 0 {
-		return NewMockFCMService()
+		timeout = constants.DefaultFCMTimeout
 	}
 
 	// Parse batch size - must be a valid positive integer
 	batchSize, err := strconv.Atoi(batchSizeStr)
 	if err != nil || batchSize <= 0 {
-		return NewMockFCMService()
+		batchSize = constants.DefaultFCMBatchSize
 	}
 
 	return &FCMServiceImpl{
