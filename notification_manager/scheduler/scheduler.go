@@ -82,19 +82,6 @@ func (ss *SchedulerImpl) CancelJob(jobID string) error {
 	return nil // Job not found, consider it already cancelled
 }
 
-// GetScheduledJobs returns all scheduled job IDs
-func (ss *SchedulerImpl) GetScheduledJobs() []string {
-	ss.mutex.RLock()
-	defer ss.mutex.RUnlock()
-
-	jobIDs := make([]string, 0, len(ss.jobs))
-	for jobID := range ss.jobs {
-		jobIDs = append(jobIDs, jobID)
-	}
-
-	return jobIDs
-}
-
 // Stop stops the scheduler
 func (ss *SchedulerImpl) Stop() {
 	ss.mutex.Lock()
