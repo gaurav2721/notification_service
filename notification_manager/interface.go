@@ -1,8 +1,6 @@
 package notification_manager
 
 import (
-	"context"
-
 	"github.com/gaurav2721/notification-service/models"
 )
 
@@ -14,5 +12,5 @@ type NotificationManager interface {
 	GetPredefinedTemplates() []*models.Template
 
 	// Main method for handling complete notification processing
-	ProcessNotificationRequest(ctx context.Context, request *models.NotificationRequest) (interface{}, error)
+	ProcessNotificationRequest(request *models.NotificationRequest) (interface{}, error)
 }

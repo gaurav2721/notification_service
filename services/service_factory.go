@@ -27,13 +27,11 @@ type (
 
 // Re-export all configurations
 type (
-	EmailConfig        = email.EmailConfig
-	SlackConfig        = slack.SlackConfig
-	APNSConfig         = apns.APNSConfig
-	FCMConfig          = fcm.FCMConfig
-	UserConfig         = user.UserConfig
-	ConsumerConfig     = consumers.ConsumerConfig
-	NotificationConfig = notification_manager.NotificationConfig
+	EmailConfig    = email.EmailConfig
+	SlackConfig    = slack.SlackConfig
+	APNSConfig     = apns.APNSConfig
+	FCMConfig      = fcm.FCMConfig
+	ConsumerConfig = consumers.ConsumerConfig
 )
 
 // Re-export all errors

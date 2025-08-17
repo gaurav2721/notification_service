@@ -56,7 +56,7 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 	}).Debug("Processing notification request")
 
 	// Process the notification request through the notification manager
-	response, err := h.notificationService.ProcessNotificationRequest(c.Request.Context(), &request)
+	response, err := h.notificationService.ProcessNotificationRequest(&request)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to process notification request")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

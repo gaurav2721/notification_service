@@ -24,9 +24,8 @@ func NewUserHandler(userService user.UserService) *UserHandler {
 // GetUsers handles GET /api/v1/users
 func (h *UserHandler) GetUsers(c *gin.Context) {
 	logrus.Debug("Received get users request")
-	ctx := c.Request.Context()
 
-	users, err := h.userService.GetAllUsers(ctx)
+	users, err := h.userService.GetAllUsers()
 	if err != nil {
 		logrus.WithError(err).Error("Failed to get all users")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -50,8 +49,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 	}
 
 	logrus.WithField("user_id", userID).Debug("Received get user request")
-	ctx := c.Request.Context()
-	user, err := h.userService.GetUserByID(ctx, userID)
+	user, err := h.userService.GetUserByID(userID)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"user_id": userID,
@@ -88,8 +86,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	// Create new user using the models.NewUser function
 	newUser := models.NewUser(request.Email, request.FullName)
 
-	ctx := c.Request.Context()
-	err := h.userService.CreateUser(ctx, newUser)
+	err := h.userService.CreateUser(newUser)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"email": request.Email,
@@ -132,8 +129,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	}
 
 	// Get existing user first
-	ctx := c.Request.Context()
-	existingUser, err := h.userService.GetUserByID(ctx, userID)
+	existingUser, err := h.userService.GetUserByID(userID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -157,7 +153,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	}
 
 	// Update user
-	err = h.userService.UpdateUser(ctx, existingUser)
+	err = h.userService.UpdateUser(existingUser)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -174,8 +170,7 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	ctx := c.Request.Context()
-	err := h.userService.DeleteUser(ctx, userID)
+	err := h.userService.DeleteUser(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -192,8 +187,7 @@ func (h *UserHandler) GetUserNotificationInfo(c *gin.Context) {
 		return
 	}
 
-	ctx := c.Request.Context()
-	notificationInfo, err := h.userService.GetUserNotificationInfo(ctx, userID)
+	notificationInfo, err := h.userService.GetUserNotificationInfo(userID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -223,8 +217,7 @@ func (h *UserHandler) RegisterDevice(c *gin.Context) {
 		return
 	}
 
-	ctx := c.Request.Context()
-	device, err := h.userService.RegisterDevice(ctx, userID, request.DeviceToken, request.DeviceType)
+	device, err := h.userService.RegisterDevice(userID, request.DeviceToken, request.DeviceType)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -232,13 +225,13 @@ func (h *UserHandler) RegisterDevice(c *gin.Context) {
 
 	// Update additional device info if provided
 	if request.AppVersion != "" || request.OSVersion != "" || request.DeviceModel != "" {
-		err = h.userService.UpdateDeviceInfo(ctx, device.ID, request.AppVersion, request.OSVersion, request.DeviceModel)
+		err = h.userService.UpdateDeviceInfo(device.ID, request.AppVersion, request.OSVersion, request.DeviceModel)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		// Get updated device
-		devices, err := h.userService.GetUserDevices(ctx, userID)
+		devices, err := h.userService.GetUserDevices(userID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -262,8 +255,7 @@ func (h *UserHandler) GetUserDevices(c *gin.Context) {
 		return
 	}
 
-	ctx := c.Request.Context()
-	devices, err := h.userService.GetUserDevices(ctx, userID)
+	devices, err := h.userService.GetUserDevices(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -284,8 +276,7 @@ func (h *UserHandler) GetActiveUserDevices(c *gin.Context) {
 		return
 	}
 
-	ctx := c.Request.Context()
-	devices, err := h.userService.GetActiveUserDevices(ctx, userID)
+	devices, err := h.userService.GetActiveUserDevices(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -317,8 +308,7 @@ func (h *UserHandler) UpdateDeviceInfo(c *gin.Context) {
 		return
 	}
 
-	ctx := c.Request.Context()
-	err := h.userService.UpdateDeviceInfo(ctx, deviceID, request.AppVersion, request.OSVersion, request.DeviceModel)
+	err := h.userService.UpdateDeviceInfo(deviceID, request.AppVersion, request.OSVersion, request.DeviceModel)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -335,8 +325,7 @@ func (h *UserHandler) RemoveDevice(c *gin.Context) {
 		return
 	}
 
-	ctx := c.Request.Context()
-	err := h.userService.RemoveDevice(ctx, deviceID)
+	err := h.userService.RemoveDevice(deviceID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -353,8 +342,7 @@ func (h *UserHandler) DeactivateDevice(c *gin.Context) {
 		return
 	}
 
-	ctx := c.Request.Context()
-	err := h.userService.DeactivateDevice(ctx, deviceID)
+	err := h.userService.DeactivateDevice(deviceID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -371,8 +359,7 @@ func (h *UserHandler) UpdateDeviceLastUsed(c *gin.Context) {
 		return
 	}
 
-	ctx := c.Request.Context()
-	err := h.userService.UpdateDeviceLastUsed(ctx, deviceID)
+	err := h.userService.UpdateDeviceLastUsed(deviceID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

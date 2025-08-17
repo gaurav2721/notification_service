@@ -1,7 +1,6 @@
 package notification_manager
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -40,7 +39,7 @@ func NewNotificationManagerWithDefaultTemplate(
 }
 
 // ScheduleNotification schedules a notification for future delivery
-func (nm *NotificationManagerImpl) ScheduleNotification(ctx context.Context, notificationId string, notification *models.NotificationRequest, job func() error) error {
+func (nm *NotificationManagerImpl) ScheduleNotification(notificationId string, notification *models.NotificationRequest, job func() error) error {
 	if notification == nil {
 		return ErrUnsupportedNotificationType
 	}
@@ -182,7 +181,7 @@ func (nm *NotificationManagerImpl) GetPredefinedTemplates() []*models.Template {
 }
 
 // ProcessNotificationRequest handles the complete notification request processing
-func (nm *NotificationManagerImpl) ProcessNotificationRequest(ctx context.Context, request *models.NotificationRequest) (interface{}, error) {
+func (nm *NotificationManagerImpl) ProcessNotificationRequest(request *models.NotificationRequest) (interface{}, error) {
 	logrus.Debug("Processing notification request")
 
 	// Generate notification ID
@@ -215,12 +214,12 @@ func (nm *NotificationManagerImpl) ProcessNotificationRequest(ctx context.Contex
 		logrus.Debug("Processing scheduled notification")
 
 		// Schedule notification with a job function
-		err := nm.ScheduleNotification(ctx, notificationID, request, func() error {
+		err := nm.ScheduleNotification(notificationID, request, func() error {
 			// This job will be executed at the scheduled time
 			logrus.WithField("notification_id", notificationID).Info("Executing scheduled notification job")
 
 			// Process notification for recipients
-			_, err := nm.processNotificationForRecipients(ctx, request, notificationID)
+			_, err := nm.processNotificationForRecipients(request, notificationID)
 			if err != nil {
 				logrus.WithError(err).Error("Failed to process notification for recipients")
 				// Set status to failed if processing fails
@@ -256,7 +255,7 @@ func (nm *NotificationManagerImpl) ProcessNotificationRequest(ctx context.Contex
 	}
 
 	// Process notification for recipients
-	responses, err := nm.processNotificationForRecipients(ctx, request, notificationID)
+	responses, err := nm.processNotificationForRecipients(request, notificationID)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to process notification for recipients")
 		// Set notification status to failed
@@ -359,20 +358,20 @@ func (nm *NotificationManagerImpl) processTemplateString(templateStr string, dat
 }
 
 // processNotificationForRecipients processes notifications for all recipients
-func (nm *NotificationManagerImpl) processNotificationForRecipients(ctx context.Context, request *models.NotificationRequest, notificationID string) ([]interface{}, error) {
+func (nm *NotificationManagerImpl) processNotificationForRecipients(request *models.NotificationRequest, notificationID string) ([]interface{}, error) {
 	// Get recipient information from userService
 	logrus.Debug("Fetching recipient information from user service")
 
 	// Type assert userService to get the GetUsersByIDs method
 	userService, ok := nm.userService.(interface {
-		GetUsersByIDs(ctx context.Context, userIDs []string) ([]*models.User, error)
-		GetUserNotificationInfo(ctx context.Context, userID string) (*models.UserNotificationInfo, error)
+		GetUsersByIDs(userIDs []string) ([]*models.User, error)
+		GetUserNotificationInfo(userID string) (*models.UserNotificationInfo, error)
 	})
 	if !ok {
 		return nil, fmt.Errorf("userService does not implement required methods")
 	}
 
-	users, err := userService.GetUsersByIDs(ctx, request.Recipients)
+	users, err := userService.GetUsersByIDs(request.Recipients)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to get recipient information")
 		return nil, fmt.Errorf("failed to get recipient information: %v", err)
@@ -401,7 +400,7 @@ func (nm *NotificationManagerImpl) processNotificationForRecipients(ctx context.
 		}).Debug("Processing notification for user")
 
 		// Get detailed user notification info based on notification type
-		userNotificationInfo, err := userService.GetUserNotificationInfo(ctx, user.ID)
+		userNotificationInfo, err := userService.GetUserNotificationInfo(user.ID)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
 				"user_id": user.ID,

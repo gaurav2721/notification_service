@@ -1,35 +1,12 @@
 package user
 
 import (
-	"context"
 	"errors"
 	"sync"
 	"time"
 
 	"github.com/gaurav2721/notification-service/models"
 )
-
-// UserService interface defines methods for user management
-type UserService interface {
-	GetUserByID(ctx context.Context, userID string) (*models.User, error)
-	GetUsersByIDs(ctx context.Context, userIDs []string) ([]*models.User, error)
-	GetAllUsers(ctx context.Context) ([]*models.User, error)
-	CreateUser(ctx context.Context, user *models.User) error
-	UpdateUser(ctx context.Context, user *models.User) error
-	DeleteUser(ctx context.Context, userID string) error
-
-	// Device management methods
-	RegisterDevice(ctx context.Context, userID, deviceToken, deviceType string) (*models.UserDeviceInfo, error)
-	GetUserDevices(ctx context.Context, userID string) ([]*models.UserDeviceInfo, error)
-	GetActiveUserDevices(ctx context.Context, userID string) ([]*models.UserDeviceInfo, error)
-	UpdateDeviceInfo(ctx context.Context, deviceID string, appVersion, osVersion, deviceModel string) error
-	DeactivateDevice(ctx context.Context, deviceID string) error
-	RemoveDevice(ctx context.Context, deviceID string) error
-	UpdateDeviceLastUsed(ctx context.Context, deviceID string) error
-
-	// Notification info methods
-	GetUserNotificationInfo(ctx context.Context, userID string) (*models.UserNotificationInfo, error)
-}
 
 // userService implements UserService interface
 type userService struct {
@@ -276,7 +253,7 @@ func (s *userService) preloadDevices() {
 }
 
 // GetUserByID retrieves a user by their ID
-func (s *userService) GetUserByID(ctx context.Context, userID string) (*models.User, error) {
+func (s *userService) GetUserByID(userID string) (*models.User, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
@@ -293,7 +270,7 @@ func (s *userService) GetUserByID(ctx context.Context, userID string) (*models.U
 }
 
 // GetUsersByIDs retrieves multiple users by their IDs
-func (s *userService) GetUsersByIDs(ctx context.Context, userIDs []string) ([]*models.User, error) {
+func (s *userService) GetUsersByIDs(userIDs []string) ([]*models.User, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
@@ -308,7 +285,7 @@ func (s *userService) GetUsersByIDs(ctx context.Context, userIDs []string) ([]*m
 }
 
 // GetAllUsers retrieves all users from the service
-func (s *userService) GetAllUsers(ctx context.Context) ([]*models.User, error) {
+func (s *userService) GetAllUsers() ([]*models.User, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
@@ -323,7 +300,7 @@ func (s *userService) GetAllUsers(ctx context.Context) ([]*models.User, error) {
 }
 
 // CreateUser adds a new user to the service
-func (s *userService) CreateUser(ctx context.Context, user *models.User) error {
+func (s *userService) CreateUser(user *models.User) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -339,7 +316,7 @@ func (s *userService) CreateUser(ctx context.Context, user *models.User) error {
 }
 
 // UpdateUser updates an existing user
-func (s *userService) UpdateUser(ctx context.Context, user *models.User) error {
+func (s *userService) UpdateUser(user *models.User) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -354,7 +331,7 @@ func (s *userService) UpdateUser(ctx context.Context, user *models.User) error {
 }
 
 // DeleteUser removes a user from the service (soft delete)
-func (s *userService) DeleteUser(ctx context.Context, userID string) error {
+func (s *userService) DeleteUser(userID string) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -368,7 +345,7 @@ func (s *userService) DeleteUser(ctx context.Context, userID string) error {
 }
 
 // RegisterDevice registers a new device for a user
-func (s *userService) RegisterDevice(ctx context.Context, userID, deviceToken, deviceType string) (*models.UserDeviceInfo, error) {
+func (s *userService) RegisterDevice(userID, deviceToken, deviceType string) (*models.UserDeviceInfo, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -399,7 +376,7 @@ func (s *userService) RegisterDevice(ctx context.Context, userID, deviceToken, d
 }
 
 // GetUserDevices retrieves all devices for a user
-func (s *userService) GetUserDevices(ctx context.Context, userID string) ([]*models.UserDeviceInfo, error) {
+func (s *userService) GetUserDevices(userID string) ([]*models.UserDeviceInfo, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
@@ -414,7 +391,7 @@ func (s *userService) GetUserDevices(ctx context.Context, userID string) ([]*mod
 }
 
 // GetActiveUserDevices retrieves all active devices for a user
-func (s *userService) GetActiveUserDevices(ctx context.Context, userID string) ([]*models.UserDeviceInfo, error) {
+func (s *userService) GetActiveUserDevices(userID string) ([]*models.UserDeviceInfo, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
@@ -429,7 +406,7 @@ func (s *userService) GetActiveUserDevices(ctx context.Context, userID string) (
 }
 
 // UpdateDeviceInfo updates device information
-func (s *userService) UpdateDeviceInfo(ctx context.Context, deviceID string, appVersion, osVersion, deviceModel string) error {
+func (s *userService) UpdateDeviceInfo(deviceID string, appVersion, osVersion, deviceModel string) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -453,7 +430,7 @@ func (s *userService) UpdateDeviceInfo(ctx context.Context, deviceID string, app
 }
 
 // DeactivateDevice marks a device as inactive
-func (s *userService) DeactivateDevice(ctx context.Context, deviceID string) error {
+func (s *userService) DeactivateDevice(deviceID string) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -467,7 +444,7 @@ func (s *userService) DeactivateDevice(ctx context.Context, deviceID string) err
 }
 
 // RemoveDevice completely removes a device
-func (s *userService) RemoveDevice(ctx context.Context, deviceID string) error {
+func (s *userService) RemoveDevice(deviceID string) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -480,7 +457,7 @@ func (s *userService) RemoveDevice(ctx context.Context, deviceID string) error {
 }
 
 // UpdateDeviceLastUsed updates the last used timestamp for a device
-func (s *userService) UpdateDeviceLastUsed(ctx context.Context, deviceID string) error {
+func (s *userService) UpdateDeviceLastUsed(deviceID string) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -494,14 +471,14 @@ func (s *userService) UpdateDeviceLastUsed(ctx context.Context, deviceID string)
 }
 
 // GetUserNotificationInfo retrieves essential user info for notifications
-func (s *userService) GetUserNotificationInfo(ctx context.Context, userID string) (*models.UserNotificationInfo, error) {
-	user, err := s.GetUserByID(ctx, userID)
+func (s *userService) GetUserNotificationInfo(userID string) (*models.UserNotificationInfo, error) {
+	user, err := s.GetUserByID(userID)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get active devices for the user
-	devices, err := s.GetActiveUserDevices(ctx, userID)
+	devices, err := s.GetActiveUserDevices(userID)
 	if err != nil {
 		return nil, err
 	}

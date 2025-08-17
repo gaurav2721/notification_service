@@ -1,7 +1,6 @@
 package user
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -17,44 +16,41 @@ func TestNewUserService(t *testing.T) {
 
 func TestUserService_GetUserByID(t *testing.T) {
 	service := NewUserService()
-	ctx := context.Background()
 
 	// Test getting existing user
-	user, err := service.GetUserByID(ctx, "user-001")
+	user, err := service.GetUserByID("user-001")
 	require.NoError(t, err)
 	assert.Equal(t, "user-001", user.ID)
 	assert.Equal(t, "john.doe@company.com", user.Email)
 	assert.Equal(t, "John Doe", user.FullName)
 
 	// Test getting non-existent user
-	_, err = service.GetUserByID(ctx, "non-existent")
+	_, err = service.GetUserByID("non-existent")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "user not found")
 }
 
 func TestUserService_GetUsersByIDs(t *testing.T) {
 	service := NewUserService()
-	ctx := context.Background()
 
 	// Test getting multiple existing users
 	userIDs := []string{"user-001", "user-002", "user-003"}
-	users, err := service.GetUsersByIDs(ctx, userIDs)
+	users, err := service.GetUsersByIDs(userIDs)
 	require.NoError(t, err)
 	assert.Len(t, users, 3)
 
 	// Test getting mix of existing and non-existing users
 	userIDs = []string{"user-001", "non-existent", "user-002"}
-	users, err = service.GetUsersByIDs(ctx, userIDs)
+	users, err = service.GetUsersByIDs(userIDs)
 	require.NoError(t, err)
 	assert.Len(t, users, 2) // Should only return existing users
 }
 
 func TestUserService_GetAllUsers(t *testing.T) {
 	service := NewUserService()
-	ctx := context.Background()
 
 	// Get all users
-	users, err := service.GetAllUsers(ctx)
+	users, err := service.GetAllUsers()
 	require.NoError(t, err)
 	assert.Len(t, users, 8) // All 8 preloaded users are active
 
@@ -66,7 +62,6 @@ func TestUserService_GetAllUsers(t *testing.T) {
 
 func TestUserService_CreateUser(t *testing.T) {
 	service := NewUserService()
-	ctx := context.Background()
 
 	// Create a new user
 	newUser := &models.User{
@@ -76,11 +71,11 @@ func TestUserService_CreateUser(t *testing.T) {
 		IsActive: true,
 	}
 
-	err := service.CreateUser(ctx, newUser)
+	err := service.CreateUser(newUser)
 	require.NoError(t, err)
 
 	// Verify user was created
-	createdUser, err := service.GetUserByID(ctx, "user-new-001")
+	createdUser, err := service.GetUserByID("user-new-001")
 	require.NoError(t, err)
 	assert.Equal(t, "newuser@company.com", createdUser.Email)
 	assert.Equal(t, "New User", createdUser.FullName)
@@ -88,43 +83,40 @@ func TestUserService_CreateUser(t *testing.T) {
 
 func TestUserService_UpdateUser(t *testing.T) {
 	service := NewUserService()
-	ctx := context.Background()
 
 	// Get existing user
-	user, err := service.GetUserByID(ctx, "user-001")
+	user, err := service.GetUserByID("user-001")
 	require.NoError(t, err)
 
 	// Update user
 	user.FullName = "John Doe Updated"
-	err = service.UpdateUser(ctx, user)
+	err = service.UpdateUser(user)
 	require.NoError(t, err)
 
 	// Verify update
-	updatedUser, err := service.GetUserByID(ctx, "user-001")
+	updatedUser, err := service.GetUserByID("user-001")
 	require.NoError(t, err)
 	assert.Equal(t, "John Doe Updated", updatedUser.FullName)
 }
 
 func TestUserService_DeleteUser(t *testing.T) {
 	service := NewUserService()
-	ctx := context.Background()
 
 	// Delete user
-	err := service.DeleteUser(ctx, "user-001")
+	err := service.DeleteUser("user-001")
 	require.NoError(t, err)
 
 	// Verify user is inactive
-	_, err = service.GetUserByID(ctx, "user-001")
+	_, err = service.GetUserByID("user-001")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "user is inactive")
 }
 
 func TestUserService_RegisterDevice(t *testing.T) {
 	service := NewUserService()
-	ctx := context.Background()
 
 	// Register a new device
-	device, err := service.RegisterDevice(ctx, "user-001", "test_device_token", "ios")
+	device, err := service.RegisterDevice("user-001", "test_device_token", "ios")
 	require.NoError(t, err)
 	assert.Equal(t, "user-001", device.UserID)
 	assert.Equal(t, "test_device_token", device.DeviceToken)
@@ -132,53 +124,50 @@ func TestUserService_RegisterDevice(t *testing.T) {
 	assert.True(t, device.IsActive)
 
 	// Test registering same device again (should update last used)
-	device2, err := service.RegisterDevice(ctx, "user-001", "test_device_token", "ios")
+	device2, err := service.RegisterDevice("user-001", "test_device_token", "ios")
 	require.NoError(t, err)
 	assert.Equal(t, device.ID, device2.ID)
 }
 
 func TestUserService_GetUserDevices(t *testing.T) {
 	service := NewUserService()
-	ctx := context.Background()
 
 	// Get all devices for user
-	devices, err := service.GetUserDevices(ctx, "user-001")
+	devices, err := service.GetUserDevices("user-001")
 	require.NoError(t, err)
 	assert.Len(t, devices, 2) // user-001 has 2 devices in sample data
 }
 
 func TestUserService_GetActiveUserDevices(t *testing.T) {
 	service := NewUserService()
-	ctx := context.Background()
 
 	// Get active devices for user
-	devices, err := service.GetActiveUserDevices(ctx, "user-001")
+	devices, err := service.GetActiveUserDevices("user-001")
 	require.NoError(t, err)
 	assert.Len(t, devices, 2) // user-001 has 2 active devices
 
 	// Get active devices for user with inactive device
-	devices, err = service.GetActiveUserDevices(ctx, "user-003")
+	devices, err = service.GetActiveUserDevices("user-003")
 	require.NoError(t, err)
 	assert.Len(t, devices, 0) // user-003 has 1 inactive device
 }
 
 func TestUserService_UpdateDeviceInfo(t *testing.T) {
 	service := NewUserService()
-	ctx := context.Background()
 
 	// Get a device first
-	devices, err := service.GetUserDevices(ctx, "user-001")
+	devices, err := service.GetUserDevices("user-001")
 	require.NoError(t, err)
 	require.Len(t, devices, 2)
 
 	deviceID := devices[0].ID
 
 	// Update device info
-	err = service.UpdateDeviceInfo(ctx, deviceID, "1.3.0", "iOS 17.0", "iPhone 15")
+	err = service.UpdateDeviceInfo(deviceID, "1.3.0", "iOS 17.0", "iPhone 15")
 	require.NoError(t, err)
 
 	// Verify update
-	devices, err = service.GetUserDevices(ctx, "user-001")
+	devices, err = service.GetUserDevices("user-001")
 	require.NoError(t, err)
 
 	var updatedDevice *models.UserDeviceInfo
@@ -196,52 +185,49 @@ func TestUserService_UpdateDeviceInfo(t *testing.T) {
 
 func TestUserService_DeactivateDevice(t *testing.T) {
 	service := NewUserService()
-	ctx := context.Background()
 
 	// Get a device first
-	devices, err := service.GetUserDevices(ctx, "user-001")
+	devices, err := service.GetUserDevices("user-001")
 	require.NoError(t, err)
 	require.Len(t, devices, 2)
 
 	deviceID := devices[0].ID
 
 	// Deactivate device
-	err = service.DeactivateDevice(ctx, deviceID)
+	err = service.DeactivateDevice(deviceID)
 	require.NoError(t, err)
 
 	// Verify device is inactive
-	devices, err = service.GetActiveUserDevices(ctx, "user-001")
+	devices, err = service.GetActiveUserDevices("user-001")
 	require.NoError(t, err)
 	assert.Len(t, devices, 1) // Should have 1 active device now
 }
 
 func TestUserService_RemoveDevice(t *testing.T) {
 	service := NewUserService()
-	ctx := context.Background()
 
 	// Get a device first
-	devices, err := service.GetUserDevices(ctx, "user-001")
+	devices, err := service.GetUserDevices("user-001")
 	require.NoError(t, err)
 	require.Len(t, devices, 2)
 
 	deviceID := devices[0].ID
 
 	// Remove device
-	err = service.RemoveDevice(ctx, deviceID)
+	err = service.RemoveDevice(deviceID)
 	require.NoError(t, err)
 
 	// Verify device is removed
-	devices, err = service.GetUserDevices(ctx, "user-001")
+	devices, err = service.GetUserDevices("user-001")
 	require.NoError(t, err)
 	assert.Len(t, devices, 1) // Should have 1 device now
 }
 
 func TestUserService_UpdateDeviceLastUsed(t *testing.T) {
 	service := NewUserService()
-	ctx := context.Background()
 
 	// Get a device first
-	devices, err := service.GetUserDevices(ctx, "user-001")
+	devices, err := service.GetUserDevices("user-001")
 	require.NoError(t, err)
 	require.Len(t, devices, 2)
 
@@ -252,11 +238,11 @@ func TestUserService_UpdateDeviceLastUsed(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 
 	// Update last used
-	err = service.UpdateDeviceLastUsed(ctx, deviceID)
+	err = service.UpdateDeviceLastUsed(deviceID)
 	require.NoError(t, err)
 
 	// Verify last used was updated
-	devices, err = service.GetUserDevices(ctx, "user-001")
+	devices, err = service.GetUserDevices("user-001")
 	require.NoError(t, err)
 
 	var updatedDevice *models.UserDeviceInfo
@@ -272,10 +258,9 @@ func TestUserService_UpdateDeviceLastUsed(t *testing.T) {
 
 func TestUserService_GetUserNotificationInfo(t *testing.T) {
 	service := NewUserService()
-	ctx := context.Background()
 
 	// Get notification info
-	info, err := service.GetUserNotificationInfo(ctx, "user-001")
+	info, err := service.GetUserNotificationInfo("user-001")
 	require.NoError(t, err)
 	assert.Equal(t, "user-001", info.ID)
 	assert.Equal(t, "john.doe@company.com", info.Email)
