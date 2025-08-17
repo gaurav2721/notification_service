@@ -17,6 +17,7 @@ type NotificationManagerImpl struct {
 	kafkaService    interface{}
 	scheduler       scheduler.Scheduler
 	templateManager templates.TemplateManager
+	storage         *InMemoryStorage
 }
 
 // NewNotificationManager creates a new notification manager instance
@@ -31,6 +32,7 @@ func NewNotificationManager(
 		kafkaService:    kafkaService,
 		scheduler:       scheduler,
 		templateManager: templateManager,
+		storage:         NewInMemoryStorage(),
 	}
 }
 
@@ -99,6 +101,16 @@ func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notific
 			return nil, err
 		}
 
+		// Store the scheduled notification in memory
+		if err := nm.storage.StoreNotification(notif.ID, notificationRequest); err != nil {
+			logrus.WithError(err).WithField("notification_id", notif.ID).Warn("Failed to store scheduled notification")
+		} else {
+			// Set status to scheduled
+			if err := nm.storage.UpdateNotificationStatus(notif.ID, StatusScheduled, ""); err != nil {
+				logrus.WithError(err).WithField("notification_id", notif.ID).Warn("Failed to update scheduled notification status")
+			}
+		}
+
 		return &models.NotificationResponse{
 			ID:      notif.ID,
 			Status:  "scheduled",
@@ -146,6 +158,24 @@ func (nm *NotificationManagerImpl) SendNotification(ctx context.Context, notific
 					// Channel is full, handle accordingly
 					// TODO: Add proper error handling
 				}
+			}
+		}
+
+		// Store the email notification in memory
+		emailNotificationRequest := &models.NotificationRequest{
+			Type:       notif.Type,
+			Content:    notif.Content,
+			Template:   notif.Template,
+			Recipients: notif.Recipients,
+			From:       notif.From,
+		}
+
+		if err := nm.storage.StoreNotification(notif.ID, emailNotificationRequest); err != nil {
+			logrus.WithError(err).WithField("notification_id", notif.ID).Warn("Failed to store email notification")
+		} else {
+			// Set status to queued
+			if err := nm.storage.UpdateNotificationStatus(notif.ID, StatusQueued, ""); err != nil {
+				logrus.WithError(err).WithField("notification_id", notif.ID).Warn("Failed to update email notification status")
 			}
 		}
 
@@ -321,15 +351,91 @@ func (nm *NotificationManagerImpl) ScheduleNotification(ctx context.Context, not
 
 // GetNotificationStatus retrieves the status of a notification
 func (nm *NotificationManagerImpl) GetNotificationStatus(ctx context.Context, notificationID string) (interface{}, error) {
-	// This would typically query a database or storage system
-	// For now, return a mock response
+	// Get notification from in-memory storage
+	record, err := nm.storage.GetNotification(notificationID)
+	if err != nil {
+		logrus.WithError(err).WithField("notification_id", notificationID).Debug("Notification not found in storage")
+		return nil, err
+	}
+
 	return &struct {
 		ID     string `json:"id"`
 		Status string `json:"status"`
 	}{
-		ID:     notificationID,
-		Status: "sent",
+		ID:     record.ID,
+		Status: string(record.Status),
 	}, nil
+}
+
+// SetNotificationStatus sets the status of a notification
+func (nm *NotificationManagerImpl) SetNotificationStatus(ctx context.Context, notificationId string, notification *models.NotificationRequest, status string) error {
+	if notification == nil {
+		return ErrUnsupportedNotificationType
+	}
+
+	if notificationId == "" {
+		return fmt.Errorf("notification ID cannot be empty")
+	}
+
+	if status == "" {
+		return fmt.Errorf("status cannot be empty")
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"notification_id": notificationId,
+		"status":          status,
+		"type":            notification.Type,
+		"recipients":      len(notification.Recipients),
+	}).Debug("Setting notification status")
+
+	// Convert string status to NotificationStatus type
+	var notificationStatus NotificationStatus
+	switch status {
+	case "pending":
+		notificationStatus = StatusPending
+	case "scheduled":
+		notificationStatus = StatusScheduled
+	case "queued":
+		notificationStatus = StatusQueued
+	case "sent":
+		notificationStatus = StatusSent
+	case "failed":
+		notificationStatus = StatusFailed
+	case "cancelled":
+		notificationStatus = StatusCancelled
+	default:
+		return fmt.Errorf("invalid status: %s", status)
+	}
+
+	// Store notification if it doesn't exist
+	existingRecord, err := nm.storage.GetNotification(notificationId)
+	if err != nil {
+		// Notification doesn't exist, store it first
+		if err := nm.storage.StoreNotification(notificationId, notification); err != nil {
+			logrus.WithError(err).WithField("notification_id", notificationId).Error("Failed to store notification")
+			return err
+		}
+	}
+
+	// Update the status in storage
+	if err := nm.storage.UpdateNotificationStatus(notificationId, notificationStatus, ""); err != nil {
+		logrus.WithError(err).WithField("notification_id", notificationId).Error("Failed to update notification status")
+		return err
+	}
+
+	// Log the status change with old status if available
+	oldStatus := "unknown"
+	if existingRecord != nil {
+		oldStatus = string(existingRecord.Status)
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"notification_id": notificationId,
+		"old_status":      oldStatus,
+		"new_status":      status,
+	}).Info("Notification status updated successfully")
+
+	return nil
 }
 
 // CreateTemplate creates a new notification template

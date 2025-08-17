@@ -24,11 +24,9 @@ func main() {
 
 	// Configure logging
 	logger.Configure()
-	logrus.Debug("Starting notification service initialization")
 
 	// Initialize service container (manages all service dependencies)
 	serviceContainer := services.NewServiceContainer()
-	logrus.Debug("Service container initialized successfully")
 
 	// Initialize handlers with required dependencies
 	notificationHandler := handlers.NewNotificationHandler(serviceContainer.GetNotificationService(), serviceContainer.GetUserService(), serviceContainer.GetKafkaService())

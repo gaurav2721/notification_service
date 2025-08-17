@@ -149,11 +149,8 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1755282275013750680",
-  "status": "sent",
-  "message": "Email notification sent successfully",
-  "sent_at": "2025-08-15T18:24:35.013754596Z",
-  "channel": "email"
+  "id": "1755399957828083000",
+  "status": "sent"
 }
 ```
 
@@ -174,11 +171,8 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1705312345678901235",
-  "status": "sent",
-  "message": "Slack notification sent successfully",
-  "sent_at": "2024-01-15T12:01:00Z",
-  "channel": "slack"
+  "id": "1755399957828083000",
+  "status": "sent"
 }
 ```
 
@@ -200,11 +194,8 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1705312345678901236",
-  "status": "sent",
-  "message": "In-app notification sent successfully",
-  "sent_at": "2024-01-15T12:02:00Z",
-  "channel": "in_app"
+  "id": "1755399957828083000",
+  "status": "sent"
 }
 ```
 
@@ -232,11 +223,8 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1705312345678901237",
-  "status": "scheduled",
-  "message": "Email notification scheduled successfully",
-  "scheduled_at": "2024-01-15T14:00:00Z",
-  "channel": "email"
+  "id": "1755399957828083000",
+  "status": "scheduled"
 }
 ```
 
@@ -258,11 +246,8 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1705312345678901238",
-  "status": "scheduled",
-  "message": "Slack notification scheduled successfully",
-  "scheduled_at": "2024-01-16T09:00:00Z",
-  "channel": "slack"
+  "id": "1755399957828083000",
+  "status": "scheduled"
 }
 ```
 
@@ -285,11 +270,8 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1705312345678901239",
-  "status": "scheduled",
-  "message": "In-app notification scheduled successfully",
-  "scheduled_at": "2024-01-20T08:00:00Z",
-  "channel": "in_app"
+  "id": "1755399957828083000",
+  "status": "scheduled"
 }
 ```
 
@@ -437,11 +419,8 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1705312345678901240",
-  "status": "sent",
-  "message": "Email notification sent successfully using template",
-  "sent_at": "2024-01-15T12:05:00Z",
-  "channel": "email"
+  "id": "1755399957828083000",
+  "status": "sent"
 }
 ```
 
@@ -474,11 +453,8 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1705312345678901241",
-  "status": "sent",
-  "message": "Slack notification sent successfully using template",
-  "sent_at": "2024-01-15T12:06:00Z",
-  "channel": "slack"
+  "id": "1755399957828083000",
+  "status": "sent"
 }
 ```
 
@@ -508,11 +484,8 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1705312345678901242",
-  "status": "sent",
-  "message": "In-app notification sent successfully using template",
-  "sent_at": "2024-01-15T12:07:00Z",
-  "channel": "in_app"
+  "id": "1755399957828083000",
+  "status": "sent"
 }
 ```
 
@@ -548,11 +521,8 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1705312345678901243",
-  "status": "scheduled",
-  "message": "Email notification scheduled successfully using template",
-  "scheduled_at": "2024-01-15T15:00:00Z",
-  "channel": "email"
+  "id": "1755399957828083000",
+  "status": "scheduled"
 }
 ```
 
@@ -586,11 +556,8 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1705312345678901244",
-  "status": "scheduled",
-  "message": "Slack notification scheduled successfully using template",
-  "scheduled_at": "2024-01-16T02:30:00Z",
-  "channel": "slack"
+  "id": "1755399957828083000",
+  "status": "scheduled"
 }
 ```
 
@@ -621,11 +588,8 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1705312345678901245",
-  "status": "scheduled",
-  "message": "In-app notification scheduled successfully using template",
-  "scheduled_at": "2024-01-16T10:00:00Z",
-  "channel": "in_app"
+  "id": "1755399957828083000",
+  "status": "scheduled"
 }
 ```
 
@@ -689,11 +653,8 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1705312345678901246",
-  "status": "sent",
-  "message": "Email notification sent successfully using template",
-  "sent_at": "2024-01-15T12:11:00Z",
-  "channel": "email"
+  "id": "1755399957828083000",
+  "status": "sent"
 }
 ```
 
@@ -725,11 +686,8 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 **Expected Output:**
 ```json
 {
-  "id": "1705312345678901247",
-  "status": "scheduled",
-  "message": "Email notification scheduled successfully using template",
-  "scheduled_at": "2024-01-15T16:00:00Z",
-  "channel": "email"
+  "id": "1755399957828083000",
+  "status": "scheduled"
 }
 ```
 
@@ -744,12 +702,8 @@ curl -X GET http://localhost:8080/api/v1/notifications/1705312345678901234
 **Expected Output:**
 ```json
 {
-  "id": "1705312345678901234",
-  "status": "sent",
-  "message": "Email notification sent successfully",
-  "sent_at": "2024-01-15T12:00:00Z",
-  "channel": "email",
-  "recipients": ["user-001", "user-002"]
+  "id": "1755400733586253000",
+  "status": "sent"
 }
 ```
 

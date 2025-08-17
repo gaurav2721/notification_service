@@ -21,6 +21,7 @@ type NotificationHandler struct {
 		SendNotification(ctx context.Context, notification interface{}) (interface{}, error)
 		ScheduleNotification(ctx context.Context, notificationId string, notification *models.NotificationRequest, job func() error) error
 		GetNotificationStatus(ctx context.Context, notificationID string) (interface{}, error)
+		SetNotificationStatus(ctx context.Context, notificationId string, notification *models.NotificationRequest, status string) error
 		CreateTemplate(ctx context.Context, template interface{}) (interface{}, error)
 		GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error)
 		GetPredefinedTemplates() []*models.Template
@@ -45,6 +46,7 @@ func NewNotificationHandler(
 		SendNotification(ctx context.Context, notification interface{}) (interface{}, error)
 		ScheduleNotification(ctx context.Context, notificationId string, notification *models.NotificationRequest, job func() error) error
 		GetNotificationStatus(ctx context.Context, notificationID string) (interface{}, error)
+		SetNotificationStatus(ctx context.Context, notificationId string, notification *models.NotificationRequest, status string) error
 		CreateTemplate(ctx context.Context, template interface{}) (interface{}, error)
 		GetTemplateVersion(ctx context.Context, templateID string, version int) (interface{}, error)
 		GetPredefinedTemplates() []*models.Template
@@ -216,8 +218,19 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 			_, err := h.processNotificationForRecipients(c, &request, id)
 			if err != nil {
 				logrus.WithError(err).Error("Failed to process notification for recipients")
+				// Set status to failed if processing fails
+				if statusErr := h.notificationService.SetNotificationStatus(c.Request.Context(), id, &request, "failed"); statusErr != nil {
+					logrus.WithError(statusErr).WithField("notification_id", id).Warn("Failed to set notification status to failed")
+				}
 				return err
 			}
+
+			// Set notification status to sent after successful processing
+			if err := h.notificationService.SetNotificationStatus(c.Request.Context(), id, &request, "sent"); err != nil {
+				logrus.WithError(err).WithField("notification_id", id).Warn("Failed to set notification status to sent")
+				// Continue even if status update fails
+			}
+
 			// TODO: Implement the actual notification sending logic here
 			// For now, just log that the job would be executed
 			return nil
@@ -229,11 +242,16 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 			return
 		}
 
+		// Set notification status to sent after successful processing
+		if err := h.notificationService.SetNotificationStatus(c.Request.Context(), id, &request, "scheduled"); err != nil {
+			logrus.WithError(err).WithField("notification_id", id).Warn("Failed to set notification status to sent")
+			// Continue even if status update fails
+		}
+
 		logrus.WithField("notification_id", id).Debug("Notification scheduled successfully")
 		c.JSON(http.StatusOK, gin.H{
-			"id":      id,
-			"status":  "scheduled",
-			"message": "Notification scheduled successfully",
+			"id":     id,
+			"status": "scheduled",
 		})
 		return
 	}
@@ -242,6 +260,10 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 	responses, err := h.processNotificationForRecipients(c, &request, id)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to process notification for recipients")
+		// Set notification status to failed
+		if statusErr := h.notificationService.SetNotificationStatus(c.Request.Context(), id, &request, "failed"); statusErr != nil {
+			logrus.WithError(statusErr).WithField("notification_id", id).Warn("Failed to set notification status to failed")
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -252,11 +274,16 @@ func (h *NotificationHandler) SendNotification(c *gin.Context) {
 		"queued_count":     len(responses),
 	}).Debug("Notification processing completed")
 
+	// Set notification status to sent
+	if err := h.notificationService.SetNotificationStatus(c.Request.Context(), id, &request, "sent"); err != nil {
+		logrus.WithError(err).WithField("notification_id", id).Warn("Failed to set notification status to sent")
+		// Continue with response even if status update fails
+	}
+
 	// Return aggregated response
 	c.JSON(http.StatusOK, gin.H{
-		"id":      id,
-		"status":  "sent",
-		"message": "Notification sent successfully",
+		"id":     id,
+		"status": "sent",
 	})
 }
 
