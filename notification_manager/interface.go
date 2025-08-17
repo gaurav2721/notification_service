@@ -9,7 +9,7 @@ import (
 // NotificationManager interface defines methods for notification management
 type NotificationManager interface {
 	GetNotificationStatus(notificationID string) (interface{}, error)
-	CreateTemplate(template interface{}) (interface{}, error)
+	CreateTemplate(template *models.Template) (interface{}, error)
 	GetTemplateVersion(templateID string, version int) (interface{}, error)
 	GetPredefinedTemplates() []*models.Template
 

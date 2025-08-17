@@ -1,7 +1,6 @@
 package templates
 
 import (
-	"context"
 	"sync"
 	"time"
 
@@ -48,7 +47,7 @@ func (tm *TemplateManagerImpl) loadPredefinedTemplates() {
 }
 
 // CreateTemplate creates a new notification template
-func (tm *TemplateManagerImpl) CreateTemplate(ctx context.Context, template *models.Template) (*models.TemplateResponse, error) {
+func (tm *TemplateManagerImpl) CreateTemplate(template *models.Template) (*models.TemplateResponse, error) {
 	tm.templateMutex.Lock()
 	defer tm.templateMutex.Unlock()
 
@@ -82,7 +81,7 @@ func (tm *TemplateManagerImpl) CreateTemplate(ctx context.Context, template *mod
 }
 
 // GetTemplateVersion retrieves a specific version of a notification template
-func (tm *TemplateManagerImpl) GetTemplateVersion(ctx context.Context, templateID string, version int) (*models.TemplateVersion, error) {
+func (tm *TemplateManagerImpl) GetTemplateVersion(templateID string, version int) (*models.TemplateVersion, error) {
 	tm.templateMutex.RLock()
 	defer tm.templateMutex.RUnlock()
 

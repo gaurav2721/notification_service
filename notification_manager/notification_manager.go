@@ -167,19 +167,13 @@ func (nm *NotificationManagerImpl) SetNotificationStatus(notificationId string, 
 }
 
 // CreateTemplate creates a new notification template
-func (nm *NotificationManagerImpl) CreateTemplate(template interface{}) (interface{}, error) {
-	// Type assertion to get template
-	tmpl, ok := template.(*models.Template)
-	if !ok {
-		return nil, ErrTemplateNotFound
-	}
-
-	return nm.templateManager.CreateTemplate(context.Background(), tmpl)
+func (nm *NotificationManagerImpl) CreateTemplate(template *models.Template) (interface{}, error) {
+	return nm.templateManager.CreateTemplate(template)
 }
 
 // GetTemplateVersion retrieves a specific version of a notification template
 func (nm *NotificationManagerImpl) GetTemplateVersion(templateID string, version int) (interface{}, error) {
-	return nm.templateManager.GetTemplateVersion(context.Background(), templateID, version)
+	return nm.templateManager.GetTemplateVersion(templateID, version)
 }
 
 // GetPredefinedTemplates returns all predefined templates
