@@ -57,7 +57,6 @@ func (fcm *MockFCMServiceImpl) SendPushNotification(ctx context.Context, notific
 	notificationData := map[string]interface{}{
 		"timestamp": time.Now().Format(time.RFC3339),
 		"id":        notif.ID,
-		"type":      notif.Type,
 		"content":   notif.Content,
 		"recipient": notif.Recipient,
 		"status":    "mock_sent",

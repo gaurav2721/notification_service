@@ -55,7 +55,6 @@ func (es *MockEmailServiceImpl) SendEmail(ctx context.Context, notification inte
 	notificationData := map[string]interface{}{
 		"timestamp": time.Now().Format(time.RFC3339),
 		"id":        notif.ID,
-		"type":      notif.Type,
 		"content":   notif.Content,
 		"recipient": notif.Recipient,
 		"from":      notif.From,

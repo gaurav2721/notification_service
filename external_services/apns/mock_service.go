@@ -57,7 +57,6 @@ func (aps *MockAPNSServiceImpl) SendPushNotification(ctx context.Context, notifi
 	notificationData := map[string]interface{}{
 		"timestamp": time.Now().Format(time.RFC3339),
 		"id":        notif.ID,
-		"type":      notif.Type,
 		"content":   notif.Content,
 		"recipient": notif.Recipient,
 		"status":    "mock_sent",
