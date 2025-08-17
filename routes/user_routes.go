@@ -7,7 +7,7 @@ import (
 
 // SetupUserRoutes configures user-related routes
 func SetupUserRoutes(api *gin.RouterGroup, userHandler *handlers.UserHandler) {
-	// User endpoints
+	// User endpoints : we have not added any validation layer here as that is not the core problem statement
 	users := api.Group("/users")
 	{
 		users.GET("/", userHandler.GetUsers)         // Get all users
