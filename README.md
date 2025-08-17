@@ -11,7 +11,7 @@ This service is used to send email , slack and in-app(for ios(apple push notific
 
 ## Building and Running
 
-For detailed instructions on building and running the notification service, please refer to [Build.md](BUILD.md).
+For detailed instructions on building and running the notification service, please refer to 
 
 ## Assumptions for this service
 
