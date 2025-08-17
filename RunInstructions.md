@@ -7,6 +7,17 @@ This document provides step-by-step instructions to run the notification service
 - Docker and Docker Compose installed
 - curl (for API testing)
 
+## Authentication
+
+All `/api/v1/*` endpoints require API key authentication. The API key used in these examples is `gaurav`.
+
+**Authorization Header Format:**
+```
+Authorization: Bearer gaurav
+```
+
+**Note:** Health check endpoints (`/health/*`) do not require authentication.
+
 ## 1. Build and Run the Service
 
 ### 1.1 Build Docker Image
@@ -26,7 +37,8 @@ The service comes with some pre-loaded users for testing purposes.
 **Note:** The service redirects `/api/v1/users` to `/api/v1/users/` (with trailing slash), so use the trailing slash version.
 
 ```bash
-curl -X GET http://localhost:8080/api/v1/users/
+curl -X GET http://localhost:8080/api/v1/users/ \
+  -H "Authorization: Bearer gaurav"
 ```
 
 **Expected Output:**
@@ -132,6 +144,7 @@ curl -X GET http://localhost:8080/api/v1/users/
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/notifications \
+  -H "Authorization: Bearer gaurav" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "email",
@@ -158,6 +171,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/notifications \
+  -H "Authorization: Bearer gaurav" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "slack",
@@ -180,6 +194,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/notifications \
+  -H "Authorization: Bearer gaurav" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "in_app",
@@ -205,6 +220,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/notifications \
+  -H "Authorization: Bearer gaurav" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "email",
@@ -232,6 +248,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/notifications \
+  -H "Authorization: Bearer gaurav" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "slack",
@@ -255,6 +272,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/notifications \
+  -H "Authorization: Bearer gaurav" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "in_app",
@@ -280,7 +298,8 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 The service comes with several predefined templates for common use cases.
 
 ```bash
-curl -X GET http://localhost:8080/api/v1/templates/predefined
+curl -X GET http://localhost:8080/api/v1/templates/predefined \
+  -H "Authorization: Bearer gaurav"
 ```
 
 **Expected Output:**
@@ -394,6 +413,7 @@ curl -X GET http://localhost:8080/api/v1/templates/predefined
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/notifications \
+  -H "Authorization: Bearer gaurav" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "email",
@@ -428,6 +448,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/notifications \
+  -H "Authorization: Bearer gaurav" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "slack",
@@ -462,6 +483,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/notifications \
+  -H "Authorization: Bearer gaurav" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "in_app",
@@ -495,6 +517,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/notifications \
+  -H "Authorization: Bearer gaurav" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "email",
@@ -530,6 +553,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/notifications \
+  -H "Authorization: Bearer gaurav" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "slack",
@@ -565,6 +589,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/notifications \
+  -H "Authorization: Bearer gaurav" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "in_app",
@@ -599,6 +624,7 @@ Create a custom email template for password reset notifications.
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/templates \
+  -H "Authorization: Bearer gaurav" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Password Reset Template",
@@ -630,6 +656,7 @@ curl -X POST http://localhost:8080/api/v1/templates \
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/notifications \
+  -H "Authorization: Bearer gaurav" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "email",
@@ -662,6 +689,7 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/notifications \
+  -H "Authorization: Bearer gaurav" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "email",
@@ -696,7 +724,8 @@ curl -X POST http://localhost:8080/api/v1/notifications \
 You can check the status of any notification using its ID.
 
 ```bash
-curl -X GET http://localhost:8080/api/v1/notifications/1705312345678901234
+curl -X GET http://localhost:8080/api/v1/notifications/1705312345678901234 \
+  -H "Authorization: Bearer gaurav"
 ```
 
 **Expected Output:**
