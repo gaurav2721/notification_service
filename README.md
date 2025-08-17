@@ -9,19 +9,19 @@ This service is used to send email , slack and in-app(for ios(apple push notific
 ### View Docker Container Output
 1. `make docker-exec`
 
-## Assumptions for this service
-
-1. All the information is stored in memory , database persistence may be added later
-2. User and UserDeviceInfo have been preloaded and the apis for these are disabled by default , since it is considered to be out of scope
-3. Interfaces for sending emails, Slack messages, and in-app notifications will be mocked in the first iteration to focus on building scalable service logic with features such as templates and scheduling.(If the .env does not have creds for the email, slack, apns and fcm , the information will be printed in a simple output/<service_name>.txt for eg output/email.txt)
-4. When a customer raises a notification request, only user IDs will be provided as recipients. The service will retrieve other necessary details from the pre-stored user information.
-5. Only text-based content will be supported for notifications in this iteration.
-6. Each notification request raised by customer/user will be linked to only one notification type/channel in this iteration.
-7. In-app notifications will be limited to mobile push notifications for iOS and Android in this iteration.
-
 ## Building and Running
 
-For detailed instructions on building and running the notification service, please refer to [Build.md](Build.md).
+For detailed instructions on building and running the notification service, please refer to [Build.md](BUILD.md).
+
+## Assumptions for this service
+
+1. When a customer raises a notification request, only user IDs will be provided as recipients. The service will retrieve other necessary details from the pre-stored user information.
+2. Only text-based content will be supported for notifications in this iteration.
+3. Each notification request raised by customer/user will be linked to only one notification type/channel in this iteration.
+4. In-app notifications will be limited to mobile push notifications for iOS and Android in this iteration.
+5. All the information is stored in memory , database persistence may be added later
+6. User and UserDeviceInfo have been preloaded and the apis for these are disabled by default , since it is considered to be out of scope
+7. Interfaces for sending emails, Slack messages, and in-app notifications will be mocked in the first iteration to focus on building scalable service logic with features such as templates and scheduling.(If the .env does not have creds for the email, slack, apns and fcm , the information will be printed in a simple output/<service_name>.txt for eg output/email.txt)
 
 ## API Endpoints
 
