@@ -19,7 +19,8 @@ func main() {
 
 	// Load environment variables
 	if err := godotenv.Load(); err != nil {
-		logrus.Info("No .env file found, using system environment variables")
+		logrus.Error("No .env file found, using system environment variables")
+		return
 	}
 
 	// Configure logging

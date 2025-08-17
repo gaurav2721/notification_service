@@ -37,6 +37,10 @@ For detailed API documentation, please refer to [API.md](API.md).
 
 ## Development
 
+Following things have been implemented 
+
+1. Logging with different log levels for eg info, debug
+
 ```
 notification_service/
 ├── main.go                 # Application entry point
