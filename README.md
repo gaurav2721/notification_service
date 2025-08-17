@@ -51,7 +51,7 @@ Functional Requirement
 Other things implemented are
 1. Authentication via Api key
 2. Input Validation for notification and template apis
-3. Implemened logging with different levels 
+3. Implemented logging with different levels 
 
 Design Patterns implemented
 1. Publisher/Subscriber
