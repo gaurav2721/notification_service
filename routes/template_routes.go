@@ -2,14 +2,14 @@ package routes
 
 import (
 	"github.com/gaurav2721/notification-service/handlers"
-	"github.com/gaurav2721/notification-service/middleware"
+	"github.com/gaurav2721/notification-service/validation"
 	"github.com/gin-gonic/gin"
 )
 
 // SetupTemplateRoutes configures template-related routes
 func SetupTemplateRoutes(api *gin.RouterGroup, handler *handlers.NotificationHandler) {
 	// Create validation middleware
-	validationMiddleware := middleware.NewValidationMiddleware()
+	validationMiddleware := validation.NewValidationMiddleware()
 
 	// Template endpoints with validation
 	api.POST("/templates", validationMiddleware.ValidateTemplateRequest(), handler.CreateTemplate)

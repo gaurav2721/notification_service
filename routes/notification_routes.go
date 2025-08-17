@@ -2,14 +2,14 @@ package routes
 
 import (
 	"github.com/gaurav2721/notification-service/handlers"
-	"github.com/gaurav2721/notification-service/middleware"
+	"github.com/gaurav2721/notification-service/validation"
 	"github.com/gin-gonic/gin"
 )
 
 // SetupNotificationRoutes configures notification-related routes
 func SetupNotificationRoutes(api *gin.RouterGroup, handler *handlers.NotificationHandler) {
 	// Create validation middleware
-	validationMiddleware := middleware.NewValidationMiddleware()
+	validationMiddleware := validation.NewValidationMiddleware()
 
 	// Notification endpoints with validation
 	api.POST("/notifications", validationMiddleware.ValidateNotificationRequest(), handler.SendNotification)

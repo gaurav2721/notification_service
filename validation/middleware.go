@@ -1,26 +1,25 @@
-package middleware
+package validation
 
 import (
 	"fmt"
 	"net/http"
 
 	"github.com/gaurav2721/notification-service/models"
-	"github.com/gaurav2721/notification-service/validation"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
 
 // ValidationMiddleware provides middleware for request validation
 type ValidationMiddleware struct {
-	notificationValidator *validation.NotificationValidator
-	templateValidator     *validation.TemplateValidator
+	notificationValidator *NotificationValidator
+	templateValidator     *TemplateValidator
 }
 
 // NewValidationMiddleware creates a new validation middleware
 func NewValidationMiddleware() *ValidationMiddleware {
 	return &ValidationMiddleware{
-		notificationValidator: validation.NewNotificationValidator(),
-		templateValidator:     validation.NewTemplateValidator(),
+		notificationValidator: NewNotificationValidator(),
+		templateValidator:     NewTemplateValidator(),
 	}
 }
 
