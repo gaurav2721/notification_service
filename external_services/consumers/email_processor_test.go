@@ -16,21 +16,17 @@ func TestEmailProcessor_ProcessNotification(t *testing.T) {
 	processor := NewEmailProcessor()
 	require.NotNil(t, processor)
 
-	// Create test notification data
+	// Create notification data
 	notificationData := map[string]interface{}{
 		"notification_id": "test-123",
 		"type":            "email",
 		"content": map[string]interface{}{
 			"subject":    "Test Email Subject",
-			"email_body": "<h1>Test Email Body</h1><p>This is a test email.</p>",
+			"email_body": "<h1>Test Email Body</h1>",
 		},
-		"recipient": map[string]interface{}{
-			"user_id":   "user-123",
-			"email":     "test@example.com",
-			"full_name": "Test User",
-		},
+		"recipient": "test@example.com",
 		"from": map[string]interface{}{
-			"email": "sender@example.com",
+			"email": "noreply@example.com",
 		},
 		"created_at": time.Now(),
 	}
@@ -91,10 +87,9 @@ func TestEmailProcessor_ProcessNotification_MissingEmail(t *testing.T) {
 			"subject":    "Test Email Subject",
 			"email_body": "<h1>Test Email Body</h1>",
 		},
-		"recipient": map[string]interface{}{
-			"user_id":   "user-123",
-			"full_name": "Test User",
-			// Missing email field
+		"recipient": "", // Empty recipient
+		"from": map[string]interface{}{
+			"email": "noreply@example.com",
 		},
 		"created_at": time.Now(),
 	}
@@ -117,7 +112,7 @@ func TestEmailProcessor_ProcessNotification_MissingEmail(t *testing.T) {
 
 	// Should fail due to missing email
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "missing or invalid email address")
+	assert.Contains(t, err.Error(), "no recipient specified in email notification")
 }
 
 func TestEmailProcessor_GetNotificationType(t *testing.T) {
@@ -138,7 +133,7 @@ func TestEmailProcessor_WithCustomEmailService(t *testing.T) {
 	processor := NewEmailProcessorWithService(mockEmailService)
 	require.NotNil(t, processor)
 
-	// Create test notification data
+	// Create notification data
 	notificationData := map[string]interface{}{
 		"notification_id": "test-123",
 		"type":            "email",
@@ -146,9 +141,9 @@ func TestEmailProcessor_WithCustomEmailService(t *testing.T) {
 			"subject":    "Test Email Subject",
 			"email_body": "<h1>Test Email Body</h1>",
 		},
-		"recipient": map[string]interface{}{
-			"user_id": "user-123",
-			"email":   "test@example.com",
+		"recipient": "test@example.com",
+		"from": map[string]interface{}{
+			"email": "noreply@example.com",
 		},
 		"created_at": time.Now(),
 	}
@@ -169,7 +164,7 @@ func TestEmailProcessor_WithCustomEmailService(t *testing.T) {
 	ctx := context.Background()
 	err = processor.ProcessNotification(ctx, message)
 
-	// Should succeed with mock service
+	// Should succeed with custom service
 	assert.NoError(t, err)
 	assert.True(t, mockEmailService.sendEmailCalled)
 }

@@ -3,7 +3,8 @@ package fcm
 import (
 	"context"
 	"testing"
-	"time"
+
+	"github.com/gaurav2721/notification-service/models"
 )
 
 func TestNewFCMService(t *testing.T) {
@@ -16,32 +17,18 @@ func TestNewFCMService(t *testing.T) {
 func TestSendPushNotification(t *testing.T) {
 	service := NewFCMService()
 
-	// Test with Android device tokens in recipients
-	notification := &struct {
-		ID       string
-		Type     string
-		Content  map[string]interface{}
-		Template *struct {
-			ID   string
-			Data map[string]interface{}
-		}
-		Recipients  []string
-		ScheduledAt *time.Time
-	}{
+	// Test with Android device token in recipient
+	notification := &models.FCMNotificationRequest{
 		ID:   "test_notification",
-		Type: "test",
-		Content: map[string]interface{}{
-			"title": "Test Title",
-			"body":  "Test Body",
-			"data": map[string]interface{}{
-				"key1": "value1",
-				"key2": "value2",
-			},
+		Type: "android_push",
+		Content: models.FCMContent{
+			Title: "Test Title",
+			Body:  "Test Body",
 		},
-		Recipients: []string{"android_device_token_123", "android_device_token_456"},
+		Recipient: "android_device_token_123",
 	}
 
-	// Test sending to Android devices
+	// Test sending to Android device
 	result, err := service.SendPushNotification(context.Background(), notification)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -51,34 +38,20 @@ func TestSendPushNotification(t *testing.T) {
 		t.Fatal("Expected result, got nil")
 	}
 
-	// Test with no device tokens
-	emptyNotification := &struct {
-		ID       string
-		Type     string
-		Content  map[string]interface{}
-		Template *struct {
-			ID   string
-			Data map[string]interface{}
-		}
-		Recipients  []string
-		ScheduledAt *time.Time
-	}{
+	// Test with no device token - should fail validation
+	emptyNotification := &models.FCMNotificationRequest{
 		ID:   "test_notification",
-		Type: "test",
-		Content: map[string]interface{}{
-			"title": "Test Title",
-			"body":  "Test Body",
+		Type: "android_push",
+		Content: models.FCMContent{
+			Title: "Test Title",
+			Body:  "Test Body",
 		},
-		Recipients: []string{},
+		Recipient: "",
 	}
 
-	result, err = service.SendPushNotification(context.Background(), emptyNotification)
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
-
-	if result == nil {
-		t.Fatal("Expected result, got nil")
+	_, err = service.SendPushNotification(context.Background(), emptyNotification)
+	if err == nil {
+		t.Errorf("Expected error for empty recipient, got nil")
 	}
 
 	// Test with invalid notification

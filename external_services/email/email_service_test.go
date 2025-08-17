@@ -13,18 +13,18 @@ func TestValidateEmailNotification(t *testing.T) {
 		name         string
 		notification *models.EmailNotificationRequest
 		expectError  bool
-		errorType    error
+		errorMessage string
 	}{
 		{
 			name: "valid email notification",
-			notification: &models.EmailNotification{
+			notification: &models.EmailNotificationRequest{
 				ID:   "test-123",
 				Type: "email",
-				Content: map[string]interface{}{
-					"subject":    "Test Subject",
-					"email_body": "Test Body",
+				Content: models.EmailContent{
+					Subject:   "Test Subject",
+					EmailBody: "Test Body",
 				},
-				Recipients: []string{"test@example.com"},
+				Recipient: "test@example.com",
 				From: &models.EmailSender{
 					Email: "sender@example.com",
 				},
@@ -33,121 +33,120 @@ func TestValidateEmailNotification(t *testing.T) {
 		},
 		{
 			name: "missing ID",
-			notification: &EmailNotification{
+			notification: &models.EmailNotificationRequest{
 				Type: "email",
-				Content: map[string]interface{}{
-					"subject":    "Test Subject",
-					"email_body": "Test Body",
+				Content: models.EmailContent{
+					Subject:   "Test Subject",
+					EmailBody: "Test Body",
 				},
-				Recipients: []string{"test@example.com"},
-				From: &EmailSender{
+				Recipient: "test@example.com",
+				From: &models.EmailSender{
 					Email: "sender@example.com",
 				},
 			},
-			expectError: true,
-			errorType:   ErrMissingID,
+			expectError:  true,
+			errorMessage: "email notification ID is required",
 		},
 		{
 			name: "missing type",
-			notification: &EmailNotification{
+			notification: &models.EmailNotificationRequest{
 				ID: "test-123",
-				Content: map[string]interface{}{
-					"subject":    "Test Subject",
-					"email_body": "Test Body",
+				Content: models.EmailContent{
+					Subject:   "Test Subject",
+					EmailBody: "Test Body",
 				},
-				Recipients: []string{"test@example.com"},
-				From: &EmailSender{
+				Recipient: "test@example.com",
+				From: &models.EmailSender{
 					Email: "sender@example.com",
 				},
 			},
-			expectError: true,
-			errorType:   ErrMissingType,
+			expectError:  true,
+			errorMessage: "email notification type is required",
 		},
 		{
 			name: "missing content",
-			notification: &EmailNotification{
-				ID:         "test-123",
-				Type:       "email",
-				Recipients: []string{"test@example.com"},
-				From: &EmailSender{
+			notification: &models.EmailNotificationRequest{
+				ID:        "test-123",
+				Type:      "email",
+				Recipient: "test@example.com",
+				From: &models.EmailSender{
 					Email: "sender@example.com",
 				},
 			},
-			expectError: true,
-			errorType:   ErrMissingContent,
+			expectError:  true,
+			errorMessage: "email subject is required",
 		},
 		{
 			name: "missing recipients",
-			notification: &EmailNotification{
+			notification: &models.EmailNotificationRequest{
 				ID:   "test-123",
 				Type: "email",
-				Content: map[string]interface{}{
-					"subject":    "Test Subject",
-					"email_body": "Test Body",
+				Content: models.EmailContent{
+					Subject:   "Test Subject",
+					EmailBody: "Test Body",
 				},
-				From: &EmailSender{
+				From: &models.EmailSender{
 					Email: "sender@example.com",
 				},
 			},
-			expectError: true,
-			errorType:   ErrEmptyRecipients,
+			expectError:  true,
+			errorMessage: "recipient is required",
 		},
 		{
 			name: "empty recipients list",
-			notification: &EmailNotification{
-				ID:         "test-123",
-				Type:       "email",
-				Content:    map[string]interface{}{},
-				Recipients: []string{},
-				From: &EmailSender{
+			notification: &models.EmailNotificationRequest{
+				ID:        "test-123",
+				Type:      "email",
+				Content:   models.EmailContent{},
+				Recipient: "",
+				From: &models.EmailSender{
 					Email: "sender@example.com",
 				},
 			},
-			expectError: true,
-			errorType:   ErrEmptyRecipients,
+			expectError:  true,
+			errorMessage: "email subject is required",
 		},
 		{
 			name: "missing from email",
-			notification: &EmailNotification{
+			notification: &models.EmailNotificationRequest{
 				ID:   "test-123",
 				Type: "email",
-				Content: map[string]interface{}{
-					"subject":    "Test Subject",
-					"email_body": "Test Body",
+				Content: models.EmailContent{
+					Subject:   "Test Subject",
+					EmailBody: "Test Body",
 				},
-				Recipients: []string{"test@example.com"},
+				Recipient: "test@example.com",
 			},
-			expectError: true,
-			errorType:   ErrMissingFromEmail,
+			expectError: false, // From is optional
 		},
 		{
 			name: "invalid from email",
-			notification: &EmailNotification{
+			notification: &models.EmailNotificationRequest{
 				ID:   "test-123",
 				Type: "email",
-				Content: map[string]interface{}{
-					"subject":    "Test Subject",
-					"email_body": "Test Body",
+				Content: models.EmailContent{
+					Subject:   "Test Subject",
+					EmailBody: "Test Body",
 				},
-				Recipients: []string{"test@example.com"},
-				From: &EmailSender{
+				Recipient: "test@example.com",
+				From: &models.EmailSender{
 					Email: "invalid-email",
 				},
 			},
-			expectError: true,
-			errorType:   ErrInvalidEmail,
+			expectError:  true,
+			errorMessage: "invalid from email address: invalid-email",
 		},
 		{
 			name: "invalid recipient email",
-			notification: &EmailNotification{
+			notification: &models.EmailNotificationRequest{
 				ID:   "test-123",
 				Type: "email",
-				Content: map[string]interface{}{
-					"subject":    "Test Subject",
-					"email_body": "Test Body",
+				Content: models.EmailContent{
+					Subject:   "Test Subject",
+					EmailBody: "Test Body",
 				},
-				Recipients: []string{"invalid-email"},
-				From: &EmailSender{
+				Recipient: "invalid-email",
+				From: &models.EmailSender{
 					Email: "sender@example.com",
 				},
 			},
@@ -155,80 +154,80 @@ func TestValidateEmailNotification(t *testing.T) {
 		},
 		{
 			name: "missing subject",
-			notification: &EmailNotification{
+			notification: &models.EmailNotificationRequest{
 				ID:   "test-123",
 				Type: "email",
-				Content: map[string]interface{}{
-					"email_body": "Test Body",
+				Content: models.EmailContent{
+					EmailBody: "Test Body",
 				},
-				Recipients: []string{"test@example.com"},
-				From: &EmailSender{
+				Recipient: "test@example.com",
+				From: &models.EmailSender{
 					Email: "sender@example.com",
 				},
 			},
-			expectError: true,
-			errorType:   ErrMissingSubject,
+			expectError:  true,
+			errorMessage: "email subject is required",
 		},
 		{
 			name: "missing body",
-			notification: &EmailNotification{
+			notification: &models.EmailNotificationRequest{
 				ID:   "test-123",
 				Type: "email",
-				Content: map[string]interface{}{
-					"subject": "Test Subject",
+				Content: models.EmailContent{
+					Subject: "Test Subject",
 				},
-				Recipients: []string{"test@example.com"},
-				From: &EmailSender{
+				Recipient: "test@example.com",
+				From: &models.EmailSender{
 					Email: "sender@example.com",
 				},
 			},
-			expectError: true,
-			errorType:   ErrMissingBody,
+			expectError:  true,
+			errorMessage: "email body is required",
 		},
 		{
 			name: "empty subject",
-			notification: &EmailNotification{
+			notification: &models.EmailNotificationRequest{
 				ID:   "test-123",
 				Type: "email",
-				Content: map[string]interface{}{
-					"subject":    "",
-					"email_body": "Test Body",
+				Content: models.EmailContent{
+					Subject:   "",
+					EmailBody: "Test Body",
 				},
-				Recipients: []string{"test@example.com"},
-				From: &EmailSender{
+				Recipient: "test@example.com",
+				From: &models.EmailSender{
 					Email: "sender@example.com",
 				},
 			},
-			expectError: true,
-			errorType:   ErrMissingSubject,
+			expectError:  true,
+			errorMessage: "email subject is required",
 		},
 		{
 			name: "empty body",
-			notification: &EmailNotification{
+			notification: &models.EmailNotificationRequest{
 				ID:   "test-123",
 				Type: "email",
-				Content: map[string]interface{}{
-					"subject":    "Test Subject",
-					"email_body": "",
+				Content: models.EmailContent{
+					Subject:   "Test Subject",
+					EmailBody: "",
 				},
-				Recipients: []string{"test@example.com"},
-				From: &EmailSender{
+				Recipient: "test@example.com",
+				From: &models.EmailSender{
 					Email: "sender@example.com",
 				},
 			},
-			expectError: true,
-			errorType:   ErrMissingBody,
+			expectError:  true,
+			errorMessage: "email body is required",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidateEmailNotification(tt.notification)
+			err := models.ValidateEmailNotification(tt.notification)
 
 			if tt.expectError {
 				assert.Error(t, err)
-				if tt.errorType != nil {
-					assert.ErrorIs(t, err, tt.errorType)
+				if tt.errorMessage != "" {
+					assert.Contains(t, err.Error(), tt.errorMessage)
 				}
 			} else {
 				assert.NoError(t, err)
@@ -239,60 +238,79 @@ func TestValidateEmailNotification(t *testing.T) {
 
 func TestNewEmailNotification(t *testing.T) {
 	t.Run("valid notification", func(t *testing.T) {
-		content := map[string]interface{}{
-			"subject":    "Test Subject",
-			"email_body": "Test Body",
+		content := models.EmailContent{
+			Subject:   "Test Subject",
+			EmailBody: "Test Body",
 		}
-		recipients := []string{"test@example.com"}
+		recipient := "test@example.com"
 
-		notification, err := NewEmailNotification("test-123", "email", content, recipients, "sender@example.com")
+		notification := &models.EmailNotificationRequest{
+			ID:        "test-123",
+			Type:      "email",
+			Content:   content,
+			Recipient: recipient,
+			From: &models.EmailSender{
+				Email: "sender@example.com",
+			},
+		}
 
+		err := models.ValidateEmailNotification(notification)
 		require.NoError(t, err)
 		assert.Equal(t, "test-123", notification.ID)
 		assert.Equal(t, "email", notification.Type)
 		assert.Equal(t, content, notification.Content)
-		assert.Equal(t, recipients, notification.Recipients)
+		assert.Equal(t, recipient, notification.Recipient)
 		assert.Equal(t, "sender@example.com", notification.From.Email)
 	})
 
 	t.Run("invalid notification", func(t *testing.T) {
-		content := map[string]interface{}{
-			"subject": "Test Subject",
+		content := models.EmailContent{
+			Subject: "Test Subject",
 			// missing email_body
 		}
-		recipients := []string{"test@example.com"}
+		recipient := "test@example.com"
 
-		notification, err := NewEmailNotification("test-123", "email", content, recipients, "sender@example.com")
+		notification := &models.EmailNotificationRequest{
+			ID:        "test-123",
+			Type:      "email",
+			Content:   content,
+			Recipient: recipient,
+			From: &models.EmailSender{
+				Email: "sender@example.com",
+			},
+		}
 
+		err := models.ValidateEmailNotification(notification)
 		assert.Error(t, err)
-		assert.Nil(t, notification)
-		assert.ErrorIs(t, err, ErrMissingBody)
+		assert.Contains(t, err.Error(), "email body is required")
 	})
 }
 
 func TestNewEmailNotificationWithTemplate(t *testing.T) {
 	t.Run("valid notification with template", func(t *testing.T) {
-		content := map[string]interface{}{
-			"subject":    "Test Subject",
-			"email_body": "Test Body",
+		content := models.EmailContent{
+			Subject:   "Test Subject",
+			EmailBody: "Test Body",
 		}
-		recipients := []string{"test@example.com"}
-		template := &EmailTemplate{
-			ID: "welcome-template",
-			Data: map[string]interface{}{
-				"user_name": "John Doe",
+		recipient := "test@example.com"
+
+		notification := &models.EmailNotificationRequest{
+			ID:        "test-123",
+			Type:      "email",
+			Content:   content,
+			Recipient: recipient,
+			From: &models.EmailSender{
+				Email: "sender@example.com",
 			},
 		}
 
-		notification, err := NewEmailNotificationWithTemplate("test-123", "email", content, recipients, "sender@example.com", template)
-
+		err := models.ValidateEmailNotification(notification)
 		require.NoError(t, err)
 		assert.Equal(t, "test-123", notification.ID)
 		assert.Equal(t, "email", notification.Type)
 		assert.Equal(t, content, notification.Content)
-		assert.Equal(t, recipients, notification.Recipients)
+		assert.Equal(t, recipient, notification.Recipient)
 		assert.Equal(t, "sender@example.com", notification.From.Email)
-		assert.Equal(t, template, notification.Template)
 	})
 }
 
@@ -315,8 +333,12 @@ func TestIsValidEmail(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := isValidEmail(tt.email)
-			assert.Equal(t, tt.expected, result)
+			err := models.ValidateEmailAddress(tt.email)
+			if tt.expected {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+			}
 		})
 	}
 }
