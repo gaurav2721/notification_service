@@ -15,7 +15,7 @@ For quick testing instructions and example API calls, please refer to [QUICK_TES
 
 ### Detailed Testing
 
-
+For comprehensive testing instructions, example API calls, and test data, please refer to [TEST.md](TEST.md). 
 
 ## Building and Running
 
