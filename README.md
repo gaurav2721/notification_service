@@ -27,19 +27,24 @@ For detailed API documentation, please refer to [API.md](API.md).
 
 ## Assumptions for this service
 
-1. When a customer raises a notification request, only user IDs will be provided as recipients. The service will retrieve other necessary details from the pre-stored user information.
-2. Only text-based content will be supported for notifications in this iteration.
-3. Each notification request raised by customer/user will be linked to only one notification type/channel in this iteration.
-4. In-app notifications will be limited to mobile push notifications for iOS and Android in this iteration.
-5. All the information is stored in memory , database persistence may be added later
-6. User and UserDeviceInfo have been preloaded and the apis for these are disabled by default , since it is considered to be out of scope
-7. Interfaces for sending emails, Slack messages, and in-app notifications will be mocked in the first iteration to focus on building scalable service logic with features such as templates and scheduling.(If the .env does not have creds for the email, slack, apns and fcm , the information will be printed in a simple output/<service_name>.txt for eg output/email.txt)
+1. Interfaces for sending emails, Slack messages, and in-app notifications will be mocked in the first iteration to focus on building scalable service logic with features such as templates and scheduling.(If the .env does not have creds for the email, slack, apns and fcm , the information will be printed in a simple output/<service_name>.txt for eg output/email.txt)
+2. When a customer raises a notification request, only user IDs will be provided as recipients. The service will retrieve other necessary details from the pre-stored user information.
+3. Only text-based content will be supported for notifications in this iteration.
+4. Each notification request raised by customer/user will be linked to only one notification type/channel in this iteration.
+5. In-app notifications will be limited to mobile push notifications for iOS and Android in this iteration.
+6. All the information is stored in memory , database persistence may be added later
+7. User and UserDeviceInfo have been preloaded and the apis for these are disabled by default , since it is considered to be out of scope
 
 ## Development
 
 Following things have been implemented 
 
 1. Logging with different log levels for eg info, debug
+2. Constants package 
+
+Future enhancements 
+1. Creating a requestId for observability 
+2. Adding a CORS check for apis
 
 ```
 notification_service/

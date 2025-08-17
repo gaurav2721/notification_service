@@ -9,22 +9,22 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// ValidationMiddleware provides middleware for request validation
-type ValidationMiddleware struct {
+// ValidationLayer provides middleware for request validation
+type ValidationLayer struct {
 	notificationValidator *NotificationValidator
 	templateValidator     *TemplateValidator
 }
 
-// NewValidationMiddleware creates a new validation middleware
-func NewValidationMiddleware() *ValidationMiddleware {
-	return &ValidationMiddleware{
+// NewValidationLayer creates a new validation layer
+func NewValidationLayer() *ValidationLayer {
+	return &ValidationLayer{
 		notificationValidator: NewNotificationValidator(),
 		templateValidator:     NewTemplateValidator(),
 	}
 }
 
 // ValidateNotificationRequest is middleware that validates notification requests
-func (vm *ValidationMiddleware) ValidateNotificationRequest() gin.HandlerFunc {
+func (vm *ValidationLayer) ValidateNotificationRequest() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request models.NotificationRequest
 
@@ -56,7 +56,7 @@ func (vm *ValidationMiddleware) ValidateNotificationRequest() gin.HandlerFunc {
 }
 
 // ValidateTemplateRequest is middleware that validates template creation requests
-func (vm *ValidationMiddleware) ValidateTemplateRequest() gin.HandlerFunc {
+func (vm *ValidationLayer) ValidateTemplateRequest() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request models.TemplateRequest
 
@@ -88,7 +88,7 @@ func (vm *ValidationMiddleware) ValidateTemplateRequest() gin.HandlerFunc {
 }
 
 // ValidateTemplateID is middleware that validates template ID parameter
-func (vm *ValidationMiddleware) ValidateTemplateID() gin.HandlerFunc {
+func (vm *ValidationLayer) ValidateTemplateID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		templateID := c.Param("templateId")
 
@@ -108,7 +108,7 @@ func (vm *ValidationMiddleware) ValidateTemplateID() gin.HandlerFunc {
 }
 
 // ValidateTemplateVersion is middleware that validates template version parameter
-func (vm *ValidationMiddleware) ValidateTemplateVersion() gin.HandlerFunc {
+func (vm *ValidationLayer) ValidateTemplateVersion() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		versionStr := c.Param("version")
 		if versionStr == "" {
@@ -145,7 +145,7 @@ func (vm *ValidationMiddleware) ValidateTemplateVersion() gin.HandlerFunc {
 }
 
 // ValidateUserRequest is middleware that validates user requests
-func (vm *ValidationMiddleware) ValidateUserRequest() gin.HandlerFunc {
+func (vm *ValidationLayer) ValidateUserRequest() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Basic user validation can be added here
 		// For now, just pass through

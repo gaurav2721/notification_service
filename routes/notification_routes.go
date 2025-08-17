@@ -8,10 +8,10 @@ import (
 
 // SetupNotificationRoutes configures notification-related routes
 func SetupNotificationRoutes(api *gin.RouterGroup, handler *handlers.NotificationHandler) {
-	// Create validation middleware
-	validationMiddleware := validation.NewValidationMiddleware()
+	// Create validation layer
+	validationLayer := validation.NewValidationLayer()
 
 	// Notification endpoints with validation
-	api.POST("/notifications", validationMiddleware.ValidateNotificationRequest(), handler.SendNotification)
+	api.POST("/notifications", validationLayer.ValidateNotificationRequest(), handler.SendNotification)
 	api.GET("/notifications/:id", handler.GetNotificationStatus)
 }
