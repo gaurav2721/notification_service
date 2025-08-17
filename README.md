@@ -27,7 +27,7 @@ For detailed API documentation, please refer to [API.md](API.md).
 
 ## Assumptions for this service
 
-1. Interfaces for sending emails, slack messages, and in-app notifications will be mocked in the first iteration to focus on building scalable service logic(for eg using pub-sub, worker pool design pattern etc) with features such as templates and scheduling.(If the .env does not have creds for the email, slack, apns and fcm , the information will be printed in a simple output/<service_name>.txt for eg output/email.txt , output/slack.txt etc.)
+1. Interfaces for sending emails, slack messages, and in-app notifications will be mocked in the first iteration to focus on building scalable service logic(for eg using pub-sub, worker pool design pattern etc) with features such as templates and scheduling.(If the .env does not have creds for the email, slack, apns and fcm , the output will be printed in a simple output/<service_name>.txt for eg output/email.txt , output/slack.txt etc. by the mocked implementation)
 2. When a customer raises a notification request, only user IDs will be provided as recipients. The service will retrieve other necessary details from the pre-stored user information.
 3. Only text-based content will be supported for notifications in this iteration.
 4. Each notification request raised by customer/user will be linked to only one notification type in this iteration.
