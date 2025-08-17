@@ -77,7 +77,7 @@ notification_service/
   external_services/ -> has logic for all the services that notification service would require
     apns/ -> Apple Push Notification service
     email/ -> email service
-    fcm/ -> firebase cloud messaging service
+    fcm/ -> Firebase Cloud Messaging service
     slack/ -> slack service
     user/ -> user service 
     kafka/ -> kafka service having apns,fcm,email and slack queue
