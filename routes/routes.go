@@ -17,8 +17,9 @@ func SetupRoutes(router *gin.Engine, notificationHandler *handlers.NotificationH
 	// Setup health routes
 	SetupHealthRoutes(router, notificationHandler)
 
-	// API routes
+	// API routes with API key authentication
 	api := router.Group("/api/v1")
+	api.Use(middleware.APIKeyMiddleware()) // Apply API key middleware to all /api/v1 routes
 	{
 		// Setup notification routes
 		SetupNotificationRoutes(api, notificationHandler)
