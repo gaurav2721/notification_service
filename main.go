@@ -31,7 +31,7 @@ func main() {
 	serviceContainer := services.NewServiceContainer()
 
 	// Initialize handlers with required dependencies
-	notificationHandler := handlers.NewNotificationHandler(serviceContainer.GetNotificationService(), serviceContainer.GetUserService(), serviceContainer.GetKafkaService())
+	notificationHandler := handlers.NewNotificationHandler(serviceContainer.GetNotificationService())
 	userHandler := handlers.NewUserHandler(serviceContainer.GetUserService())
 	logrus.Debug("Handlers initialized successfully")
 

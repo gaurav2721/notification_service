@@ -19,4 +19,9 @@ type NotificationManager interface {
 	GetTemplateByID(templateID string) (*models.Template, error)
 	GetTemplateByIDAndVersion(templateID string, version int) (*models.Template, error)
 	GetPredefinedTemplates() []*models.Template
+
+	// New methods for handling complete notification processing
+	ProcessNotificationRequest(ctx context.Context, request *models.NotificationRequest) (interface{}, error)
+	ProcessTemplateToContent(template *models.TemplateData, notificationType string) (map[string]interface{}, error)
+	ProcessNotificationForRecipients(ctx context.Context, request *models.NotificationRequest, notificationID string) ([]interface{}, error)
 }
